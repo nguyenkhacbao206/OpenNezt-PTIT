@@ -1,0 +1,20 @@
+# Core web framework + ASGI server
+fastapi>=0.110
+uvicorn[standard]>=0.29
+
+# Config via environment / .env
+pydantic-settings>=2.2
+
+# WebSocket client used by tests/test_client.py
+websockets>=12.0
+
+# --- Real STT: recording tool (tools/record_stt.py) + OfflineSTTProvider ---
+faster-whisper>=1.0      # Whisper STT engine (app/providers/whisper_engine.py)
+sounddevice>=0.4         # microphone capture
+soundfile>=0.12          # WAV decode for OfflineSTTProvider
+numpy>=1.24              # audio buffers
+
+# --- Reserved for the rest of the real pipeline (uncomment when wiring) ---
+# httpx>=0.27            # cloud provider HTTP calls
+# transformers>=4.40     # OfflineNMTProvider (NLLB)
+# piper-tts              # OfflineTTSProvider (TTS)
