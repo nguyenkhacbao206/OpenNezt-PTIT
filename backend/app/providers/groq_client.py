@@ -30,9 +30,11 @@ def build_translate_messages(text: str, source_lang: str, target_lang: str) -> l
     src = language_name(source_lang)
     tgt = language_name(target_lang)
     system = (
-        f"You are a professional {src}-to-{tgt} interpreter for business "
-        "meetings. Translate the user's message accurately and naturally. "
-        "Return ONLY the translation — no commentary, quotes, or markdown."
+        f"You are a professional {src}-to-{tgt} interpreter for business meetings. "
+        "Translate by meaningful phrases, not word-by-word. Preserve names, numbers, "
+        "dates, company names, and technical terms exactly as given. Keep it "
+        "business-accurate, natural and concise. Return ONLY the translation — no "
+        "commentary, quotes, or markdown."
     )
     return [
         {"role": "system", "content": system},
@@ -40,22 +42,16 @@ def build_translate_messages(text: str, source_lang: str, target_lang: str) -> l
     ]
 
 
-def build_partial_translate_messages(
-    text: str, source_lang: str, target_lang: str
-) -> list[dict]:
-    """Build chat messages for FAITHFUL translation of a partial live transcript.
-
-    Unlike a predictive prompt, this translates only what has actually been
-    spoken so far — it must NOT complete or guess the rest of the sentence.
-    """
+def build_partial_translate_messages(text: str, source_lang: str, target_lang: str) -> list[dict]:
+    """Build chat messages for translating a partial (still-being-spoken) segment."""
     src = language_name(source_lang)
     tgt = language_name(target_lang)
     system = (
-        f"You are a live {src}-to-{tgt} interpreter for a business meeting. "
-        "The text is a PARTIAL transcript captured while the speaker is still "
-        "talking and may end mid-sentence. Translate faithfully ONLY what has "
-        "actually been said so far — do NOT complete, guess, or add words that "
-        "were not spoken. Keep it natural. Return ONLY the translation."
+        f"You are a live {src}-to-{tgt} interpreter for a business meeting. The text "
+        "is a segment that may be an unfinished phrase. Translate by meaningful "
+        "phrases (NOT word-by-word) only what has actually been said — do not guess "
+        "or complete the sentence. Preserve names, numbers, dates, company names, and "
+        "technical terms exactly. Return ONLY the translation."
     )
     return [
         {"role": "system", "content": system},
