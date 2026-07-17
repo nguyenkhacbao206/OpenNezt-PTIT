@@ -8,16 +8,25 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { CheckCheck, Download, List } from 'lucide-react-native';
 
 import type { RttStackScreenProps } from '@/navigation/rttTypes';
+import { useStore } from '@/store';
 
 const TP = { accent: '#5EEAD4', text2: '#9AA0A6', black: '#000000' };
 
-const STATS = [
-  { value: '12:45', label: 'Thời lượng' },
-  { value: '24', label: 'Câu đã dịch' },
-  { value: '2', label: 'Người tham gia' },
-];
-
 export function Demo8EndSession({ navigation }: RttStackScreenProps<'EndSession'>) {
+  const turns = useStore((s) => s.turns);
+  const clearTurns = useStore((s) => s.clearTurns);
+
+  const STATS = [
+    { value: '—', label: 'Thời lượng' },
+    { value: String(turns.length), label: 'Câu đã dịch' },
+    { value: '2', label: 'Người tham gia' },
+  ];
+
+  const backToDevices = () => {
+    clearTurns();
+    navigation.navigate('Devices');
+  };
+
   return (
     <View className="flex-1 bg-tp-bg">
       <ScrollView contentContainerStyle={{ flexGrow: 1, alignItems: 'center', justifyContent: 'center', padding: 40 }}>
@@ -47,7 +56,7 @@ export function Demo8EndSession({ navigation }: RttStackScreenProps<'EndSession'
 
           <View className="w-full gap-3">
             <Pressable
-              onPress={() => navigation.navigate('Devices')}
+              onPress={backToDevices}
               className="w-full flex-row items-center justify-center gap-2 rounded-full bg-tp-accent p-[15px]"
             >
               <List size={18} color={TP.black} />

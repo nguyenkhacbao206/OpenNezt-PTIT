@@ -22,7 +22,6 @@ export type AuthStackParamList = {
 
 /** Tabs available in the authenticated (Main) flow. */
 export type MainTabParamList = {
-  Translator: undefined;
   Home: undefined;
   Profile: { userId?: string } | undefined;
 };

@@ -5,10 +5,11 @@
  * chưa gắn logic — `onContinue` điều hướng sang bước kế.
  */
 import { useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
-import { Globe, Languages } from 'lucide-react-native';
+import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Globe, Languages, Server } from 'lucide-react-native';
 
 import type { RttStackScreenProps } from '@/navigation/rttTypes';
+import { useStore } from '@/store';
 
 interface LangOption {
   code: string;
@@ -26,6 +27,18 @@ const LANGS: LangOption[] = [
 
 export function Demo1Language({ navigation }: RttStackScreenProps<'Language'>) {
   const [selected, setSelected] = useState('vi');
+  const [showAdv, setShowAdv] = useState(false);
+  const setLangs = useStore((s) => s.setLangs);
+  const wsUrl = useStore((s) => s.wsUrl);
+  const setWsUrl = useStore((s) => s.setWsUrl);
+
+  const onContinue = () => {
+    // Ngôn ngữ của mình = nguồn; đối tác nhận ngôn ngữ còn lại. Backend hỗ trợ
+    // vi/en → gộp các ngôn ngữ khác về "en" cho demo.
+    const src = selected === 'vi' ? 'vi' : 'en';
+    setLangs(src, src === 'vi' ? 'en' : 'vi');
+    navigation.navigate('Devices');
+  };
 
   return (
     <View className="flex-1 bg-tp-bg">
@@ -82,13 +95,40 @@ export function Demo1Language({ navigation }: RttStackScreenProps<'Language'>) {
           </View>
 
           <Pressable
-            onPress={() => navigation.navigate('Devices')}
+            onPress={onContinue}
             className="items-center justify-center rounded-full bg-tp-accent p-[15px]"
           >
             <Text className="text-base font-semibold text-tp-bg">Tiếp tục</Text>
           </Pressable>
 
           <Text className="text-center text-[13px] text-tp-muted">Có thể đổi lại trong Cài đặt.</Text>
+
+          {/* Cài đặt backend (WS URL) — cần khi chạy trên thiết bị LAN */}
+          <Pressable
+            onPress={() => setShowAdv((v) => !v)}
+            className="mt-1 flex-row items-center justify-center gap-1.5"
+          >
+            <Server size={13} color="#585E66" />
+            <Text className="text-center text-[12px] text-tp-muted">
+              {showAdv ? 'Ẩn cài đặt backend' : 'Cài đặt backend'}
+            </Text>
+          </Pressable>
+          {showAdv && (
+            <View className="gap-1.5">
+              <Text className="text-[11px] text-tp-muted">
+                WebSocket URL (thiết bị thật: dùng IP LAN, vd ws://192.168.1.x:8000/ws)
+              </Text>
+              <TextInput
+                value={wsUrl}
+                onChangeText={setWsUrl}
+                autoCapitalize="none"
+                autoCorrect={false}
+                placeholder="ws://localhost:8000/ws"
+                placeholderTextColor="#585E66"
+                className="rounded-lg border border-tp-border bg-tp-bg px-3 py-2 text-sm text-tp-text"
+              />
+            </View>
+          )}
         </View>
       </ScrollView>
     </View>

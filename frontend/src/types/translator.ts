@@ -54,8 +54,26 @@ export interface SessionStartMessage {
 
 export interface AudioChunkMessage {
   type: 'audio.chunk';
-  /** `audio` là WAV 16kHz mono, mã hoá base64. */
+  /** `audio` là WAV 16kHz mono, mã hoá base64. Bản CHỐT của cả lượt. */
   data: { speaker: Speaker; audio: string };
+}
+
+export interface AudioPartialMessage {
+  type: 'audio.partial';
+  /** Cửa sổ audio TÍCH LUỸ (WAV 16kHz mono base64) gửi định kỳ khi đang nói. */
+  data: { speaker: Speaker; audio: string };
+}
+
+export interface TextPartialMessage {
+  type: 'text.partial';
+  /** STT phía client (cloud): đoạn văn bản chưa chốt cần dịch tạm. */
+  data: { speaker: Speaker; text: string };
+}
+
+export interface TextFinalMessage {
+  type: 'text.final';
+  /** STT phía client (cloud): đoạn văn bản đã chốt cần dịch. */
+  data: { speaker: Speaker; text: string };
 }
 
 export interface ConfigUpdateMessage {
@@ -71,6 +89,9 @@ export interface SessionEndMessage {
 export type ClientMessage =
   | SessionStartMessage
   | AudioChunkMessage
+  | AudioPartialMessage
+  | TextPartialMessage
+  | TextFinalMessage
   | ConfigUpdateMessage
   | SessionEndMessage;
 
@@ -96,6 +117,12 @@ export interface SttPartialEvent {
 export interface SttFinalEvent {
   type: 'stt.final';
   data: { speaker: Speaker; text: string; lang: Lang };
+}
+
+export interface NmtPartialEvent {
+  type: 'nmt.partial';
+  /** Bản dịch TẠM (cập nhật liên tục, tự sửa) của câu đang nói dở. */
+  data: { speaker: Speaker; srcText: string; dstText: string; isFinal: false };
 }
 
 export interface NmtResultEvent {
@@ -132,6 +159,7 @@ export type ServerEvent =
   | SessionStartedEvent
   | SttPartialEvent
   | SttFinalEvent
+  | NmtPartialEvent
   | NmtResultEvent
   | TtsAudioEvent
   | MetricsEvent
