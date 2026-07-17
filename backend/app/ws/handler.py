@@ -46,6 +46,8 @@ async def dispatch(ws: WebSocket, session: SessionState, message: dict) -> None:
         await _on_session_start(ws, session, data)
     elif event == "audio.chunk":
         await _on_audio_chunk(ws, session, data)
+    elif event == "audio.partial":
+        await _on_audio_partial(ws, session, data)
     elif event == "config.update":
         await _on_config_update(ws, session, data)
     elif event == "session.end":
@@ -101,6 +103,48 @@ async def _on_session_end(ws: WebSocket, session: SessionState, data: dict) -> N
     """Handle session.end: zero-retention cleanup and acknowledge."""
     session.cleanup()
     await send(ws, "session.ended", {})
+
+
+async def _on_audio_partial(ws: WebSocket, session: SessionState, data: dict) -> None:
+    """Live streaming turn: transcribe a growing audio window and emit a
+    translation of what has been said SO FAR, while the speaker keeps talking.
+
+    Best-effort: any failure is swallowed (no `error` event, no disconnect) —
+    a dropped partial is harmless; the authoritative result still arrives via
+    `audio.chunk` -> `nmt.result`.
+    """
+    if not session.started or session.providers is None:
+        return
+
+    speaker = data.get("speaker", "unknown")
+    try:
+        audio = base64.b64decode(data.get("audio", ""), validate=False)
+    except (binascii.Error, ValueError):
+        return
+
+    try:
+        # Transcribe the window; take its final hypothesis as the text-so-far.
+        window_text: str | None = None
+        async for result in session.providers.stt.transcribe(audio, session.source_lang):
+            if result.is_final:
+                window_text = result.text
+        if not window_text or not window_text.strip():
+            return
+
+        await send(ws, "stt.partial", {"speaker": speaker, "text": window_text})
+
+        dst_text = await session.providers.nmt.translate_partial(
+            window_text, session.source_lang, session.target_lang
+        )
+        dst_text = apply_glossary(dst_text, session.glossary_id)
+        await send(ws, "nmt.partial", {
+            "speaker": speaker,
+            "srcText": window_text,
+            "dstText": dst_text,
+            "isFinal": False,
+        })
+    except Exception as exc:  # noqa: BLE001 - partials are best-effort
+        log.info("partial turn skipped for speaker=%s: %s", speaker, exc)
 
 
 async def _on_audio_chunk(ws: WebSocket, session: SessionState, data: dict) -> None:

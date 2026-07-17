@@ -2,37 +2,38 @@
  * TranslatorPage — trợ lý phiên dịch song ngữ Việt ⇄ Anh real-time.
  *
  * Bố cục Split-Screen theo SRS: nửa trên là phía Singapore (English), nửa dưới
- * là đoàn Việt Nam (Tiếng Việt). Mỗi bên có nút Push-to-Talk riêng; phụ đề gốc
- * + bản dịch hiện ngay khi backend trả về qua WebSocket.
+ * là đoàn Việt Nam (Tiếng Việt). Mỗi panel chỉ hiển thị nội dung BẰNG NGÔN NGỮ
+ * CỦA CHÍNH NÓ — panel người nói hiện câu GỐC, panel bên kia hiện BẢN DỊCH — và
+ * text hiện ra theo từng chữ (word-by-word).
  */
 import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui';
-import { useMic } from '@/components/hooks';
+import { useMic, useWordReveal } from '@/components/hooks';
 import { cn } from '@/components/utils';
 import { useAppStore } from '@/store';
-import type { Speaker, TranslatorTurn } from '@/types';
+import type { PartialLine, Speaker, TranslatorTurn } from '@/types';
 
 interface SideConfig {
   speaker: Speaker;
   title: string;
-  spokenLabel: string;
-  translatedLabel: string;
-  accent: string; // class nền nhấn cho panel
+  ownLabel: string; // nhãn khi chính phía này nói (câu gốc)
+  translatedLabel: string; // nhãn khi hiển thị bản dịch từ phía kia
+  accent: string;
 }
 
 const SG_SIDE: SideConfig = {
   speaker: 'sg',
   title: '🇸🇬 Đối tác Singapore (English)',
-  spokenLabel: 'English',
-  translatedLabel: 'Tiếng Việt',
+  ownLabel: 'Họ nói (English)',
+  translatedLabel: 'Bản dịch (English)',
   accent: 'bg-blue-50 dark:bg-blue-950/30',
 };
 
 const VN_SIDE: SideConfig = {
   speaker: 'vn',
   title: '🇻🇳 Đoàn Việt Nam (Tiếng Việt)',
-  spokenLabel: 'Tiếng Việt',
-  translatedLabel: 'English',
+  ownLabel: 'Bạn nói (Tiếng Việt)',
+  translatedLabel: 'Bản dịch (Tiếng Việt)',
   accent: 'bg-emerald-50 dark:bg-emerald-950/30',
 };
 
@@ -41,12 +42,14 @@ export function TranslatorPage() {
   const mode = useAppStore((s) => s.translatorMode);
   const error = useAppStore((s) => s.translatorError);
   const turns = useAppStore((s) => s.turns);
-  const partial = useAppStore((s) => s.partial);
+  const liveOriginal = useAppStore((s) => s.liveOriginal);
+  const liveTranslation = useAppStore((s) => s.liveTranslation);
   const metrics = useAppStore((s) => s.metrics);
 
   const connect = useAppStore((s) => s.connect);
   const disconnect = useAppStore((s) => s.disconnect);
   const setMode = useAppStore((s) => s.setTranslatorMode);
+  const sendPartial = useAppStore((s) => s.sendPartial);
   const sendTurn = useAppStore((s) => s.sendTurn);
   const clearTurns = useAppStore((s) => s.clearTurns);
 
@@ -65,13 +68,14 @@ export function TranslatorPage() {
       if (activeSpeaker === speaker) {
         setActiveSpeaker(null);
         const audio = await mic.stop();
-        if (audio) sendTurn(speaker, audio);
+        if (audio) sendTurn(speaker, audio); // chốt câu -> bản dịch chính thức
       } else if (activeSpeaker === null) {
         setActiveSpeaker(speaker);
-        await mic.start();
+        // Streaming: mỗi cửa sổ audio -> dịch phần đã nói ngay, không chờ hết câu.
+        await mic.start((audioBase64) => sendPartial(speaker, audioBase64));
       }
     },
-    [activeSpeaker, mic, sendTurn],
+    [activeSpeaker, mic, sendPartial, sendTurn],
   );
 
   const isConnected = status === 'connected';
@@ -120,7 +124,8 @@ export function TranslatorPage() {
       <Panel
         side={SG_SIDE}
         turns={turns}
-        partialText={partial?.speaker === 'sg' ? partial.text : null}
+        liveOriginal={liveOriginal}
+        liveTranslation={liveTranslation}
         isRecording={activeSpeaker === 'sg'}
         disabled={!isConnected || (activeSpeaker !== null && activeSpeaker !== 'sg')}
         onTalk={() => void handleTalk('sg')}
@@ -128,7 +133,8 @@ export function TranslatorPage() {
       <Panel
         side={VN_SIDE}
         turns={turns}
-        partialText={partial?.speaker === 'vn' ? partial.text : null}
+        liveOriginal={liveOriginal}
+        liveTranslation={liveTranslation}
         isRecording={activeSpeaker === 'vn'}
         disabled={!isConnected || (activeSpeaker !== null && activeSpeaker !== 'vn')}
         onTalk={() => void handleTalk('vn')}
@@ -198,14 +204,47 @@ function LatencyHud({
 interface PanelProps {
   side: SideConfig;
   turns: TranslatorTurn[];
-  partialText: string | null;
+  liveOriginal: PartialLine | null;
+  liveTranslation: PartialLine | null;
   isRecording: boolean;
   disabled: boolean;
   onTalk: () => void;
 }
 
-function Panel({ side, turns, partialText, isRecording, disabled, onTalk }: PanelProps) {
-  const own = turns.filter((t) => t.speaker === side.speaker);
+/** Text của một lượt nói, quy về NGÔN NGỮ của panel `side`. */
+function panelText(turn: TranslatorTurn, side: SideConfig): string {
+  return turn.speaker === side.speaker ? turn.srcText : turn.dstText;
+}
+
+function Panel({
+  side,
+  turns,
+  liveOriginal,
+  liveTranslation,
+  isRecording,
+  disabled,
+  onTalk,
+}: PanelProps) {
+  const newest = turns.at(-1) ?? null;
+
+  // Câu mới nhất: cuộn ra từng chữ (bằng ngôn ngữ của panel này).
+  const newestText = newest ? panelText(newest, side) : '';
+  const revealedNewest = useWordReveal(newestText, newest?.id);
+
+  // Panel người nói: transcript GỐC hiện dần khi đang nói.
+  const originalText =
+    liveOriginal && liveOriginal.speaker === side.speaker ? liveOriginal.text : '';
+  const revealedOriginal = useWordReveal(originalText, `orig-${side.speaker}`);
+
+  // Panel bên kia: BẢN DỊCH của phần đã nói hiện ngay khi người kia đang nói.
+  const translationText =
+    liveTranslation && liveTranslation.speaker !== side.speaker
+      ? liveTranslation.text
+      : '';
+  const revealedTranslation = useWordReveal(translationText, `trans-${side.speaker}`);
+
+  const isEmpty = turns.length === 0 && !originalText && !translationText;
+
   return (
     <section
       className={cn(
@@ -221,30 +260,65 @@ function Panel({ side, turns, partialText, isRecording, disabled, onTalk }: Pane
           onClick={onTalk}
           disabled={disabled}
         >
-          {isRecording ? '■ Dừng & Dịch' : '● Nhấn để nói'}
+          {isRecording ? '■ Dừng & Chốt' : '● Nhấn để nói'}
         </Button>
       </div>
 
       <div className="flex-1 space-y-2 overflow-y-auto">
-        {own.length === 0 && !partialText && (
-          <p className="text-sm text-gray-400">Chưa có lượt nói nào.</p>
-        )}
-        {own.map((turn) => (
-          <div
-            key={turn.id}
-            className="rounded-lg bg-white/70 p-3 shadow-sm dark:bg-gray-900/40"
-          >
-            <p className="text-xs uppercase tracking-wide text-gray-400">{side.spokenLabel}</p>
-            <p className="text-gray-800 dark:text-gray-100">{turn.srcText}</p>
-            <p className="mt-1 text-xs uppercase tracking-wide text-gray-400">
-              {side.translatedLabel}
+        {isEmpty && <p className="text-sm text-gray-400">Chưa có lượt nói nào.</p>}
+
+        {turns.map((turn, i) => {
+          const isOwn = turn.speaker === side.speaker;
+          const isNewest = i === turns.length - 1;
+          const full = panelText(turn, side);
+          const shown = isNewest ? revealedNewest : full;
+          const revealing = isNewest && shown !== full;
+          return (
+            <div
+              key={turn.id}
+              className={cn(
+                'rounded-lg p-3 shadow-sm',
+                isOwn ? 'bg-white/70 dark:bg-gray-900/40' : 'bg-white/40 dark:bg-gray-900/20',
+              )}
+            >
+              <p className="text-xs uppercase tracking-wide text-gray-400">
+                {isOwn ? side.ownLabel : side.translatedLabel}
+              </p>
+              <p
+                className={cn(
+                  isOwn
+                    ? 'text-gray-800 dark:text-gray-100'
+                    : 'font-medium text-primary dark:text-primary-light',
+                )}
+              >
+                {shown}
+                {revealing && <span className="ml-0.5 animate-pulse">▋</span>}
+              </p>
+            </div>
+          );
+        })}
+
+        {/* Đang nói: transcript GỐC cuộn từng chữ trên panel người nói. */}
+        {originalText && (
+          <div className="rounded-lg border border-dashed border-gray-300 p-3 dark:border-gray-600">
+            <p className="text-xs uppercase tracking-wide text-gray-400">🎙 Đang nói…</p>
+            <p className="text-gray-700 dark:text-gray-200">
+              {revealedOriginal}
+              <span className="ml-0.5 animate-pulse">▋</span>
             </p>
-            <p className="font-medium text-primary dark:text-primary-light">{turn.dstText}</p>
           </div>
-        ))}
-        {partialText && (
-          <div className="rounded-lg border border-dashed border-gray-300 p-3 text-gray-500 dark:border-gray-600">
-            {isRecording ? '🎙 Đang nghe…' : `⏳ Đang dịch: ${partialText}`}
+        )}
+
+        {/* Đang dịch: BẢN DỊCH phần đã nói hiện ngay trên panel bên kia. */}
+        {translationText && (
+          <div className="rounded-lg border border-dashed border-amber-400 bg-amber-50/50 p-3 dark:border-amber-500/50 dark:bg-amber-950/20">
+            <p className="text-xs uppercase tracking-wide text-amber-600 dark:text-amber-400">
+              ⏳ Đang dịch…
+            </p>
+            <p className="font-medium text-amber-700 dark:text-amber-300">
+              {revealedTranslation}
+              <span className="ml-0.5 animate-pulse">▋</span>
+            </p>
           </div>
         )}
       </div>

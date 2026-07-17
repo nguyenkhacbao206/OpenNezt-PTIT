@@ -38,7 +38,10 @@ export interface TranslatorSlice {
   translatorMode: TranslatorMode;
   translatorError: string | null;
   turns: TranslatorTurn[];
-  partial: PartialLine | null;
+  /** Transcript gốc tạm thời (hiện dần khi đang nói). */
+  liveOriginal: PartialLine | null;
+  /** Bản dịch của phần đã nói (hiện ngay khi đang nói, chưa chốt). */
+  liveTranslation: PartialLine | null;
   metrics: TurnMetrics | null;
 
   /** Nội bộ — KHÔNG select trong component. */
@@ -48,6 +51,9 @@ export interface TranslatorSlice {
   connect: () => void;
   disconnect: () => void;
   setTranslatorMode: (mode: TranslatorMode) => void;
+  /** Gửi cửa sổ audio đang nói -> nhận transcript gốc + bản dịch phần đã nói. */
+  sendPartial: (speaker: Speaker, audioBase64: string) => void;
+  /** Chốt lượt nói khi dứt câu -> bản dịch chính thức. */
   sendTurn: (speaker: Speaker, audioBase64: string) => void;
   clearTurns: () => void;
 }
@@ -58,17 +64,47 @@ export const createTranslatorSlice: StateCreator<
   [],
   TranslatorSlice
 > = (set, get) => {
+  /**
+   * Đảm bảo phiên đang ở đúng chiều dịch cho `speaker` trước khi gửi audio.
+   * Trả về socket đang mở, hoặc null (kèm set lỗi) nếu chưa kết nối.
+   */
+  const ensureDirection = (speaker: Speaker): TranslatorSocket | null => {
+    const { _socket, translatorMode, _direction } = get();
+    if (!_socket || !_socket.isOpen) {
+      set({ translatorError: 'Chưa kết nối tới backend. Bấm "Kết nối" trước.' });
+      return null;
+    }
+    const { source, target } = directionFor(speaker);
+    const dir = `${translatorMode}:${source}->${target}`;
+    if (_direction !== dir) {
+      _socket.send({
+        type: 'session.start',
+        data: { mode: translatorMode, sourceLang: source, targetLang: target },
+      });
+      set({ _direction: dir, translatorError: null });
+    }
+    return _socket;
+  };
+
   const handleEvent = (event: ServerEvent): void => {
     switch (event.type) {
       case 'session.started':
         set({ translatorMode: event.data.mode });
         break;
       case 'stt.partial':
-        set({ partial: { speaker: event.data.speaker, text: event.data.text } });
+        set({ liveOriginal: { speaker: event.data.speaker, text: event.data.text } });
+        break;
+      case 'nmt.partial':
+        // Bản dịch phần đã nói — hiện ngay ở panel bên kia, chưa chốt.
+        set({
+          liveTranslation: { speaker: event.data.speaker, text: event.data.dstText },
+        });
         break;
       case 'nmt.result':
+        // Bản chốt — đưa vào hội thoại và xoá các bản tạm.
         set({
-          partial: null,
+          liveOriginal: null,
+          liveTranslation: null,
           turns: [
             ...get().turns,
             {
@@ -85,7 +121,8 @@ export const createTranslatorSlice: StateCreator<
         break;
       case 'error':
         set({
-          partial: null,
+          liveOriginal: null,
+          liveTranslation: null,
           translatorError: `[${event.data.code}] ${event.data.message}`,
         });
         break;
@@ -99,7 +136,8 @@ export const createTranslatorSlice: StateCreator<
     translatorMode: 'cloud',
     translatorError: null,
     turns: [],
-    partial: null,
+    liveOriginal: null,
+    liveTranslation: null,
     metrics: null,
     _socket: null,
     _direction: null,
@@ -130,25 +168,19 @@ export const createTranslatorSlice: StateCreator<
       set({ translatorMode: mode, _direction: null });
     },
 
-    sendTurn: (speaker, audioBase64) => {
-      const { _socket, translatorMode, _direction } = get();
-      if (!_socket || !_socket.isOpen) {
-        set({ translatorError: 'Chưa kết nối tới backend. Bấm "Kết nối" trước.' });
-        return;
-      }
-      const { source, target } = directionFor(speaker);
-      const dir = `${translatorMode}:${source}->${target}`;
-      if (_direction !== dir) {
-        _socket.send({
-          type: 'session.start',
-          data: { mode: translatorMode, sourceLang: source, targetLang: target },
-        });
-        set({ _direction: dir });
-      }
-      set({ translatorError: null, partial: { speaker, text: '…' } });
-      _socket.send({ type: 'audio.chunk', data: { speaker, audio: audioBase64 } });
+    sendPartial: (speaker, audioBase64) => {
+      const socket = ensureDirection(speaker);
+      if (!socket) return;
+      socket.send({ type: 'audio.partial', data: { speaker, audio: audioBase64 } });
     },
 
-    clearTurns: () => set({ turns: [], partial: null, metrics: null }),
+    sendTurn: (speaker, audioBase64) => {
+      const socket = ensureDirection(speaker);
+      if (!socket) return;
+      socket.send({ type: 'audio.chunk', data: { speaker, audio: audioBase64 } });
+    },
+
+    clearTurns: () =>
+      set({ turns: [], liveOriginal: null, liveTranslation: null, metrics: null }),
   };
 };

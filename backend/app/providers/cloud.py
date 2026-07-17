@@ -122,6 +122,26 @@ class CloudNMTProvider(NMTProvider):
             target_lang,
         )
 
+    async def translate_partial(self, text: str, source_lang: str, target_lang: str) -> str:
+        """Faithful translation of a partial transcript (live streaming path)."""
+        if not self._enabled:
+            return await self._fallback.translate(text, source_lang, target_lang)
+
+        if self._provider == "groq":
+            from . import groq_client
+
+            return await groq_client.translate_partial(
+                settings.groq_api_key or "",
+                settings.groq_api_url,
+                settings.groq_nmt_model,
+                text,
+                source_lang,
+                target_lang,
+            )
+
+        # Gemini: reuse the full translate (no separate partial prompt).
+        return await self.translate(text, source_lang, target_lang)
+
 
 class CloudTTSProvider(TTSProvider):
     """TTS via an external API, or Mock fallback when no key is configured."""

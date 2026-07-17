@@ -86,12 +86,12 @@ def to_wav_bytes(audio: np.ndarray, sample_rate: int = SAMPLE_RATE) -> bytes:
     return buf.getvalue()
 
 
-async def run_turn(audio_b64: str, src: str, tgt: str) -> None:
+async def run_turn(audio_b64: str, src: str, tgt: str, mode: str) -> None:
     """Send one push-to-talk turn and print the transcript + translation."""
     async with websockets.connect(WS_URL) as ws:
         await ws.send(json.dumps(
             {"type": "session.start",
-             "data": {"mode": "cloud", "sourceLang": src, "targetLang": tgt}}
+             "data": {"mode": mode, "sourceLang": src, "targetLang": tgt}}
         ))
         await ws.send(json.dumps(
             {"type": "audio.chunk", "data": {"speaker": "A", "audio": audio_b64}}
@@ -128,6 +128,8 @@ def main() -> None:
                         help="Record a fixed number of seconds (default: Enter to start/stop).")
     parser.add_argument("--src", default="vi", help="Source language (default: vi).")
     parser.add_argument("--tgt", default="en", help="Target language (default: en).")
+    parser.add_argument("--mode", default="cloud",
+                        help="Pipeline mode: cloud (default) | mock | offline.")
     args = parser.parse_args()
 
     audio = record_fixed(args.seconds) if args.seconds else record_until_enter()
@@ -136,7 +138,7 @@ def main() -> None:
         return
 
     audio_b64 = base64.b64encode(to_wav_bytes(audio)).decode("ascii")
-    asyncio.run(run_turn(audio_b64, args.src, args.tgt))
+    asyncio.run(run_turn(audio_b64, args.src, args.tgt, args.mode))
 
 
 if __name__ == "__main__":

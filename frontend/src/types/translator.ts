@@ -42,7 +42,7 @@ export interface TranslatorTurn {
   dstText: string;
 }
 
-/** Phụ đề tạm thời khi đang nhận dạng. */
+/** Phụ đề tạm thời khi đang nhận dạng (transcript gốc lớn dần). */
 export interface PartialLine {
   speaker: Speaker;
   text: string;
@@ -58,7 +58,13 @@ export interface SessionStartMessage {
 
 export interface AudioChunkMessage {
   type: 'audio.chunk';
-  /** `audio` là WAV 16kHz mono, mã hoá base64. */
+  /** `audio` là WAV 16kHz mono, mã hoá base64. Đây là bản CHỐT của lượt nói. */
+  data: { speaker: Speaker; audio: string };
+}
+
+export interface AudioPartialMessage {
+  type: 'audio.partial';
+  /** Cửa sổ audio lớn dần khi đang nói -> dịch phần đã nói, chưa chốt. */
   data: { speaker: Speaker; audio: string };
 }
 
@@ -75,6 +81,7 @@ export interface SessionEndMessage {
 export type ClientMessage =
   | SessionStartMessage
   | AudioChunkMessage
+  | AudioPartialMessage
   | ConfigUpdateMessage
   | SessionEndMessage;
 
@@ -107,6 +114,12 @@ export interface NmtResultEvent {
   data: { speaker: Speaker; srcText: string; dstText: string };
 }
 
+export interface NmtPartialEvent {
+  type: 'nmt.partial';
+  /** Bản dịch phần đã nói (chưa chốt) — hiện ngay khi đang nói. */
+  data: { speaker: Speaker; srcText: string; dstText: string; isFinal: boolean };
+}
+
 export interface TtsAudioEvent {
   type: 'tts.audio';
   data: { speaker: Speaker; audio: string };
@@ -137,6 +150,7 @@ export type ServerEvent =
   | SttPartialEvent
   | SttFinalEvent
   | NmtResultEvent
+  | NmtPartialEvent
   | TtsAudioEvent
   | MetricsEvent
   | ConfigUpdatedEvent

@@ -40,6 +40,29 @@ def build_translate_messages(text: str, source_lang: str, target_lang: str) -> l
     ]
 
 
+def build_partial_translate_messages(
+    text: str, source_lang: str, target_lang: str
+) -> list[dict]:
+    """Build chat messages for FAITHFUL translation of a partial live transcript.
+
+    Unlike a predictive prompt, this translates only what has actually been
+    spoken so far — it must NOT complete or guess the rest of the sentence.
+    """
+    src = language_name(source_lang)
+    tgt = language_name(target_lang)
+    system = (
+        f"You are a live {src}-to-{tgt} interpreter for a business meeting. "
+        "The text is a PARTIAL transcript captured while the speaker is still "
+        "talking and may end mid-sentence. Translate faithfully ONLY what has "
+        "actually been said so far — do NOT complete, guess, or add words that "
+        "were not spoken. Keep it natural. Return ONLY the translation."
+    )
+    return [
+        {"role": "system", "content": system},
+        {"role": "user", "content": text},
+    ]
+
+
 def extract_transcript(response_json: dict) -> str:
     """Pull the transcript text out of an audio/transcriptions response."""
     if "error" in response_json:
@@ -125,4 +148,12 @@ async def translate_text(
 ) -> str:
     """Translate text from source_lang to target_lang via a Groq chat model."""
     messages = build_translate_messages(text, source_lang, target_lang)
+    return extract_chat_text(await _chat(api_key, base_url, model, messages))
+
+
+async def translate_partial(
+    api_key: str, base_url: str, model: str, text: str, source_lang: str, target_lang: str
+) -> str:
+    """Faithful real-time translation of a partial (still-being-spoken) transcript."""
+    messages = build_partial_translate_messages(text, source_lang, target_lang)
     return extract_chat_text(await _chat(api_key, base_url, model, messages))
