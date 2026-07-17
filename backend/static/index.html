@@ -218,6 +218,7 @@ function resetButtons() {
   if ("speechSynthesis" in window) window.speechSynthesis.cancel();
   hideLive();
   $("stageHint").style.display = "";
+  $("src").disabled = $("dst").disabled = $("mode").disabled = false;
 }
 
 function handleEvent(msg) {
@@ -328,6 +329,8 @@ async function startRec() {
   // Dịch DẦN khi đang nói: mỗi ~2.5s gửi cửa sổ audio tích luỹ (audio.partial).
   partialTimer = setInterval(sendPartialWindow, 2500);
   $("stageHint").style.display = "none";
+  // Khóa nguồn/đích/chế độ khi đang thu -> không đổi chiều dịch giữa chừng.
+  $("src").disabled = $("dst").disabled = $("mode").disabled = true;
   $("rec").classList.add("active"); $("rec").textContent = "Dừng lại";
 }
 
@@ -348,6 +351,7 @@ function stopRec() {
   stream.getTracks().forEach((t) => t.stop());
   audioCtx.close();
   $("rec").classList.remove("active"); $("rec").textContent = "Nhấn để nói";
+  $("src").disabled = $("dst").disabled = $("mode").disabled = false;   // mở khóa lại
 
   // merge → downsample → WAV → base64
   const merged = mergeChunks(chunks);
@@ -401,6 +405,11 @@ $("rec").onclick = () => (recording ? stopRec() : startRec().catch((e) => log("e
 $("fake").onclick = sendFake;
 $("ttsOn").onchange = () => { if (!$("ttsOn").checked && "speechSynthesis" in window) window.speechSynthesis.cancel(); };
 $("mode").onchange = () => { if (ws && ws.readyState === 1) send("config.update", { mode: $("mode").value }); };
+// Đổi Nguồn/Đích giữa các lượt -> gửi lại session.start để backend theo đúng chiều dịch.
+$("src").onchange = $("dst").onchange = () => {
+  if (ws && ws.readyState === 1 && !recording)
+    send("session.start", { mode: $("mode").value, sourceLang: $("src").value, targetLang: $("dst").value });
+};
 </script>
 </body>
 </html>
