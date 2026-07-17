@@ -43,6 +43,10 @@ function getCtor(): SpeechRecognitionCtor | null {
 export interface SpeechRecognitionHandlers {
   onInterim: (text: string) => void;
   onFinal: (text: string) => void;
+  /** Gọi khi trình nhận dạng tự khởi động lại (sau quãng im lặng). */
+  onRestart?: () => void;
+  /** Gọi khi có lỗi nghiêm trọng (mic bị chặn, ngôn ngữ/không mạng...). */
+  onError?: (error: string) => void;
 }
 
 export interface UseSpeechRecognition {
@@ -90,11 +94,14 @@ export function useSpeechRecognition(
     rec.onerror = (e) => {
       if (e.error !== 'no-speech' && e.error !== 'aborted') {
         setError(`Speech recognition: ${e.error}`);
+        handlersRef.current.onError?.(e.error);
       }
     };
     rec.onend = () => {
       // Web Speech tự dừng khi im lặng -> nghe lại nếu vẫn muốn.
       if (wantRef.current && recRef.current) {
+        // Phiên mới bắt đầu lại từ đầu -> báo caller reset trạng thái segmenter.
+        handlersRef.current.onRestart?.();
         try {
           recRef.current.start();
         } catch {
@@ -111,7 +118,14 @@ export function useSpeechRecognition(
 
   const stop = useCallback(() => {
     wantRef.current = false;
-    recRef.current?.stop();
+    const rec = recRef.current;
+    if (rec) {
+      // Gỡ handler trước khi dừng để không còn callback muộn (tránh rò/nhầm phía nói).
+      rec.onresult = null;
+      rec.onerror = null;
+      rec.onend = null;
+      rec.stop();
+    }
     recRef.current = null;
     setListening(false);
   }, []);

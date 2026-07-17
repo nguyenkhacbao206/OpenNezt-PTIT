@@ -58,8 +58,20 @@ export function TranslatorPage() {
 
   const mic = useMic();
   const [activeSpeaker, setActiveSpeaker] = useState<Speaker | null>(null);
+  // Web Speech "hỏng" (lỗi hoặc không nhả chữ) -> tự chuyển sang Whisper.
+  const [speechBroken, setSpeechBroken] = useState(false);
   const speakerRef = useRef<Speaker | null>(null);
   const lastTranscriptRef = useRef<string>('');
+  const gotResultRef = useRef(false);
+  const watchdogRef = useRef<number | null>(null);
+  const switchToWhisperRef = useRef<(speaker: Speaker) => void>(() => {});
+
+  const clearWatchdog = useCallback(() => {
+    if (watchdogRef.current !== null) {
+      window.clearTimeout(watchdogRef.current);
+      watchdogRef.current = null;
+    }
+  }, []);
 
   const segmenter = useTranslationSegmenter({
     onCaption: (text) => {
@@ -75,22 +87,55 @@ export function TranslatorPage() {
       if (sp) sendTextFinal(sp, text);
     },
   });
+
   const speech = useSpeechRecognition({
     onInterim: (text) => {
+      gotResultRef.current = true;
+      clearWatchdog();
       lastTranscriptRef.current = text;
       segmenter.push(text, false);
     },
     onFinal: (text) => {
+      gotResultRef.current = true;
+      clearWatchdog();
       lastTranscriptRef.current = '';
       segmenter.push(text, true);
     },
+    onRestart: () => {
+      // Phiên Web Speech mới bắt đầu lại từ đầu -> reset segmenter, nếu không
+      // `confirmedWords` cũ sẽ cắt nhầm và LÀM MẤT CHỮ trên giao diện.
+      segmenter.reset();
+      lastTranscriptRef.current = '';
+    },
+    onError: () => {
+      const sp = speakerRef.current;
+      if (sp) switchToWhisperRef.current(sp);
+    },
   });
-  const useSpeechPath = mode === 'cloud' && speech.supported;
+
+  const useSpeechPath = mode === 'cloud' && speech.supported && !speechBroken;
+
+  // Chuyển lượt đang thu từ Web Speech sang Whisper audio (fallback an toàn).
+  const switchToWhisper = useCallback(
+    (speaker: Speaker) => {
+      clearWatchdog();
+      speech.stop();
+      segmenter.reset();
+      lastTranscriptRef.current = '';
+      setSpeechBroken(true); // các lượt sau dùng thẳng Whisper
+      void mic.start((audioBase64) => sendPartial(speaker, audioBase64));
+    },
+    [clearWatchdog, speech, segmenter, mic, sendPartial],
+  );
+  switchToWhisperRef.current = switchToWhisper;
 
   // Tự kết nối khi vào trang, tự đóng khi rời trang (zero-retention).
   useEffect(() => {
     connect();
-    return () => disconnect();
+    return () => {
+      disconnect();
+      clearWatchdog();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -98,6 +143,7 @@ export function TranslatorPage() {
     async (speaker: Speaker): Promise<void> => {
       if (activeSpeaker === speaker) {
         // Dừng
+        clearWatchdog();
         if (useSpeechPath) {
           speech.stop();
           const last = lastTranscriptRef.current;
@@ -118,13 +164,33 @@ export function TranslatorPage() {
         if (useSpeechPath) {
           segmenter.reset();
           lastTranscriptRef.current = '';
+          gotResultRef.current = false;
           speech.start(speaker === 'vn' ? 'vi-VN' : 'en-US');
+          // Watchdog: nếu ~2.5s không nhả chữ -> coi như Web Speech không chạy được,
+          // tự chuyển sang Whisper để luôn có phụ đề.
+          clearWatchdog();
+          watchdogRef.current = window.setTimeout(() => {
+            if (!gotResultRef.current && speakerRef.current === speaker) {
+              switchToWhisper(speaker);
+            }
+          }, 2500);
         } else {
           await mic.start((audioBase64) => sendPartial(speaker, audioBase64));
         }
       }
     },
-    [activeSpeaker, mic, sendPartial, sendTurn, useSpeechPath, speech, segmenter, setCaption],
+    [
+      activeSpeaker,
+      mic,
+      sendPartial,
+      sendTurn,
+      useSpeechPath,
+      speech,
+      segmenter,
+      setCaption,
+      clearWatchdog,
+      switchToWhisper,
+    ],
   );
 
   const isConnected = status === 'connected';
@@ -138,7 +204,7 @@ export function TranslatorPage() {
           <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
             {STATUS_LABEL[status]}
           </span>
-          <ModeToggle mode={mode} onChange={setMode} />
+          <ModeToggle mode={mode} onChange={setMode} disabled={activeSpeaker !== null} />
         </div>
 
         <LatencyHud
@@ -219,17 +285,20 @@ function StatusDot({ status }: { status: string }) {
 function ModeToggle({
   mode,
   onChange,
+  disabled = false,
 }: {
   mode: string;
   onChange: (mode: 'cloud' | 'mock') => void;
+  disabled?: boolean;
 }) {
   const next = mode === 'cloud' ? 'mock' : 'cloud';
   return (
     <button
       type="button"
       onClick={() => onChange(next)}
-      className="rounded-md border border-gray-300 px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-      title="Chuyển chế độ Cloud ⇄ Mock"
+      disabled={disabled}
+      className="rounded-md border border-gray-300 px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+      title={disabled ? 'Không đổi chế độ khi đang nói' : 'Chuyển chế độ Cloud ⇄ Mock'}
     >
       Chế độ: {mode === 'cloud' ? 'Cloud (Groq)' : 'Mock'}
     </button>
