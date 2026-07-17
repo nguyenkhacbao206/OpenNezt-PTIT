@@ -177,8 +177,15 @@
 <script>
 const $ = (id) => document.getElementById(id);
 let ws = null, audioCtx = null, stream = null, processor = null, sourceNode = null;
-let recording = false, chunks = [], inRate = 48000, curTurn = null;
-let partialTimer = null, awaitingPartial = false, lastPartialAt = 0;
+let recording = false, inRate = 48000, curTurn = null;
+// Cắt lời theo CỤM (VAD nhẹ theo năng lượng) để dịch + đọc cuốn chiếu khi đang nói.
+let segFrames = [], segMs = 0, silenceMs = 0, speaking = false;
+const SPEECH_RMS = 0.012;   // ngưỡng coi là đang nói (chỉnh nếu mic to/nhỏ)
+const SILENCE_MS = 650;     // ngừng bao lâu thì chốt cụm
+const MIN_SEG_MS = 500;     // cụm tối thiểu (bỏ tiếng động ngắn)
+const MAX_SEG_MS = 6000;    // cụm dài liền mạch -> cắt cưỡng bức
+// Hàng đợi phát audio: phát từng cụm theo thứ tự, không đè nhau.
+let audioQueue = [], audioBusy = false;
 
 // ---------- logging ----------
 function log(dir, type, data) {
@@ -214,7 +221,7 @@ function resetButtons() {
   $("connect").disabled = false; $("end").disabled = true;
   $("rec").disabled = true; $("fake").disabled = true;
   recording = false;
-  if (partialTimer) { clearInterval(partialTimer); partialTimer = null; }
+  audioQueue = []; audioBusy = false;
   if ("speechSynthesis" in window) window.speechSynthesis.cancel();
   hideLive();
   $("stageHint").style.display = "";
@@ -224,8 +231,6 @@ function resetButtons() {
 function handleEvent(msg) {
   const { type, data } = msg;
   log("in", type, type === "tts.audio" ? `<audio ${data.audio.length}b64>` : data);
-  // Gỡ cờ chờ khi partial/final có phản hồi -> cửa sổ kế tiếp được gửi (coalesce).
-  if (type === "nmt.partial" || type === "nmt.result" || type === "error") awaitingPartial = false;
   switch (type) {
     case "stt.partial":                    // transcript gốc tạm khi đang nói
       showLive(); $("liveSrc").textContent = data.text; break;
@@ -246,7 +251,7 @@ function handleEvent(msg) {
       // xong sẽ khớp lại nhịp chữ theo độ dài audio (chữ & tiếng chạy cùng lúc).
       startReveal(curTurn.querySelector(".dst"), data.dstText, 130);
       break;
-    case "tts.audio": playAudio(data.audio); break;
+    case "tts.audio": enqueueAudio(data.audio); break;
     case "metrics":
       if (curTurn) curTurn.querySelector(".meta").innerHTML =
         `<span class="badge">STT ${data.sttMs}ms</span><span class="badge">NMT ${data.nmtMs}ms</span><span class="badge">E2E ${data.e2eMs}ms</span>`;
@@ -264,18 +269,18 @@ function newTurn(speaker, lang) {
 }
 function showLive() { $("live").style.display = ""; }
 function hideLive() { $("live").style.display = "none"; $("liveSrc").textContent = ""; $("liveDst").textContent = ""; }
-function playAudio(b64) {
+// Hàng đợi audio: mỗi cụm (tts.audio) phát lần lượt, không đè lên cụm trước.
+function enqueueAudio(b64) { audioQueue.push(b64); if (!audioBusy) playNext(); }
+function playNext() {
+  const b64 = audioQueue.shift();
+  if (!b64) { audioBusy = false; return; }
+  audioBusy = true;
   const mime = b64.startsWith("UklGR") ? "audio/wav" : "audio/mpeg";   // WAV (mock) vs MP3 (edge-tts)
   const p = $("player");
   p.src = "data:" + mime + ";base64," + b64;
-  // Khớp nhịp hiện chữ theo độ dài audio -> chữ & tiếng chạy cùng lúc.
-  p.onloadedmetadata = () => { if (isFinite(p.duration) && p.duration > 0) repaceReveal(p.duration * 1000); };
-  p.play().catch((e) => log("err", "audio.play", e.message));
-}
-// Điều chỉnh nhịp reveal đang chạy để kết thúc quanh lúc audio kết thúc.
-function repaceReveal(durationMs) {
-  if (!reveal || durationMs < 400) return;
-  reveal.cadence = Math.max(50, Math.round(durationMs / Math.max(1, reveal.words.length)));
+  p.onended = playNext;
+  p.onerror = () => { log("err", "audio.play", "phát lỗi"); playNext(); };
+  p.play().catch(() => playNext());
 }
 
 // ---------- word-by-word reveal (debounce, real-time) ----------
@@ -347,43 +352,46 @@ async function startRec() {
   inRate = audioCtx.sampleRate;
   sourceNode = audioCtx.createMediaStreamSource(stream);
   processor = audioCtx.createScriptProcessor(4096, 1, 1);
-  chunks = [];
-  processor.onaudioprocess = (e) => chunks.push(new Float32Array(e.inputBuffer.getChannelData(0)));
+  segFrames = []; segMs = 0; silenceMs = 0; speaking = false;
+  processor.onaudioprocess = onAudioFrame;
   sourceNode.connect(processor); processor.connect(audioCtx.destination);
   recording = true;
-  awaitingPartial = false;
-  // Dịch DẦN khi đang nói: mỗi ~2.5s gửi cửa sổ audio tích luỹ (audio.partial).
-  partialTimer = setInterval(sendPartialWindow, 2500);
   $("stageHint").style.display = "none";
   // Khóa nguồn/đích/chế độ khi đang thu -> không đổi chiều dịch giữa chừng.
   $("src").disabled = $("dst").disabled = $("mode").disabled = true;
   $("rec").classList.add("active"); $("rec").textContent = "Dừng lại";
 }
 
-// Gửi cửa sổ audio đang lớn dần -> backend STT+NMT -> nmt.partial (bản dịch tạm).
-// Coalesce: chỉ gửi khi partial trước đã phản hồi (hoặc quá 8s) -> tránh dồn call.
-function sendPartialWindow() {
-  if (!recording || chunks.length === 0) return;
-  if (awaitingPartial && Date.now() - lastPartialAt < 8000) return;
-  const down = downsample(mergeChunks(chunks), inRate, 16000);
-  const wav = encodeWav(down, 16000);
-  awaitingPartial = true; lastPartialAt = Date.now();
-  send("audio.partial", { speaker: "me", audio: abToB64(wav) });
+// Phát hiện cụm theo năng lượng: gom frame khi đang nói, chốt cụm khi ngừng đủ lâu.
+function onAudioFrame(e) {
+  if (!recording) return;
+  const f = new Float32Array(e.inputBuffer.getChannelData(0));
+  const frameMs = (f.length / inRate) * 1000;
+  let sum = 0; for (let i = 0; i < f.length; i++) sum += f[i] * f[i];
+  const rms = Math.sqrt(sum / f.length);
+  if (rms > SPEECH_RMS) { speaking = true; silenceMs = 0; }
+  else if (speaking) { silenceMs += frameMs; }
+  if (speaking) { segFrames.push(f); segMs += frameMs; }
+  if ((speaking && silenceMs >= SILENCE_MS && segMs >= MIN_SEG_MS) || segMs >= MAX_SEG_MS) {
+    finalizeSegment();
+  }
+}
+// Gửi một CỤM đã nói -> backend STT+NMT+TTS -> một lượt + audio (phát cuốn chiếu).
+function finalizeSegment() {
+  const frames = segFrames;
+  segFrames = []; segMs = 0; silenceMs = 0; speaking = false;
+  if (!frames.length) return;
+  const wav = encodeWav(downsample(mergeChunks(frames), inRate, 16000), 16000);
+  send("audio.chunk", { speaker: "me", audio: abToB64(wav) });
 }
 function stopRec() {
   recording = false;
-  if (partialTimer) { clearInterval(partialTimer); partialTimer = null; }
   processor.disconnect(); sourceNode.disconnect();
   stream.getTracks().forEach((t) => t.stop());
   audioCtx.close();
   $("rec").classList.remove("active"); $("rec").textContent = "Nhấn để nói";
   $("src").disabled = $("dst").disabled = $("mode").disabled = false;   // mở khóa lại
-
-  // merge → downsample → WAV → base64
-  const merged = mergeChunks(chunks);
-  const down = downsample(merged, inRate, 16000);
-  const wav = encodeWav(down, 16000);
-  send("audio.chunk", { speaker: "me", audio: abToB64(wav) });
+  finalizeSegment();   // gửi nốt cụm cuối cùng
 }
 function mergeChunks(list) {
   const len = list.reduce((a, c) => a + c.length, 0);
