@@ -4,6 +4,7 @@
 export const ROUTE_PATHS = {
   HOME: '/',
   ABOUT: '/about',
+  TRANSLATOR: '/translator',
   DASHBOARD: '/dashboard',
   LOGIN: '/login',
   NOT_FOUND: '*',

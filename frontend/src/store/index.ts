@@ -12,15 +12,20 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { createAuthSlice, type AuthSlice } from './slices/authSlice';
 import { createUserSlice, type UserSlice } from './slices/userSlice';
+import {
+  createTranslatorSlice,
+  type TranslatorSlice,
+} from './slices/translatorSlice';
 
 /** Kiểu store tổng — hợp nhất mọi slice. */
-export type AppStore = AuthSlice & UserSlice;
+export type AppStore = AuthSlice & UserSlice & TranslatorSlice;
 
 export const useAppStore = create<AppStore>()(
   devtools(
     (...args) => ({
       ...createAuthSlice(...args),
       ...createUserSlice(...args),
+      ...createTranslatorSlice(...args),
     }),
     { name: 'AppStore' },
   ),

@@ -13,6 +13,8 @@ interface AppEnv {
   appName: string;
   appEnv: AppEnvironment;
   apiTimeout: number;
+  /** WebSocket của backend phiên dịch real-time (STT/NMT/TTS). */
+  wsUrl: string;
 }
 
 /** Lấy biến bắt buộc — ném lỗi nếu rỗng/undefined. */
@@ -43,6 +45,7 @@ export const env: AppEnv = {
   appName: import.meta.env.VITE_APP_NAME ?? 'Base Web',
   appEnv: parseAppEnv(import.meta.env.VITE_APP_ENV),
   apiTimeout: parseIntEnv(import.meta.env.VITE_API_TIMEOUT, 15000),
+  wsUrl: requireEnv('VITE_WS_URL', import.meta.env.VITE_WS_URL),
 };
 
 export const isProduction = env.appEnv === 'production';

@@ -10,8 +10,10 @@ import { ROUTE_PATHS } from './paths';
 
 const HomePage = lazy(() => import('@/pages/Home'));
 const AboutPage = lazy(() => import('@/pages/About'));
+const TranslatorPage = lazy(() => import('@/pages/Translator'));
 
 export const publicRoutes: RouteObject[] = [
   { index: true, Component: HomePage },
   { path: ROUTE_PATHS.ABOUT, Component: AboutPage },
+  { path: ROUTE_PATHS.TRANSLATOR, Component: TranslatorPage },
 ];

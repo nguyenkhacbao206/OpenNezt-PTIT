@@ -16,11 +16,11 @@ export function HomePage() {
         cấu hình Axios chuyên nghiệp và sẵn sàng mở rộng.
       </p>
       <div className="flex justify-center gap-3">
-        <Link to="/dashboard">
-          <Button variant="primary">Vào Dashboard</Button>
+        <Link to="/translator">
+          <Button variant="primary">🎙 Phiên dịch trực tiếp</Button>
         </Link>
-        <Link to="/about">
-          <Button variant="ghost">Tìm hiểu thêm</Button>
+        <Link to="/dashboard">
+          <Button variant="ghost">Vào Dashboard</Button>
         </Link>
       </div>
     </section>
