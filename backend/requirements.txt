@@ -19,7 +19,7 @@ numpy>=1.24              # audio buffers
 sherpa-onnx>=1.10        # app/providers/sherpa_engine.py
 huggingface_hub>=0.23    # tools/download_sherpa_models.py (fetch gipformer)
 
-# --- Cloud provider HTTP calls (CloudSTTProvider / CloudNMTProvider via Gemini) ---
+# --- Cloud provider HTTP calls (CloudSTTProvider / CloudNMTProvider via Groq) ---
 httpx>=0.27
 
 # --- Real TTS: Piper local voices (OfflineTTSProvider, used in cloud+offline) ---

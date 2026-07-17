@@ -9,7 +9,6 @@ qua WebSocket về backend, dùng **Groq free tier** (Whisper STT + Llama NMT).
 2. Điền vào `backend/.env`:
    ```env
    DEFAULT_MODE=cloud
-   CLOUD_PROVIDER=groq
    GROQ_API_KEY=gsk_...cua_ban
    ```
 3. Kiểm tra key trước khi chạy:
@@ -60,7 +59,7 @@ Kiểm tra `frontend/.env` có: `VITE_WS_URL=ws://localhost:8000/ws`.
    → stt.final / nmt.result / metrics → hiển thị real-time trên UI
 ```
 
-- Backend chọn vendor qua `CLOUD_PROVIDER` (`groq` mặc định | `gemini`). Thiếu key → tự fallback mock.
+- Cloud STT+NMT chạy qua Groq. Thiếu key → tự fallback mock.
 - Zero-retention: audio/text chỉ trong RAM, xoá khi đóng phiên.
 
 ## Công cụ kiểm thử nhanh (không cần frontend)
@@ -76,6 +75,6 @@ python tools/talk_translate.py --mode cloud --src vi --tgt en   # mic CLI qua se
 | Triệu chứng | Cách xử lý |
 |---|---|
 | UI báo "Lỗi kết nối WebSocket" | Backend chưa chạy, hoặc sai `VITE_WS_URL`. |
-| Bản dịch trông giả/lặp | Key trống → fallback mock. Điền `GROQ_API_KEY`, đặt `CLOUD_PROVIDER=groq`, khởi động lại server. |
+| Bản dịch trông giả/lặp | Key trống → fallback mock. Điền `GROQ_API_KEY`, khởi động lại server. |
 | `error [stt_failed] ... 401` | Key Groq sai. Lấy lại tại console.groq.com/keys. |
 | Không thu được tiếng | Chưa cấp quyền micro cho trình duyệt, hoặc sai thiết bị mặc định. |

@@ -63,28 +63,9 @@ class Settings(BaseSettings):
     # Speaking rate. >1.0 = slower, <1.0 = faster. Applied to every language.
     piper_length_scale: float = 1.0
 
-    # --- Cloud STT (e.g. OpenAI Whisper API, Google STT, ...) -------------
-    stt_api_key: str | None = None
-    stt_api_url: str | None = None
-
-    # --- Cloud NMT (e.g. Google Translate, DeepL, OpenAI, ...) ------------
-    nmt_api_key: str | None = None
-    nmt_api_url: str | None = None
-
     # --- Cloud TTS (e.g. ElevenLabs, Google TTS, Azure, ...) --------------
     tts_api_key: str | None = None
     tts_api_url: str | None = None
-
-    # --- Gemini (Google AI Studio) model for cloud STT + NMT -------------
-    # The SAME Google AI Studio key goes in both stt_api_key and nmt_api_key.
-    # This selects the model used for both transcription and translation.
-    gemini_model: str = "gemini-2.0-flash"
-
-    # --- Cloud backend selection -----------------------------------------
-    # Which vendor `mode=cloud` uses: "groq" (default, generous free tier) or
-    # "gemini". Both do STT + bidirectional NMT; providers fall back to mock
-    # when the selected vendor's key is missing.
-    cloud_provider: str = "groq"
 
     # --- Groq (console.groq.com) — free tier STT (Whisper) + NMT (LLM) ---
     # `groq_api_key` is the shared/default key. To split rate limits, set a

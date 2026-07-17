@@ -79,7 +79,7 @@ def main() -> None:
         except (KeyError, IndexError):
             text = "(không đọc được nội dung nhưng HTTP 200)"
         print(f"✅ KEY DÙNG ĐƯỢC. Dịch thử 'Xin chào...' -> {text!r}")
-        print("   → Đặt CLOUD_PROVIDER=groq trong .env rồi chạy lại server.")
+        print("   → Điền key vào GROQ_API_KEY (hoặc GROQ_STT/NMT_API_KEY) trong .env.")
         return
 
     err = body.get("error", {})

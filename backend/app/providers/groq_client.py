@@ -1,8 +1,7 @@
 """Async helpers over the Groq OpenAI-compatible REST API.
 
-Shared by the cloud STT and NMT providers when `CLOUD_PROVIDER=groq`. Groq's
-free tier serves Whisper for speech-to-text and Llama chat models for
-translation, both behind one `gsk_...` key.
+Shared by the cloud STT and NMT providers. Groq's free tier serves Whisper for
+speech-to-text and Llama chat models for translation, behind `gsk_...` key(s).
 
 Request-building and response-parsing helpers are pure functions (unit-testable
 without network or a key); only `_transcribe`/`_chat` do I/O.

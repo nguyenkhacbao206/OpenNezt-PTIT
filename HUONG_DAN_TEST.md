@@ -122,5 +122,5 @@ Chạy `uvicorn` + `npm run dev`, mở `http://localhost:3000/translator` bằng
 | `⚠ timeout chờ server` | Server chưa chạy ở `localhost:8000`. |
 | `error [stt_failed] ... 401` | Key Groq sai (Tầng 1 để soi). |
 | `429` giữa lúc streaming | Chạm rate limit free tier — giảm `--windows`, hoặc giãn nhịp (nói câu ngắn hơn). |
-| Bản dịch trông giả/lặp | Key trống → fallback mock. Điền `GROQ_API_KEY`, `CLOUD_PROVIDER=groq`, khởi động lại server. |
+| Bản dịch trông giả/lặp | Key trống → fallback mock. Điền `GROQ_API_KEY`, khởi động lại server. |
 | Trình duyệt không xin quyền mic | Phải chạy qua `http://localhost` (không mở file HTML trực tiếp). |
