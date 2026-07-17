@@ -61,3 +61,69 @@ def test_extract_text_empty_parts_raises():
     resp = {"candidates": [{"content": {"parts": [{"text": ""}]}, "finishReason": "SAFETY"}]}
     with pytest.raises(RuntimeError):
         gc.extract_text(resp)
+
+
+def test_extract_text_non_dict_error_raises():
+    with pytest.raises(RuntimeError):
+        gc.extract_text({"error": "flat string"})
+
+
+def test_generate_wraps_transport_error():
+    import asyncio
+
+    import httpx
+
+    class FakeClient:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *exc):
+            return False
+
+        async def post(self, *args, **kwargs):
+            raise httpx.ConnectError("boom")
+
+    class FakeAsyncClientCtor:
+        def __call__(self, *args, **kwargs):
+            return FakeClient()
+
+    orig = gc.httpx.AsyncClient
+    gc.httpx.AsyncClient = FakeAsyncClientCtor()
+    try:
+        with pytest.raises(RuntimeError, match="Gemini request failed"):
+            asyncio.run(gc._generate("k", "m", {}))
+    finally:
+        gc.httpx.AsyncClient = orig
+
+
+def test_generate_wraps_bad_json():
+    import asyncio
+
+    class FakeResp:
+        status_code = 200
+        text = "oops"
+
+        def json(self):
+            raise ValueError("bad json")
+
+    class FakeClient:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *exc):
+            return False
+
+        async def post(self, *args, **kwargs):
+            return FakeResp()
+
+    class FakeAsyncClientCtor:
+        def __call__(self, *args, **kwargs):
+            return FakeClient()
+
+    orig = gc.httpx.AsyncClient
+    gc.httpx.AsyncClient = FakeAsyncClientCtor()
+    try:
+        with pytest.raises(RuntimeError, match="non-JSON"):
+            asyncio.run(gc._generate("k", "m", {}))
+    finally:
+        gc.httpx.AsyncClient = orig

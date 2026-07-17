@@ -80,7 +80,8 @@ def extract_text(response_json: dict) -> str:
     object, no candidates (e.g. a prompt-level safety block), or empty parts.
     """
     if "error" in response_json:
-        msg = response_json["error"].get("message", "unknown error")
+        err = response_json["error"]
+        msg = err.get("message", "unknown error") if isinstance(err, dict) else str(err)
         raise RuntimeError(f"Gemini API error: {msg}")
     candidates = response_json.get("candidates") or []
     if not candidates:
@@ -97,11 +98,17 @@ def extract_text(response_json: dict) -> str:
 async def _generate(api_key: str, model: str, payload: dict) -> dict:
     """POST a payload to generateContent and return the parsed JSON."""
     url = _ENDPOINT.format(model=model)
-    async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
-        resp = await client.post(url, params={"key": api_key}, json=payload)
+    try:
+        async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
+            resp = await client.post(url, params={"key": api_key}, json=payload)
+    except httpx.HTTPError as e:
+        raise RuntimeError(f"Gemini request failed: {e}") from e
     if resp.status_code != 200:
         raise RuntimeError(f"Gemini HTTP {resp.status_code}: {resp.text[:200]}")
-    return resp.json()
+    try:
+        return resp.json()
+    except ValueError as e:
+        raise RuntimeError(f"Gemini returned a non-JSON body: {resp.text[:200]}") from e
 
 
 async def transcribe_audio(
