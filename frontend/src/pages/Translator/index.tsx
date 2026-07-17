@@ -9,7 +9,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui';
 import { useMic, useWordReveal, useSpeechRecognition, useTranslationSegmenter } from '@/components/hooks';
-import { cn } from '@/components/utils';
+import { cn, dbg } from '@/components/utils';
 import { useAppStore } from '@/store';
 import type { PartialLine, Speaker, TranslatorTurn } from '@/types';
 
@@ -89,11 +89,17 @@ export function TranslatorPage() {
     },
     onPartial: (text) => {
       const sp = speakerRef.current;
-      if (sp) sendTextPartial(sp, text);
+      if (sp) {
+        dbg('seg → text.partial', text);
+        sendTextPartial(sp, text);
+      }
     },
     onFinal: (text) => {
       const sp = speakerRef.current;
-      if (sp) sendTextFinal(sp, text);
+      if (sp) {
+        dbg('seg → text.final (confirm)', text);
+        sendTextFinal(sp, text);
+      }
     },
   });
 
@@ -131,6 +137,7 @@ export function TranslatorPage() {
       speech.stop();
       segmenter.reset();
       lastTranscriptRef.current = '';
+      dbg('⚠ switchToWhisper (Web Speech lỗi/không nhả chữ)', speaker);
       setSpeechBroken(true); // các lượt sau dùng thẳng Whisper
       void mic.start((audioBase64) => sendPartial(speaker, audioBase64), canSendPartial);
     },
@@ -168,6 +175,7 @@ export function TranslatorPage() {
         speakerRef.current = null;
       } else if (activeSpeaker === null) {
         // Bắt đầu
+        dbg('▶ start talk', speaker, useSpeechPath ? 'via Web Speech' : 'via Whisper audio');
         setActiveSpeaker(speaker);
         speakerRef.current = speaker;
         if (useSpeechPath) {
@@ -180,6 +188,7 @@ export function TranslatorPage() {
           clearWatchdog();
           watchdogRef.current = window.setTimeout(() => {
             if (!gotResultRef.current && speakerRef.current === speaker) {
+              dbg('⏱ watchdog: Web Speech không nhả chữ 2.5s → fallback');
               switchToWhisper(speaker);
             }
           }, 2500);

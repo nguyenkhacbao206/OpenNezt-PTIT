@@ -7,6 +7,7 @@
  */
 import type { StateCreator } from 'zustand';
 import { TranslatorSocket } from '@/services';
+import { dbg } from '@/components/utils';
 import { env } from '@/config/env';
 import type {
   ConnectionStatus,
@@ -97,6 +98,7 @@ export const createTranslatorSlice: StateCreator<
   };
 
   const handleEvent = (event: ServerEvent): void => {
+    dbg('← recv', event.type);
     switch (event.type) {
       case 'session.started':
         set({ translatorMode: event.data.mode });
@@ -187,9 +189,11 @@ export const createTranslatorSlice: StateCreator<
     sendPartial: (speaker, audioBase64) => {
       const socket = ensureDirection(speaker);
       if (!socket) return;
+      const now = Date.now();
+      dbg('→ send audio.partial', `Δ${now - get()._lastPartialAt}ms`, `${audioBase64.length}b`);
       socket.send({ type: 'audio.partial', data: { speaker, audio: audioBase64 } });
       // Đánh dấu đang chờ phản hồi -> tick sau bị coalesce cho tới khi nmt.* về.
-      set({ awaitingPartial: true, _lastPartialAt: Date.now() });
+      set({ awaitingPartial: true, _lastPartialAt: now });
     },
 
     sendTurn: (speaker, audioBase64) => {

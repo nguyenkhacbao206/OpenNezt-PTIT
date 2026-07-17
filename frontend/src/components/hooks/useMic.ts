@@ -6,7 +6,7 @@
  * API nên nằm ở hook (side-effect), phần đóng gói WAV thuần ở `utils/audio`.
  */
 import { useCallback, useRef, useState } from 'react';
-import { encodeWavPcm16, arrayBufferToBase64 } from '@/components/utils';
+import { encodeWavPcm16, arrayBufferToBase64, dbg } from '@/components/utils';
 
 /** Tần số lấy mẫu mục tiêu (Whisper hoạt động ở 16 kHz). */
 const TARGET_SAMPLE_RATE = 16000;
@@ -51,10 +51,10 @@ async function blobToWav16kBase64(blob: Blob): Promise<string | null> {
 }
 
 /**
- * Chu kỳ xử lý streaming (ms). Giãn về ~3s để giảm số lần gọi model, tránh
+ * Chu kỳ xử lý streaming (ms). Giãn về ~2s để giảm số lần gọi model, tránh
  * rate-limit (429). Kết hợp với cổng `canSend` (chỉ 1 request in-flight).
  */
-const PROCESS_INTERVAL_MS = 3000;
+const PROCESS_INTERVAL_MS = 2000;
 
 /** Callback nhận WAV base64 của cửa sổ audio đang lớn dần (streaming). */
 export type OnPartial = (audioBase64: string) => void;
@@ -95,15 +95,14 @@ export function useMic(): UseMic {
       const recorder = new MediaRecorder(stream);
       recorder.ondataavailable = (ev: BlobEvent) => {
         if (ev.data.size > 0) chunksRef.current.push(ev.data);
-        // Streaming: mỗi ~3s giải mã cửa sổ tích luỹ và gửi partial.
+        if (!onPartial) return;
+        // Streaming: mỗi ~2s giải mã cửa sổ tích luỹ và gửi partial.
         // Bỏ qua nếu đang giải mã dở HOẶC còn request đang chờ phản hồi (coalesce)
         // -> tránh dồn call model gây rate-limit.
-        if (
-          onPartial &&
-          !partialBusyRef.current &&
-          (canSend?.() ?? true) &&
-          chunksRef.current.length > 0
-        ) {
+        const busy = partialBusyRef.current;
+        const allowed = canSend?.() ?? true;
+        if (!busy && allowed && chunksRef.current.length > 0) {
+          dbg('mic tick → send partial', { chunks: chunksRef.current.length });
           partialBusyRef.current = true;
           const window = new Blob(chunksRef.current, {
             type: recorder.mimeType || 'audio/webm',
@@ -116,6 +115,8 @@ export function useMic(): UseMic {
             .finally(() => {
               partialBusyRef.current = false;
             });
+        } else {
+          dbg('mic tick ⏸ skip', { decoding: busy, awaitingResponse: !allowed });
         }
       };
       // timeslice -> ondataavailable đều đặn (~3s) để xử lý cửa sổ khi đang nói.
