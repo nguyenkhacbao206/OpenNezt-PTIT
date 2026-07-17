@@ -26,15 +26,16 @@ def language_name(code: str) -> str:
 
 
 def build_translate_messages(text: str, source_lang: str, target_lang: str) -> list[dict]:
-    """Build OpenAI-style chat messages for translating text (both directions)."""
+    """Build OpenAI-style chat messages for translating text (both directions).
+
+    Basic, context-free translation prompt (no interpreter persona, no
+    business-context or entity-preservation instructions).
+    """
     src = language_name(source_lang)
     tgt = language_name(target_lang)
     system = (
-        f"You are a professional {src}-to-{tgt} interpreter for business meetings. "
-        "Translate by meaningful phrases, not word-by-word. Preserve names, numbers, "
-        "dates, company names, and technical terms exactly as given. Keep it "
-        "business-accurate, natural and concise. Return ONLY the translation — no "
-        "commentary, quotes, or markdown."
+        f"Translate the following {src} text into {tgt}. "
+        "Return only the translation, with no explanations, notes, or quotes."
     )
     return [
         {"role": "system", "content": system},
@@ -43,31 +44,9 @@ def build_translate_messages(text: str, source_lang: str, target_lang: str) -> l
 
 
 def build_partial_translate_messages(text: str, source_lang: str, target_lang: str) -> list[dict]:
-    """Build chat messages for translating a partial (still-being-spoken) segment.
-
-    Real-time simultaneous-interpreter prompt: translate the partial by meaning
-    with lowest latency, keep prior content stable, and never alter critical info.
-    """
-    src = language_name(source_lang)
-    tgt = language_name(target_lang)
-    system = (
-        f"You are a professional real-time simultaneous interpreter ({src} to {tgt}) "
-        "for business meetings. The input is a PARTIAL speech transcript from a "
-        "streaming recognizer and may be an unfinished phrase.\n"
-        "- Translate by MEANING, not word order; sound like a human interpreter and "
-        "preserve speaker intent and business context.\n"
-        "- Translate only what has actually been said so far — do not guess or "
-        "complete the sentence. Prefer a slightly incomplete but useful translation "
-        "over waiting for perfect information.\n"
-        "- Never alter: names, company names, product names, dates, numbers, "
-        "financial values, or technical terms.\n"
-        "- Output ONLY the translated text — no explanations, notes, reasoning, "
-        "quotes, formatting, or metadata."
-    )
-    return [
-        {"role": "system", "content": system},
-        {"role": "user", "content": text},
-    ]
+    """Messages for a partial segment — same basic prompt as the full translate
+    (no prediction / no context-aware interpreter persona)."""
+    return build_translate_messages(text, source_lang, target_lang)
 
 
 def extract_transcript(response_json: dict) -> str:
