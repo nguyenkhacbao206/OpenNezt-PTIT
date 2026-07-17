@@ -1,0 +1,22 @@
+# Render.com blueprint — one-service Docker web app (FastAPI + WebSocket).
+# Serves the demo console at /app and the WebSocket at /ws.
+# Secrets (GROQ_*) are set in the Render dashboard, NOT committed (sync: false).
+services:
+  - type: web
+    name: vi-en-translator-demo
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    healthCheckPath: /
+    envVars:
+      - key: DEFAULT_MODE
+        value: cloud
+      - key: TTS_ENGINE
+        value: edge
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GROQ_STT_API_KEY
+        sync: false
+      - key: GROQ_NMT_API_KEY
+        sync: false

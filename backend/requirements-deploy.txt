@@ -1,0 +1,9 @@
+# Minimal deps for the CLOUD demo deploy (Groq STT/NMT + edge-tts TTS).
+# Excludes the heavy/offline packages (faster-whisper, sherpa-onnx, piper,
+# sounddevice) — the hosted demo runs in cloud mode only.
+fastapi>=0.110
+uvicorn[standard]>=0.29
+pydantic-settings>=2.2
+httpx>=0.27
+edge-tts>=6.1
+websockets>=12.0
