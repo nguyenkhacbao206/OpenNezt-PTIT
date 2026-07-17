@@ -19,7 +19,9 @@ numpy>=1.24              # audio buffers
 sherpa-onnx>=1.10        # app/providers/sherpa_engine.py
 huggingface_hub>=0.23    # tools/download_sherpa_models.py (fetch gipformer)
 
+# --- Cloud provider HTTP calls (CloudSTTProvider / CloudNMTProvider via Gemini) ---
+httpx>=0.27
+
 # --- Reserved for the rest of the real pipeline (uncomment when wiring) ---
-# httpx>=0.27            # cloud provider HTTP calls
 # transformers>=4.40     # OfflineNMTProvider (NLLB)
 # piper-tts              # OfflineTTSProvider (TTS)

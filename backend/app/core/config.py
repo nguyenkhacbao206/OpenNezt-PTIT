@@ -63,6 +63,11 @@ class Settings(BaseSettings):
     tts_api_key: str | None = None
     tts_api_url: str | None = None
 
+    # --- Gemini (Google AI Studio) model for cloud STT + NMT -------------
+    # The SAME Google AI Studio key goes in both stt_api_key and nmt_api_key.
+    # This selects the model used for both transcription and translation.
+    gemini_model: str = "gemini-2.0-flash"
+
     @property
     def cors_origin_list(self) -> list[str]:
         """Parse the comma-separated CORS origins into a list."""
