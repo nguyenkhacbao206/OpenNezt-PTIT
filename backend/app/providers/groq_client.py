@@ -43,15 +43,26 @@ def build_translate_messages(text: str, source_lang: str, target_lang: str) -> l
 
 
 def build_partial_translate_messages(text: str, source_lang: str, target_lang: str) -> list[dict]:
-    """Build chat messages for translating a partial (still-being-spoken) segment."""
+    """Build chat messages for translating a partial (still-being-spoken) segment.
+
+    Real-time simultaneous-interpreter prompt: translate the partial by meaning
+    with lowest latency, keep prior content stable, and never alter critical info.
+    """
     src = language_name(source_lang)
     tgt = language_name(target_lang)
     system = (
-        f"You are a live {src}-to-{tgt} interpreter for a business meeting. The text "
-        "is a segment that may be an unfinished phrase. Translate by meaningful "
-        "phrases (NOT word-by-word) only what has actually been said — do not guess "
-        "or complete the sentence. Preserve names, numbers, dates, company names, and "
-        "technical terms exactly. Return ONLY the translation."
+        f"You are a professional real-time simultaneous interpreter ({src} to {tgt}) "
+        "for business meetings. The input is a PARTIAL speech transcript from a "
+        "streaming recognizer and may be an unfinished phrase.\n"
+        "- Translate by MEANING, not word order; sound like a human interpreter and "
+        "preserve speaker intent and business context.\n"
+        "- Translate only what has actually been said so far — do not guess or "
+        "complete the sentence. Prefer a slightly incomplete but useful translation "
+        "over waiting for perfect information.\n"
+        "- Never alter: names, company names, product names, dates, numbers, "
+        "financial values, or technical terms.\n"
+        "- Output ONLY the translated text — no explanations, notes, reasoning, "
+        "quotes, formatting, or metadata."
     )
     return [
         {"role": "system", "content": system},
