@@ -68,6 +68,18 @@ export interface AudioPartialMessage {
   data: { speaker: Speaker; audio: string };
 }
 
+export interface TextPartialMessage {
+  type: 'text.partial';
+  /** Đoạn text chưa chốt (từ Web Speech) để dịch xem trước. */
+  data: { speaker: Speaker; text: string };
+}
+
+export interface TextFinalMessage {
+  type: 'text.final';
+  /** Đoạn text đã chốt (cụm ổn định / trọn câu) để dịch chính thức. */
+  data: { speaker: Speaker; text: string };
+}
+
 export interface ConfigUpdateMessage {
   type: 'config.update';
   data: { mode?: TranslatorMode; ttsOn?: boolean; glossaryId?: string };
@@ -82,6 +94,8 @@ export type ClientMessage =
   | SessionStartMessage
   | AudioChunkMessage
   | AudioPartialMessage
+  | TextPartialMessage
+  | TextFinalMessage
   | ConfigUpdateMessage
   | SessionEndMessage;
 
