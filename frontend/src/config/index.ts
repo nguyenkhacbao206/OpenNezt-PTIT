@@ -1,9 +1,4 @@
-/** Barrel export cho tầng config. */
-export { default as httpClient, tokenStorage } from './axios';
-export { env, isProduction, isDevelopment } from './env';
-export {
-  type ThemeMode,
-  getStoredTheme,
-  applyTheme,
-  initTheme,
-} from './theme';
+export { env } from './env';
+export { api, isApiError, STORAGE_KEYS } from './axios';
+export { theme, colors, spacing, fontSize, radius } from './theme';
+export type { Theme, Colors, Spacing } from './theme';

@@ -1,33 +1,32 @@
 /**
- * Kiểu dữ liệu liên quan tới User (tài khoản người dùng).
+ * User domain types.
  */
 
-/** Vai trò người dùng trong hệ thống. */
-export type UserRole = 'admin' | 'manager' | 'user' | 'guest';
+export type UserRole = 'admin' | 'user' | 'guest';
 
-/** Thông tin người dùng đầy đủ. */
+/** Authenticated account profile. */
 export interface User {
   id: string;
   email: string;
   fullName: string;
-  avatarUrl: string | null;
+  avatarUrl?: string;
   role: UserRole;
-  isActive: boolean;
-  createdAt: string; // ISO 8601
-  updatedAt: string; // ISO 8601
+  createdAt: string;
+  updatedAt: string;
 }
 
-/** Payload cập nhật hồ sơ cá nhân (các field đều tuỳ chọn). */
-export interface UpdateUserProfilePayload {
-  fullName?: string;
-  avatarUrl?: string | null;
-}
-
-/** Tham số truy vấn danh sách người dùng. */
-export interface UserListItem {
-  id: string;
+/** Login request payload. */
+export interface LoginPayload {
   email: string;
-  fullName: string;
-  role: UserRole;
-  isActive: boolean;
+  password: string;
 }
+
+/** Register request payload. */
+export interface RegisterPayload {
+  fullName: string;
+  email: string;
+  password: string;
+}
+
+/** Editable subset of the profile. */
+export type UpdateProfilePayload = Partial<Pick<User, 'fullName' | 'avatarUrl'>>;

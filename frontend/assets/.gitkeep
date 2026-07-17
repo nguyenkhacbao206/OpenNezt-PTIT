@@ -1,0 +1,2 @@
+# Static assets live here: images/, fonts/, icons/.
+# Expo expects icon.png, splash.png, adaptive-icon.png and favicon.png (see app.json).
