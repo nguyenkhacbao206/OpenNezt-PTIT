@@ -55,6 +55,12 @@ export interface TranslatorSlice {
   sendPartial: (speaker: Speaker, audioBase64: string) => void;
   /** Chốt lượt nói khi dứt câu -> bản dịch chính thức. */
   sendTurn: (speaker: Speaker, audioBase64: string) => void;
+  /** Gửi đoạn text chưa chốt (Web Speech) -> dịch xem trước. */
+  sendTextPartial: (speaker: Speaker, text: string) => void;
+  /** Gửi đoạn text đã chốt -> dịch chính thức (nmt.result). */
+  sendTextFinal: (speaker: Speaker, text: string) => void;
+  /** Đặt phụ đề gốc cục bộ (từ Web Speech, Cloud mode); null để xoá. */
+  setCaption: (speaker: Speaker, text: string | null) => void;
   clearTurns: () => void;
 }
 
@@ -179,6 +185,21 @@ export const createTranslatorSlice: StateCreator<
       if (!socket) return;
       socket.send({ type: 'audio.chunk', data: { speaker, audio: audioBase64 } });
     },
+
+    sendTextPartial: (speaker, text) => {
+      const socket = ensureDirection(speaker);
+      if (!socket) return;
+      socket.send({ type: 'text.partial', data: { speaker, text } });
+    },
+
+    sendTextFinal: (speaker, text) => {
+      const socket = ensureDirection(speaker);
+      if (!socket) return;
+      socket.send({ type: 'text.final', data: { speaker, text } });
+    },
+
+    setCaption: (speaker, text) =>
+      set({ liveOriginal: text ? { speaker, text } : null }),
 
     clearTurns: () =>
       set({ turns: [], liveOriginal: null, liveTranslation: null, metrics: null }),
