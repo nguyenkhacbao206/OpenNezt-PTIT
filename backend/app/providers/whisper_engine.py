@@ -79,13 +79,15 @@ class WhisperEngine:
         log.info("Faster-Whisper model loaded.")
 
     def transcribe_array(
-        self, audio: np.ndarray, language: str | None = None
+        self, audio: np.ndarray, language: str | None = None, task: str = "transcribe"
     ) -> Transcription:
         """Transcribe a float32 mono waveform sampled at 16 kHz.
 
         Args:
             audio: 1-D float32 numpy array in [-1, 1] at 16 kHz.
             language: "vi" / "en" to force, or None to auto-detect.
+            task: "transcribe" (text in the spoken language) or "translate"
+                (Whisper's built-in any-language -> English translation).
         """
         self.load()
         assert self._model is not None
@@ -96,6 +98,7 @@ class WhisperEngine:
         segments_iter, info = self._model.transcribe(
             audio,
             language=lang,
+            task=task,
             vad_filter=True,  # skip silence for cleaner segments
             beam_size=5,
         )

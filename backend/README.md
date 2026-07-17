@@ -29,7 +29,10 @@ backend/
       base.py               # STTProvider / NMTProvider / TTSProvider (abstract)
       mock.py               # working fake providers
       cloud.py              # API stubs (env keys, mock fallback)
-      offline.py            # local-model stubs (plug models here)
+      offline.py            # local-model stubs (Whisper STT wired; NLLB/Piper TODO)
+      sherpa.py             # sherpa-onnx STT provider (gipformer VI + zipformer EN)
+      sherpa_engine.py      # per-language sherpa-onnx recognizer loader
+      whisper_engine.py     # shared Faster-Whisper engine
       factory.py            # mode -> provider trio
     core/
       session.py            # SessionState + zero-retention cleanup
@@ -95,6 +98,85 @@ Output: a Markdown transcript at `transcripts/transcript-<timestamp>.md` (or
 Options: `--lang vi|en|auto`, `--model tiny|base|small|medium`. Audio stays in
 RAM only — no audio file is written to disk.
 
+## Sherpa-onnx STT — gipformer (VI) + zipformer (EN)
+
+An alternative offline STT engine using **k2/sherpa-onnx** Zipformer transducers,
+one **independent model per language** (there is no multilingual model):
+
+- **Vietnamese** → [gipformer](https://github.com/ggroup-ai-lab/gipformer)
+  (65M params, robust on noisy/telephony audio, N/C/S accents)
+- **English** → [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx) zipformer-en
+
+It runs behind the same `STTProvider` contract, so NMT/TTS and the WS/UI code
+are untouched. Because each language is its own model, the source language must
+be explicit (no `auto`) — which fits the "each machine has a fixed spoken
+language" meeting flow.
+
+```bash
+cd backend
+pip install -r requirements.txt          # installs sherpa-onnx + huggingface_hub
+
+# 1) Download the models into models/vi and models/en
+python tools/download_sherpa_models.py            # both, or --langs vi
+
+# 2a) Try it straight from the mic (VI model)
+python tools/record_stt.py --engine sherpa --lang vi
+
+# 2b) Or use it in the server pipeline: set in .env then run uvicorn
+#     STT_ENGINE=sherpa
+#     DEFAULT_MODE=offline
+```
+
+Config (`.env`): `STT_ENGINE=sherpa|whisper`, `SHERPA_MODELS_DIR`,
+`SHERPA_USE_INT8` (smaller/faster), `SHERPA_NUM_THREADS`, `SHERPA_DECODING_METHOD`
+(`greedy_search` | `modified_beam_search`). Adding a new low-resource language =
+drop its sherpa-onnx transducer folder under `models/<code>/` and pass
+`--lang <code>` (the engine auto-discovers encoder/decoder/joiner/tokens).
+
+## Text-to-Speech — Piper (real local voices)
+
+The translated text is spoken back with **Piper** offline neural voices, one
+**independent voice per language** (VI + EN). TTS is **decoupled from the
+session mode**: the same voice engine runs whether STT/NMT are `cloud` (Groq /
+Gemini) or `offline`, so a cloud session still returns real audio. The clip is
+always synthesized from the exact translated text (`dstText`) in the target
+language, so the voice matches the text by construction.
+
+```bash
+cd backend
+pip install -r requirements.txt          # installs piper-tts (bundles espeak-ng)
+
+# 1) Download the voices into models/tts/vi and models/tts/en
+python tools/download_piper_models.py            # both, or --langs vi
+
+# 2) It is on by default (TTS_ENGINE=piper). Turn it off per session with
+#    config.update { "ttsOn": false }, or globally with TTS_ENGINE=mock.
+```
+
+The **voice follows the text, not the session's target language**: the engine
+detects whether the text to speak is Vietnamese or English (`detect_lang`) and
+picks that voice — so Vietnamese output is always read by the VI voice and
+English by the EN voice, even if the `targetLang` hint disagrees.
+
+The engine reads **exactly the text**: input is normalized first (markdown,
+emoji and stray symbols are stripped so they are never spoken), then split at
+punctuation so each clause gets a controlled pause — `,`≈275ms, `;`≈425ms,
+`. ! ?`≈650ms, line break≈950ms, paragraph≈1250ms (`PAUSE_MS` in
+`app/providers/piper_engine.py`). `PIPER_LENGTH_SCALE` sets the speaking rate.
+
+Hear it without the server:
+
+```bash
+python tools/tts_say.py --demo                       # writes demo_en.wav + demo_vi.wav
+python tools/tts_say.py --lang vi --text "Xin chào, bắt đầu họp."
+```
+
+Config (`.env`): `TTS_ENGINE=piper|mock`, `PIPER_MODELS_DIR` (default
+`models/tts`), `PIPER_LENGTH_SCALE` (>1 slower, <1 faster). Adding a new
+language = drop its Piper voice pair (`<name>.onnx` + `<name>.onnx.json`) under
+`models/tts/<code>/` — the engine auto-discovers it. Voices come from
+[rhasspy/piper-voices](https://huggingface.co/rhasspy/piper-voices).
+
 ## WebSocket contract
 
 Envelope: `{"type": <event>, "data": {...}}` in both directions.
@@ -148,8 +230,9 @@ All insertion points are marked with `TODO(...)` comments.
   final `STTResult`s from `transcribe`.
 - **NLLB (NMT)** → `OfflineNMTProvider` (`TODO(offline-nmt)`): return the
   translated string from `translate`.
-- **Piper (TTS)** → `OfflineTTSProvider` (`TODO(offline-tts)`): return
-  base64 audio from `synthesize`.
+- **Piper (TTS)** → already wired in `OfflineTTSProvider` via the shared
+  `PiperEngine` (`app/providers/piper_engine.py`); used for cloud + offline
+  modes. See "Text-to-Speech — Piper" above.
 
 Uncomment the corresponding lines in `requirements.txt`.
 

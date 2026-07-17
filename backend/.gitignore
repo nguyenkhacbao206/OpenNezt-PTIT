@@ -22,12 +22,18 @@ env/
 ENV/
 
 # ---- STT / model artifacts & recordings ----
-transcripts/          # generated markdown transcripts
-*.wav                 # never commit captured/test audio (zero-retention)
+# NOTE: keep comments on their OWN line. A trailing "# ..." comment on the same
+# line as a pattern is treated as part of the pattern and silently disables it.
+# generated markdown transcripts
+transcripts/
+# never commit captured/test audio (zero-retention)
+*.wav
 *.mp3
 *.m4a
 *.webm
-models/               # local model weights (Faster-Whisper / NLLB / Piper)
+# local model weights (Faster-Whisper / sherpa-onnx / NLLB / Piper)
+models/
+*.onnx
 *.bin
 *.ckpt
 
@@ -41,3 +47,7 @@ models/               # local model weights (Faster-Whisper / NLLB / Piper)
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# TTS test artifacts
+demo_*.wav
+tts_out.wav

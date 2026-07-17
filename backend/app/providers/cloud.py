@@ -27,9 +27,15 @@ class CloudSTTProvider(STTProvider):
 
     def __init__(self) -> None:
         self._fallback = MockSTTProvider()
-        self._enabled = bool(settings.stt_api_key)
+        self._provider = settings.cloud_provider.lower()
+        if self._provider == "groq":
+            self._enabled = bool(settings.groq_api_key)
+            key_hint = "GROQ_API_KEY"
+        else:
+            self._enabled = bool(settings.stt_api_key)
+            key_hint = "STT_API_KEY"
         if not self._enabled:
-            log.warning("STT_API_KEY not set -> CloudSTTProvider falls back to mock.")
+            log.warning("%s not set -> CloudSTTProvider falls back to mock.", key_hint)
 
     async def transcribe(
         self, audio: bytes, source_lang: str
@@ -40,21 +46,35 @@ class CloudSTTProvider(STTProvider):
                 yield result
             return
 
-        # ------------------------------------------------------------------
-        # TODO(cloud-stt): Call your streaming STT vendor here.
-        #   async with httpx.AsyncClient() as client:
-        #       resp = await client.post(
-        #           settings.stt_api_url,
-        #           headers={"Authorization": f"Bearer {settings.stt_api_key}"},
-        #           content=audio,
-        #       )
-        #   Parse partials -> yield STTResult(..., is_final=False)
-        #   Parse final    -> yield STTResult(..., is_final=True)
-        # ------------------------------------------------------------------
-        raise NotImplementedError(
-            "CloudSTTProvider: wire up your STT vendor (STT_API_URL)."
-        )
-        yield  # pragma: no cover - async generator marker
+        if self._provider == "groq":
+            # Groq Whisper: one multipart call, one final result.
+            from . import groq_client
+
+            mime = "audio/wav"
+            text = await groq_client.transcribe_audio(
+                settings.groq_api_key or "",
+                settings.groq_api_url,
+                settings.groq_stt_model,
+                audio,
+                mime,
+                source_lang,
+            )
+        else:
+            # Gemini path: one multimodal generateContent call.
+            import base64
+
+            from . import gemini_client
+
+            audio_b64 = base64.b64encode(audio).decode("ascii")
+            mime = gemini_client.sniff_audio_mime(audio)
+            text = await gemini_client.transcribe_audio(
+                settings.stt_api_key or "",
+                settings.gemini_model,
+                audio_b64,
+                mime,
+                source_lang,
+            )
+        yield STTResult(text=text, lang=source_lang, is_final=True)
 
 
 class CloudNMTProvider(NMTProvider):
@@ -64,21 +84,42 @@ class CloudNMTProvider(NMTProvider):
 
     def __init__(self) -> None:
         self._fallback = MockNMTProvider()
-        self._enabled = bool(settings.nmt_api_key)
+        self._provider = settings.cloud_provider.lower()
+        if self._provider == "groq":
+            self._enabled = bool(settings.groq_api_key)
+            key_hint = "GROQ_API_KEY"
+        else:
+            self._enabled = bool(settings.nmt_api_key)
+            key_hint = "NMT_API_KEY"
         if not self._enabled:
-            log.warning("NMT_API_KEY not set -> CloudNMTProvider falls back to mock.")
+            log.warning("%s not set -> CloudNMTProvider falls back to mock.", key_hint)
 
     async def translate(self, text: str, source_lang: str, target_lang: str) -> str:
-        """Translate via cloud API, or delegate to the mock provider."""
+        """Translate via cloud API (both directions), or delegate to the mock."""
         if not self._enabled:
             return await self._fallback.translate(text, source_lang, target_lang)
 
-        # ------------------------------------------------------------------
-        # TODO(cloud-nmt): Call your translation vendor here (DeepL, Google,
-        #   OpenAI, ...). Return the translated string.
-        # ------------------------------------------------------------------
-        raise NotImplementedError(
-            "CloudNMTProvider: wire up your NMT vendor (NMT_API_URL)."
+        if self._provider == "groq":
+            from . import groq_client
+
+            return await groq_client.translate_text(
+                settings.groq_api_key or "",
+                settings.groq_api_url,
+                settings.groq_nmt_model,
+                text,
+                source_lang,
+                target_lang,
+            )
+
+        # Gemini path: translate via generateContent.
+        from . import gemini_client
+
+        return await gemini_client.translate_text(
+            settings.nmt_api_key or "",
+            settings.gemini_model,
+            text,
+            source_lang,
+            target_lang,
         )
 
 

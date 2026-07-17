@@ -35,6 +35,34 @@ class Settings(BaseSettings):
     # CORS allow-list. "*" is fine for local hackathon dev.
     cors_origins: str = "*"
 
+    # --- Offline STT engine selection ------------------------------------
+    # Which local STT engine `mode=offline` uses:
+    #   "whisper" -> Faster-Whisper (one multilingual model, auto-detect)
+    #   "sherpa"  -> sherpa-onnx per-language Zipformer (gipformer VI + zipformer EN)
+    stt_engine: str = "whisper"
+
+    # --- sherpa-onnx STT (used when stt_engine == "sherpa") --------------
+    # Root folder holding one subfolder per language code: <dir>/vi, <dir>/en, ...
+    sherpa_models_dir: str = "models"
+    # Prefer the int8-quantized ONNX variant when a model ships both.
+    sherpa_use_int8: bool = False
+    # ONNX Runtime intra-op threads per recognizer.
+    sherpa_num_threads: int = 2
+    # "greedy_search" (fast) or "modified_beam_search" (slightly better WER).
+    sherpa_decoding_method: str = "greedy_search"
+
+    # --- Offline TTS engine (Piper) --------------------------------------
+    # TTS is decoupled from the session mode: the SAME voice engine is used
+    # whether STT/NMT run in cloud or offline. Set to "mock" to emit a silent
+    # placeholder clip (zero dependencies), or "piper" for real local voices.
+    tts_engine: str = "piper"
+    # Root folder holding one subfolder per language: <dir>/vi, <dir>/en, ...
+    # Each folder contains a Piper voice pair: <name>.onnx + <name>.onnx.json
+    # (fetch with tools/download_piper_models.py).
+    piper_models_dir: str = "models/tts"
+    # Speaking rate. >1.0 = slower, <1.0 = faster. Applied to every language.
+    piper_length_scale: float = 1.0
+
     # --- Cloud STT (e.g. OpenAI Whisper API, Google STT, ...) -------------
     stt_api_key: str | None = None
     stt_api_url: str | None = None
@@ -46,6 +74,27 @@ class Settings(BaseSettings):
     # --- Cloud TTS (e.g. ElevenLabs, Google TTS, Azure, ...) --------------
     tts_api_key: str | None = None
     tts_api_url: str | None = None
+
+    # --- Gemini (Google AI Studio) model for cloud STT + NMT -------------
+    # The SAME Google AI Studio key goes in both stt_api_key and nmt_api_key.
+    # This selects the model used for both transcription and translation.
+    gemini_model: str = "gemini-2.0-flash"
+
+    # --- Cloud backend selection -----------------------------------------
+    # Which vendor `mode=cloud` uses: "groq" (default, generous free tier) or
+    # "gemini". Both do STT + bidirectional NMT; providers fall back to mock
+    # when the selected vendor's key is missing.
+    cloud_provider: str = "groq"
+
+    # --- Groq (console.groq.com) — free tier STT (Whisper) + NMT (LLM) ---
+    # One key `gsk_...` powers both transcription and translation.
+    groq_api_key: str | None = None
+    # OpenAI-compatible Groq base URL (rarely changed).
+    groq_api_url: str = "https://api.groq.com/openai/v1"
+    # Whisper model for speech-to-text.
+    groq_stt_model: str = "whisper-large-v3"
+    # Chat model used to translate the transcript (both directions).
+    groq_nmt_model: str = "llama-3.3-70b-versatile"
 
     @property
     def cors_origin_list(self) -> list[str]:
