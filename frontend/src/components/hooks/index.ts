@@ -7,3 +7,11 @@ export type { UseMic } from './useMic';
 export { useWordReveal } from './useWordReveal';
 export { useSpeechRecognition } from './useSpeechRecognition';
 export type { UseSpeechRecognition } from './useSpeechRecognition';
+export { useTranslationSegmenter } from './useTranslationSegmenter';
+export {
+  decideSegment,
+  initSegmenterState,
+  THRESHOLD_MS,
+  THRESHOLD_WORDS,
+} from './segmenter';
+export type { SegmenterState, SegmentDecision } from './segmenter';
