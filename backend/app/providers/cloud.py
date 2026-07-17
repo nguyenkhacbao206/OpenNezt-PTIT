@@ -29,11 +29,13 @@ class CloudSTTProvider(STTProvider):
         self._fallback = MockSTTProvider()
         self._provider = settings.cloud_provider.lower()
         if self._provider == "groq":
-            self._enabled = bool(settings.groq_api_key)
-            key_hint = "GROQ_API_KEY"
+            # Dedicated STT key if set, else the shared key (rate-limit split).
+            self._key = settings.groq_stt_api_key or settings.groq_api_key
+            key_hint = "GROQ_STT_API_KEY/GROQ_API_KEY"
         else:
-            self._enabled = bool(settings.stt_api_key)
+            self._key = settings.stt_api_key
             key_hint = "STT_API_KEY"
+        self._enabled = bool(self._key)
         if not self._enabled:
             log.warning("%s not set -> CloudSTTProvider falls back to mock.", key_hint)
 
@@ -52,7 +54,7 @@ class CloudSTTProvider(STTProvider):
 
             mime = "audio/wav"
             text = await groq_client.transcribe_audio(
-                settings.groq_api_key or "",
+                self._key or "",
                 settings.groq_api_url,
                 settings.groq_stt_model,
                 audio,
@@ -68,7 +70,7 @@ class CloudSTTProvider(STTProvider):
             audio_b64 = base64.b64encode(audio).decode("ascii")
             mime = gemini_client.sniff_audio_mime(audio)
             text = await gemini_client.transcribe_audio(
-                settings.stt_api_key or "",
+                self._key or "",
                 settings.gemini_model,
                 audio_b64,
                 mime,
@@ -86,11 +88,13 @@ class CloudNMTProvider(NMTProvider):
         self._fallback = MockNMTProvider()
         self._provider = settings.cloud_provider.lower()
         if self._provider == "groq":
-            self._enabled = bool(settings.groq_api_key)
-            key_hint = "GROQ_API_KEY"
+            # Dedicated NMT key if set, else the shared key (rate-limit split).
+            self._key = settings.groq_nmt_api_key or settings.groq_api_key
+            key_hint = "GROQ_NMT_API_KEY/GROQ_API_KEY"
         else:
-            self._enabled = bool(settings.nmt_api_key)
+            self._key = settings.nmt_api_key
             key_hint = "NMT_API_KEY"
+        self._enabled = bool(self._key)
         if not self._enabled:
             log.warning("%s not set -> CloudNMTProvider falls back to mock.", key_hint)
 
@@ -103,7 +107,7 @@ class CloudNMTProvider(NMTProvider):
             from . import groq_client
 
             return await groq_client.translate_text(
-                settings.groq_api_key or "",
+                self._key or "",
                 settings.groq_api_url,
                 settings.groq_nmt_model,
                 text,
@@ -115,7 +119,7 @@ class CloudNMTProvider(NMTProvider):
         from . import gemini_client
 
         return await gemini_client.translate_text(
-            settings.nmt_api_key or "",
+            self._key or "",
             settings.gemini_model,
             text,
             source_lang,
@@ -131,7 +135,7 @@ class CloudNMTProvider(NMTProvider):
             from . import groq_client
 
             return await groq_client.translate_partial(
-                settings.groq_api_key or "",
+                self._key or "",
                 settings.groq_api_url,
                 settings.groq_nmt_model,
                 text,

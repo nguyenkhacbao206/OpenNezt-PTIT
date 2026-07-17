@@ -75,8 +75,11 @@ class Settings(BaseSettings):
     cloud_provider: str = "groq"
 
     # --- Groq (console.groq.com) — free tier STT (Whisper) + NMT (LLM) ---
-    # One key `gsk_...` powers both transcription and translation.
+    # `groq_api_key` is the shared/default key. To split rate limits, set a
+    # separate key per stage (STT vs NMT); each falls back to groq_api_key.
     groq_api_key: str | None = None
+    groq_stt_api_key: str | None = None
+    groq_nmt_api_key: str | None = None
     # OpenAI-compatible Groq base URL (rarely changed).
     groq_api_url: str = "https://api.groq.com/openai/v1"
     # Whisper model for speech-to-text.
