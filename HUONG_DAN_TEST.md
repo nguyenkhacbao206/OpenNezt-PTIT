@@ -86,6 +86,35 @@ python tools/talk_translate.py --mode mock
 
 ---
 
+## Tầng 5 — Phụ đề YouTube + dịch dual-mode (Cloud / Web Speech)
+
+Ở **Cloud mode trên Chrome/Edge**, phụ đề gốc chạy bằng Web Speech API (kiểu YouTube),
+còn bản dịch theo **dual-mode** ngưỡng **2.5 giây HOẶC 12 từ**.
+
+Chạy `uvicorn` + `npm run dev`, mở `http://localhost:3000/translator` bằng **Chrome**, mode = **Cloud**.
+
+1. **Câu ngắn (Sentence Mode):** bấm nói (VN), nói "Xin chào mọi người" rồi ngừng
+   → phụ đề gốc chạy từng chữ; **bản dịch chỉ hiện MỘT LẦN khi dứt câu** ("Hello everyone").
+2. **Câu dài (Streaming Mode):** nói liền mạch một câu **> 12 từ / > 2.5s**
+   → bản dịch **chốt dần theo cụm**; cụm đã chốt **không đổi** khi nói tiếp.
+3. **Bảo toàn entity:** nói "Công ty ABC ký 3 hợp đồng ngày 5 tháng 1"
+   → bản dịch giữ nguyên `ABC`, `3`, `5`.
+4. **Hai chiều:** thử phía SG (English) → dịch sang tiếng Việt ở panel VN.
+5. **Fallback:** mở bằng Firefox/Safari → hiện chú thích "không hỗ trợ" và tự chạy luồng
+   Whisper windowed (đường AUDIO), không vỡ. Chuyển nút **Chế độ → Offline/Mock** cũng vẫn chạy.
+
+### Checklist Tầng 5
+- [ ] Phụ đề gốc chạy word-by-word khi đang nói (Cloud/Chrome).
+- [ ] Câu ngắn: chỉ dịch khi dứt câu. Câu dài: dịch dần theo cụm, cụm đã chốt giữ nguyên.
+- [ ] Dừng giữa câu ngắn vẫn ra bản dịch (không mất đuôi câu).
+- [ ] Số/tên/ngày được bảo toàn trong bản dịch.
+- [ ] Firefox → tự fallback Whisper, có chú thích.
+
+> Logic dual-mode (`decideSegment`) đã được kiểm thử runtime 8/8 kịch bản (ngưỡng 2.5s/12 từ,
+> chốt cụm ổn định, giữ cụm đã chốt, debounce). Phần cần mic thật ở trên là kiểm thử thủ công.
+
+---
+
 ## Sự cố thường gặp
 
 | Triệu chứng | Xử lý |
