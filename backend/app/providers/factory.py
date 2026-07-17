@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from ..core.config import settings
 from .base import NMTProvider, STTProvider, TTSProvider
 from .cloud import CloudNMTProvider, CloudSTTProvider, CloudTTSProvider
 from .mock import MockNMTProvider, MockSTTProvider, MockTTSProvider
@@ -46,8 +47,16 @@ def build_providers(mode: str) -> ProviderBundle:
             mode="cloud",
         )
     if normalized == "offline":
+        # STT engine is config-selectable: Whisper (multilingual) or sherpa-onnx
+        # (per-language gipformer VI + zipformer EN). NMT/TTS are unchanged.
+        if settings.stt_engine.lower() == "sherpa":
+            from .sherpa import SherpaSTTProvider
+
+            stt: STTProvider = SherpaSTTProvider()
+        else:
+            stt = OfflineSTTProvider()
         return ProviderBundle(
-            stt=OfflineSTTProvider(),
+            stt=stt,
             nmt=OfflineNMTProvider(),
             tts=OfflineTTSProvider(),
             mode="offline",

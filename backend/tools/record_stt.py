@@ -81,7 +81,7 @@ def record_until_enter() -> np.ndarray:
     return np.concatenate(collected).reshape(-1)
 
 
-def to_markdown(result: Transcription, model: str, duration_s: float) -> str:
+def to_markdown(result: Transcription, model_label: str, duration_s: float) -> str:
     """Render the transcription as a Markdown document."""
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     lines = [
@@ -89,7 +89,7 @@ def to_markdown(result: Transcription, model: str, duration_s: float) -> str:
         "",
         f"- **Time:** {now}",
         f"- **Language (detected/forced):** `{result.language}`",
-        f"- **Model:** `faster-whisper {model}`",
+        f"- **Model:** `{model_label}`",
         f"- **Audio duration:** {duration_s:.1f}s",
         "",
         "## Text",
@@ -118,6 +118,10 @@ def main() -> None:
     parser.add_argument("--wav", default=None,
                         help="Transcribe an existing audio file instead of the mic (any format).")
     parser.add_argument("--lang", default="auto", help="vi | en | auto (default: auto).")
+    parser.add_argument("--engine", default="whisper", choices=["whisper", "sherpa"],
+                        help="STT engine: whisper (multilingual) | sherpa (gipformer VI / zipformer EN).")
+    parser.add_argument("--models-dir", default="models",
+                        help="sherpa: root folder with per-language model subfolders (default: models).")
     parser.add_argument("--model", default="small",
                         help="Whisper model: tiny|base|small|medium (default: small).")
     parser.add_argument("--out", default=None,
@@ -139,10 +143,24 @@ def main() -> None:
         print("No/almost no audio captured. Check your microphone and try again.")
         return
 
-    # 2) Transcribe with Faster-Whisper.
-    print(f"Transcribing {duration_s:.1f}s of audio with model '{args.model}'...")
-    engine = get_engine(model_size=args.model)
-    result = engine.transcribe_array(audio, language=args.lang)
+    # 2) Transcribe with the chosen engine.
+    if args.engine == "sherpa":
+        if args.lang in (None, "", "auto"):
+            print("sherpa needs an explicit --lang (e.g. --lang vi or --lang en).")
+            return
+        print(f"Transcribing {duration_s:.1f}s with sherpa-onnx ({args.lang}) from '{args.models_dir}'...")
+        from app.providers.sherpa_engine import get_sherpa_engine
+
+        sherpa = get_sherpa_engine(models_dir=args.models_dir)
+        st = sherpa.transcribe_array(audio, language=args.lang, sample_rate=SAMPLE_RATE)
+        # sherpa returns plain text (no segments) — adapt to the Markdown renderer.
+        result = Transcription(text=st.text, language=st.language, segments=[])
+        model_label = f"sherpa-onnx ({st.language})"
+    else:
+        print(f"Transcribing {duration_s:.1f}s of audio with Whisper model '{args.model}'...")
+        engine = get_engine(model_size=args.model)
+        result = engine.transcribe_array(audio, language=args.lang)
+        model_label = f"faster-whisper {args.model}"
 
     # 3) Write Markdown.
     if args.out:
@@ -151,7 +169,7 @@ def main() -> None:
         stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
         out_path = Path("transcripts") / f"transcript-{stamp}.md"
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    out_path.write_text(to_markdown(result, args.model, duration_s), encoding="utf-8")
+    out_path.write_text(to_markdown(result, model_label, duration_s), encoding="utf-8")
 
     print("\n--- Transcript ---")
     print(result.text or "(no speech detected)")
