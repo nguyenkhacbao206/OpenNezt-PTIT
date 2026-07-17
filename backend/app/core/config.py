@@ -51,11 +51,16 @@ class Settings(BaseSettings):
     # "greedy_search" (fast) or "modified_beam_search" (slightly better WER).
     sherpa_decoding_method: str = "greedy_search"
 
-    # --- Offline TTS engine (Piper) --------------------------------------
+    # --- TTS engine ------------------------------------------------------
     # TTS is decoupled from the session mode: the SAME voice engine is used
-    # whether STT/NMT run in cloud or offline. Set to "mock" to emit a silent
-    # placeholder clip (zero dependencies), or "piper" for real local voices.
-    tts_engine: str = "piper"
+    # whether STT/NMT run in cloud or offline. Options:
+    #   "edge"  -> edge-tts online neural voices (free, no key, real VN + EN);
+    #              server-side audio -> works on web AND mobile clients. (default)
+    #   "piper" -> local Piper voices (needs models); "mock" -> silent clip.
+    tts_engine: str = "edge"
+    # edge-tts voices (see `edge-tts --list-voices`).
+    edge_voice_vi: str = "vi-VN-HoaiMyNeural"
+    edge_voice_en: str = "en-US-AriaNeural"
     # Root folder holding one subfolder per language: <dir>/vi, <dir>/en, ...
     # Each folder contains a Piper voice pair: <name>.onnx + <name>.onnx.json
     # (fetch with tools/download_piper_models.py).
@@ -63,32 +68,16 @@ class Settings(BaseSettings):
     # Speaking rate. >1.0 = slower, <1.0 = faster. Applied to every language.
     piper_length_scale: float = 1.0
 
-    # --- Cloud STT (e.g. OpenAI Whisper API, Google STT, ...) -------------
-    stt_api_key: str | None = None
-    stt_api_url: str | None = None
-
-    # --- Cloud NMT (e.g. Google Translate, DeepL, OpenAI, ...) ------------
-    nmt_api_key: str | None = None
-    nmt_api_url: str | None = None
-
     # --- Cloud TTS (e.g. ElevenLabs, Google TTS, Azure, ...) --------------
     tts_api_key: str | None = None
     tts_api_url: str | None = None
 
-    # --- Gemini (Google AI Studio) model for cloud STT + NMT -------------
-    # The SAME Google AI Studio key goes in both stt_api_key and nmt_api_key.
-    # This selects the model used for both transcription and translation.
-    gemini_model: str = "gemini-2.0-flash"
-
-    # --- Cloud backend selection -----------------------------------------
-    # Which vendor `mode=cloud` uses: "groq" (default, generous free tier) or
-    # "gemini". Both do STT + bidirectional NMT; providers fall back to mock
-    # when the selected vendor's key is missing.
-    cloud_provider: str = "groq"
-
     # --- Groq (console.groq.com) — free tier STT (Whisper) + NMT (LLM) ---
-    # One key `gsk_...` powers both transcription and translation.
+    # `groq_api_key` is the shared/default key. To split rate limits, set a
+    # separate key per stage (STT vs NMT); each falls back to groq_api_key.
     groq_api_key: str | None = None
+    groq_stt_api_key: str | None = None
+    groq_nmt_api_key: str | None = None
     # OpenAI-compatible Groq base URL (rarely changed).
     groq_api_url: str = "https://api.groq.com/openai/v1"
     # Whisper model for speech-to-text.

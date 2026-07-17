@@ -19,13 +19,15 @@ numpy>=1.24              # audio buffers
 sherpa-onnx>=1.10        # app/providers/sherpa_engine.py
 huggingface_hub>=0.23    # tools/download_sherpa_models.py (fetch gipformer)
 
-# --- Cloud provider HTTP calls (CloudSTTProvider / CloudNMTProvider via Gemini) ---
+# --- Cloud provider HTTP calls (CloudSTTProvider / CloudNMTProvider via Groq) ---
 httpx>=0.27
 
-# --- Real TTS: Piper local voices (OfflineTTSProvider, used in cloud+offline) ---
-# Ships Windows/macOS/Linux wheels and bundles espeak-ng (>=1.3). Voices are
-# fetched separately via tools/download_piper_models.py.
-piper-tts>=1.3
+# --- TTS: edge-tts online neural voices (default, free, real VN + EN) ---
+# Server-side audio -> works on web AND mobile clients, no device voice needed.
+edge-tts>=6.1
+
+# --- Optional TTS: Piper local voices (TTS_ENGINE=piper; needs voice models) ---
+# piper-tts>=1.3
 
 # --- Reserved for the rest of the real pipeline (uncomment when wiring) ---
 # transformers>=4.40     # OfflineNMTProvider (NLLB)

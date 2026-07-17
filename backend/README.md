@@ -137,8 +137,8 @@ drop its sherpa-onnx transducer folder under `models/<code>/` and pass
 
 The translated text is spoken back with **Piper** offline neural voices, one
 **independent voice per language** (VI + EN). TTS is **decoupled from the
-session mode**: the same voice engine runs whether STT/NMT are `cloud` (Groq /
-Gemini) or `offline`, so a cloud session still returns real audio. The clip is
+session mode**: the same voice engine runs whether STT/NMT are `cloud` (Groq)
+or `offline`, so a cloud session still returns real audio. The clip is
 always synthesized from the exact translated text (`dstText`) in the target
 language, so the voice matches the text by construction.
 

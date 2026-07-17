@@ -1,11 +1,11 @@
 """Speak Vietnamese, get an English transcript — end-to-end cloud test.
 
 Records mic audio, sends it over the WebSocket to a server running in `cloud`
-mode (Gemini STT + NMT), and prints the Vietnamese transcript plus its English
+mode (Groq STT + NMT), and prints the Vietnamese transcript plus its English
 translation. Audio stays in RAM (no disk write).
 
 Prereqs:
-    1) A Google AI Studio key in .env as STT_API_KEY and NMT_API_KEY (same value).
+    1) A Groq key in .env as GROQ_API_KEY (console.groq.com/keys).
     2) Server running:  uvicorn app.main:app --reload
 
 Usage (from backend/):
@@ -86,12 +86,12 @@ def to_wav_bytes(audio: np.ndarray, sample_rate: int = SAMPLE_RATE) -> bytes:
     return buf.getvalue()
 
 
-async def run_turn(audio_b64: str, src: str, tgt: str) -> None:
+async def run_turn(audio_b64: str, src: str, tgt: str, mode: str) -> None:
     """Send one push-to-talk turn and print the transcript + translation."""
     async with websockets.connect(WS_URL) as ws:
         await ws.send(json.dumps(
             {"type": "session.start",
-             "data": {"mode": "cloud", "sourceLang": src, "targetLang": tgt}}
+             "data": {"mode": mode, "sourceLang": src, "targetLang": tgt}}
         ))
         await ws.send(json.dumps(
             {"type": "audio.chunk", "data": {"speaker": "A", "audio": audio_b64}}
@@ -123,11 +123,13 @@ async def run_turn(audio_b64: str, src: str, tgt: str) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Speak Vietnamese -> English transcript (cloud/Gemini).")
+    parser = argparse.ArgumentParser(description="Speak Vietnamese -> English transcript (cloud/Groq).")
     parser.add_argument("--seconds", type=float, default=None,
                         help="Record a fixed number of seconds (default: Enter to start/stop).")
     parser.add_argument("--src", default="vi", help="Source language (default: vi).")
     parser.add_argument("--tgt", default="en", help="Target language (default: en).")
+    parser.add_argument("--mode", default="cloud",
+                        help="Pipeline mode: cloud (default) | mock | offline.")
     args = parser.parse_args()
 
     audio = record_fixed(args.seconds) if args.seconds else record_until_enter()
@@ -136,7 +138,7 @@ def main() -> None:
         return
 
     audio_b64 = base64.b64encode(to_wav_bytes(audio)).decode("ascii")
-    asyncio.run(run_turn(audio_b64, args.src, args.tgt))
+    asyncio.run(run_turn(audio_b64, args.src, args.tgt, args.mode))
 
 
 if __name__ == "__main__":

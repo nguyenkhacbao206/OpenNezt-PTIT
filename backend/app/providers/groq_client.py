@@ -1,8 +1,7 @@
 """Async helpers over the Groq OpenAI-compatible REST API.
 
-Shared by the cloud STT and NMT providers when `CLOUD_PROVIDER=groq`. Groq's
-free tier serves Whisper for speech-to-text and Llama chat models for
-translation, both behind one `gsk_...` key.
+Shared by the cloud STT and NMT providers. Groq's free tier serves Whisper for
+speech-to-text and Llama chat models for translation, behind `gsk_...` key(s).
 
 Request-building and response-parsing helpers are pure functions (unit-testable
 without network or a key); only `_transcribe`/`_chat` do I/O.
@@ -26,18 +25,27 @@ def language_name(code: str) -> str:
 
 
 def build_translate_messages(text: str, source_lang: str, target_lang: str) -> list[dict]:
-    """Build OpenAI-style chat messages for translating text (both directions)."""
+    """Build OpenAI-style chat messages for translating text (both directions).
+
+    Basic, context-free translation prompt (no interpreter persona, no
+    business-context or entity-preservation instructions).
+    """
     src = language_name(source_lang)
     tgt = language_name(target_lang)
     system = (
-        f"You are a professional {src}-to-{tgt} interpreter for business "
-        "meetings. Translate the user's message accurately and naturally. "
-        "Return ONLY the translation — no commentary, quotes, or markdown."
+        f"Translate the following {src} text into {tgt}. "
+        "Return only the translation, with no explanations, notes, or quotes."
     )
     return [
         {"role": "system", "content": system},
         {"role": "user", "content": text},
     ]
+
+
+def build_partial_translate_messages(text: str, source_lang: str, target_lang: str) -> list[dict]:
+    """Messages for a partial segment — same basic prompt as the full translate
+    (no prediction / no context-aware interpreter persona)."""
+    return build_translate_messages(text, source_lang, target_lang)
 
 
 def extract_transcript(response_json: dict) -> str:
@@ -125,4 +133,12 @@ async def translate_text(
 ) -> str:
     """Translate text from source_lang to target_lang via a Groq chat model."""
     messages = build_translate_messages(text, source_lang, target_lang)
+    return extract_chat_text(await _chat(api_key, base_url, model, messages))
+
+
+async def translate_partial(
+    api_key: str, base_url: str, model: str, text: str, source_lang: str, target_lang: str
+) -> str:
+    """Faithful real-time translation of a partial (still-being-spoken) transcript."""
+    messages = build_partial_translate_messages(text, source_lang, target_lang)
     return extract_chat_text(await _chat(api_key, base_url, model, messages))

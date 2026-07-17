@@ -1,12 +1,10 @@
-"""Cloud providers: call external APIs, fall back to Mock when unconfigured.
+"""Cloud providers: STT + NMT via Groq, TTS stub. Fall back to Mock when no key.
 
-These are STUBS. The real HTTP calls are left as clearly-marked TODO blocks so
-you can drop in your vendor of choice (OpenAI Whisper, Google, DeepL,
-ElevenLabs, Azure, ...) without touching the WebSocket layer.
-
-Key behaviour required by the spec: if the relevant API key is missing from the
-environment, transparently fall back to the corresponding MockProvider so the
-demo never breaks.
+STT (Whisper) and NMT (Llama) run on Groq's OpenAI-compatible API. Each stage
+uses its own key if set (`GROQ_STT_API_KEY` / `GROQ_NMT_API_KEY`) so rate limits
+can be split, otherwise the shared `GROQ_API_KEY`. If no key is configured, the
+provider transparently falls back to the corresponding MockProvider so the demo
+never breaks.
 """
 from __future__ import annotations
 
@@ -21,102 +19,84 @@ log = logging.getLogger("providers.cloud")
 
 
 class CloudSTTProvider(STTProvider):
-    """STT via an external API, or Mock fallback when no key is configured."""
+    """STT via Groq Whisper, or Mock fallback when no key is configured."""
 
     name = "cloud-stt"
 
     def __init__(self) -> None:
         self._fallback = MockSTTProvider()
-        self._provider = settings.cloud_provider.lower()
-        if self._provider == "groq":
-            self._enabled = bool(settings.groq_api_key)
-            key_hint = "GROQ_API_KEY"
-        else:
-            self._enabled = bool(settings.stt_api_key)
-            key_hint = "STT_API_KEY"
+        # Dedicated STT key if set, else the shared key (rate-limit split).
+        self._key = settings.groq_stt_api_key or settings.groq_api_key
+        self._enabled = bool(self._key)
         if not self._enabled:
-            log.warning("%s not set -> CloudSTTProvider falls back to mock.", key_hint)
+            log.warning(
+                "GROQ_STT_API_KEY/GROQ_API_KEY not set -> CloudSTTProvider falls back to mock."
+            )
 
     async def transcribe(
         self, audio: bytes, source_lang: str
     ) -> AsyncIterator[STTResult]:
-        """Transcribe via cloud API, or delegate to the mock provider."""
+        """Transcribe via Groq Whisper, or delegate to the mock provider."""
         if not self._enabled:
             async for result in self._fallback.transcribe(audio, source_lang):
                 yield result
             return
 
-        if self._provider == "groq":
-            # Groq Whisper: one multipart call, one final result.
-            from . import groq_client
+        from . import groq_client
 
-            mime = "audio/wav"
-            text = await groq_client.transcribe_audio(
-                settings.groq_api_key or "",
-                settings.groq_api_url,
-                settings.groq_stt_model,
-                audio,
-                mime,
-                source_lang,
-            )
-        else:
-            # Gemini path: one multimodal generateContent call.
-            import base64
-
-            from . import gemini_client
-
-            audio_b64 = base64.b64encode(audio).decode("ascii")
-            mime = gemini_client.sniff_audio_mime(audio)
-            text = await gemini_client.transcribe_audio(
-                settings.stt_api_key or "",
-                settings.gemini_model,
-                audio_b64,
-                mime,
-                source_lang,
-            )
+        text = await groq_client.transcribe_audio(
+            self._key or "",
+            settings.groq_api_url,
+            settings.groq_stt_model,
+            audio,
+            "audio/wav",
+            source_lang,
+        )
         yield STTResult(text=text, lang=source_lang, is_final=True)
 
 
 class CloudNMTProvider(NMTProvider):
-    """NMT via an external API, or Mock fallback when no key is configured."""
+    """NMT via a Groq chat model, or Mock fallback when no key is configured."""
 
     name = "cloud-nmt"
 
     def __init__(self) -> None:
         self._fallback = MockNMTProvider()
-        self._provider = settings.cloud_provider.lower()
-        if self._provider == "groq":
-            self._enabled = bool(settings.groq_api_key)
-            key_hint = "GROQ_API_KEY"
-        else:
-            self._enabled = bool(settings.nmt_api_key)
-            key_hint = "NMT_API_KEY"
+        # Dedicated NMT key if set, else the shared key (rate-limit split).
+        self._key = settings.groq_nmt_api_key or settings.groq_api_key
+        self._enabled = bool(self._key)
         if not self._enabled:
-            log.warning("%s not set -> CloudNMTProvider falls back to mock.", key_hint)
+            log.warning(
+                "GROQ_NMT_API_KEY/GROQ_API_KEY not set -> CloudNMTProvider falls back to mock."
+            )
 
     async def translate(self, text: str, source_lang: str, target_lang: str) -> str:
-        """Translate via cloud API (both directions), or delegate to the mock."""
+        """Translate via a Groq chat model (both directions), or the mock."""
         if not self._enabled:
             return await self._fallback.translate(text, source_lang, target_lang)
 
-        if self._provider == "groq":
-            from . import groq_client
+        from . import groq_client
 
-            return await groq_client.translate_text(
-                settings.groq_api_key or "",
-                settings.groq_api_url,
-                settings.groq_nmt_model,
-                text,
-                source_lang,
-                target_lang,
-            )
+        return await groq_client.translate_text(
+            self._key or "",
+            settings.groq_api_url,
+            settings.groq_nmt_model,
+            text,
+            source_lang,
+            target_lang,
+        )
 
-        # Gemini path: translate via generateContent.
-        from . import gemini_client
+    async def translate_partial(self, text: str, source_lang: str, target_lang: str) -> str:
+        """Translate a partial transcript (live streaming path)."""
+        if not self._enabled:
+            return await self._fallback.translate(text, source_lang, target_lang)
 
-        return await gemini_client.translate_text(
-            settings.nmt_api_key or "",
-            settings.gemini_model,
+        from . import groq_client
+
+        return await groq_client.translate_partial(
+            self._key or "",
+            settings.groq_api_url,
+            settings.groq_nmt_model,
             text,
             source_lang,
             target_lang,

@@ -22,11 +22,16 @@ def build_tts() -> TTSProvider:
     """Build the TTS provider, decoupled from the STT/NMT mode.
 
     TTS is picked by `settings.tts_engine`, NOT by the session mode, so a cloud
-    (Groq/Gemini) STT+NMT session still gets real local voices from Piper. When
+    (Groq) STT+NMT session still gets real local voices from Piper. When
     the engine is unavailable or misconfigured, the caller catches the error and
     the handler emits a `tts_failed` event without aborting the turn.
     """
-    if settings.tts_engine.lower() == "piper":
+    engine = settings.tts_engine.lower()
+    if engine == "edge":
+        from .tts_edge import EdgeTTSProvider
+
+        return EdgeTTSProvider()
+    if engine == "piper":
         return OfflineTTSProvider()
     return MockTTSProvider()
 
