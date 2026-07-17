@@ -17,7 +17,14 @@
       "Bash(PYTHONUTF8=1 \"D:/OpenNezt-PTIT/.venv/Scripts/python.exe\" -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --log-level info)",
       "Bash(curl -s http://127.0.0.1:8000/)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://127.0.0.1:8000/app)",
-      "Bash(PYTHONUTF8=1 D:/OpenNezt-PTIT/.venv/Scripts/python.exe -c ' *)"
+      "Bash(PYTHONUTF8=1 D:/OpenNezt-PTIT/.venv/Scripts/python.exe -c ' *)",
+      "Bash(npm run *)",
+      "Bash(npx tsc *)",
+      "Bash(python -c \"import fastapi, uvicorn, websockets\")",
+      "Bash(./.venv/Scripts/python.exe -m uvicorn app.main:app --port 8000 --log-level warning)",
+      "Bash(curl -s http://localhost:8000/)",
+      "Bash(python -m uvicorn app.main:app --port 8001 --log-level warning)",
+      "Bash(PYTHONUTF8=1 PYTHONIOENCODING=utf-8 python \"C:\\\\Users\\\\ADMIN\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\d--OpenNezt-PTIT\\\\8648651f-1c05-4839-9b8f-96f80110bf08\\\\scratchpad\\\\test_stream.py\")"
     ]
   }
 }

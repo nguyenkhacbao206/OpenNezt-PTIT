@@ -46,6 +46,8 @@ async def dispatch(ws: WebSocket, session: SessionState, message: dict) -> None:
         await _on_session_start(ws, session, data)
     elif event == "audio.chunk":
         await _on_audio_chunk(ws, session, data)
+    elif event == "audio.stream":
+        await _on_audio_stream(ws, session, data)
     elif event == "config.update":
         await _on_config_update(ws, session, data)
     elif event == "session.end":
@@ -101,6 +103,47 @@ async def _on_session_end(ws: WebSocket, session: SessionState, data: dict) -> N
     """Handle session.end: zero-retention cleanup and acknowledge."""
     session.cleanup()
     await send(ws, "session.ended", {})
+
+
+async def _on_audio_stream(ws: WebSocket, session: SessionState, data: dict) -> None:
+    """Interim streaming preview: STT -> NMT on the audio-so-far, emitting a live
+    `nmt.partial` with the TRANSLATED text, WITHOUT TTS/metrics.
+
+    Sent repeatedly (every ~1s) while the speaker holds the mic, so the
+    translation appears in real time as they talk (speak EN -> see VI, and vice
+    versa). The authoritative turn is still committed once, on release, by
+    `audio.chunk`. Interim failures are swallowed (logged only) so a slow/failed
+    preview never disrupts the turn.
+    """
+    if not session.started or session.providers is None:
+        return  # ignore stray interim chunks that arrive before session.start
+
+    speaker = data.get("speaker", "unknown")
+    try:
+        audio = base64.b64decode(data.get("audio", ""), validate=False)
+    except (binascii.Error, ValueError):
+        return
+
+    # Interim audio is intentionally NOT buffered: each tick re-sends the whole
+    # growing utterance, so buffering would blow up RAM, and audio.chunk
+    # supersedes it anyway (zero-retention still holds).
+    try:
+        src_text = ""
+        async for result in session.providers.stt.transcribe(audio, session.source_lang):
+            src_text = result.text
+        if not src_text:
+            return
+        dst_text = await session.providers.nmt.translate(
+            src_text, session.source_lang, session.target_lang
+        )
+        dst_text = apply_glossary(dst_text, session.glossary_id)
+        await send(ws, "nmt.partial", {
+            "speaker": speaker,
+            "srcText": src_text,
+            "dstText": dst_text,
+        })
+    except Exception as exc:  # noqa: BLE001 - a preview failure must never break the turn
+        log.warning("interim stream (STT+NMT) failed (ignored): %s", exc)
 
 
 async def _on_audio_chunk(ws: WebSocket, session: SessionState, data: dict) -> None:

@@ -187,6 +187,7 @@ Envelope: `{"type": <event>, "data": {...}}` in both directions.
 |-----------------|--------------------------------------------|
 | `session.start` | `{ mode, sourceLang, targetLang }`         |
 | `audio.chunk`   | `{ speaker, audio }` (audio = base64)      |
+| `audio.stream`  | `{ speaker, audio }` interim while holding: STT→NMT → `nmt.partial` (live translation), no TTS |
 | `config.update` | `{ mode?, ttsOn?, glossaryId? }`           |
 | `session.end`   | `{}`                                       |
 
@@ -196,6 +197,7 @@ Envelope: `{"type": <event>, "data": {...}}` in both directions.
 |---------------|------------------------------------------|
 | `stt.partial` | `{ speaker, text }`                      |
 | `stt.final`   | `{ speaker, text, lang }`                |
+| `nmt.partial` | `{ speaker, srcText, dstText }` live translation preview while holding (from `audio.stream`) |
 | `nmt.result`  | `{ speaker, srcText, dstText }`          |
 | `tts.audio`   | `{ speaker, audio }` (base64, if ttsOn)  |
 | `metrics`     | `{ sttMs, nmtMs, e2eMs }`                 |

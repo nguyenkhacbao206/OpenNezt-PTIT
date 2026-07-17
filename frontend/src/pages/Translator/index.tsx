@@ -2,8 +2,9 @@
  * TranslatorPage — trợ lý phiên dịch song ngữ Việt ⇄ Anh real-time.
  *
  * Bố cục Split-Screen theo SRS: nửa trên là phía Singapore (English), nửa dưới
- * là đoàn Việt Nam (Tiếng Việt). Mỗi bên có nút Push-to-Talk riêng; phụ đề gốc
- * + bản dịch hiện ngay khi backend trả về qua WebSocket.
+ * là đoàn Việt Nam (Tiếng Việt). Mỗi bên có nút "Giữ để nói" (hold-to-talk):
+ * khi ĐANG giữ, audio được stream liên tục → transcript nguồn hiện real-time;
+ * khi THẢ, backend chạy full pipeline → bản dịch hiện ra.
  */
 import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui';
@@ -47,6 +48,7 @@ export function TranslatorPage() {
   const connect = useAppStore((s) => s.connect);
   const disconnect = useAppStore((s) => s.disconnect);
   const setMode = useAppStore((s) => s.setTranslatorMode);
+  const streamPartial = useAppStore((s) => s.streamPartial);
   const sendTurn = useAppStore((s) => s.sendTurn);
   const clearTurns = useAppStore((s) => s.clearTurns);
 
@@ -60,16 +62,23 @@ export function TranslatorPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleTalk = useCallback(
+  // Bắt đầu giữ mic: thu + stream audio tích luỹ để hiện transcript real-time.
+  const startTalk = useCallback(
     async (speaker: Speaker): Promise<void> => {
-      if (activeSpeaker === speaker) {
-        setActiveSpeaker(null);
-        const audio = await mic.stop();
-        if (audio) sendTurn(speaker, audio);
-      } else if (activeSpeaker === null) {
-        setActiveSpeaker(speaker);
-        await mic.start();
-      }
+      if (activeSpeaker !== null) return;
+      setActiveSpeaker(speaker);
+      await mic.start((audio) => streamPartial(speaker, audio));
+    },
+    [activeSpeaker, mic, streamPartial],
+  );
+
+  // Thả mic: chốt lượt nói, gửi audio cuối để chạy full STT→NMT→TTS.
+  const stopTalk = useCallback(
+    async (speaker: Speaker): Promise<void> => {
+      if (activeSpeaker !== speaker) return;
+      setActiveSpeaker(null);
+      const audio = await mic.stop();
+      if (audio) sendTurn(speaker, audio);
     },
     [activeSpeaker, mic, sendTurn],
   );
@@ -121,17 +130,21 @@ export function TranslatorPage() {
         side={SG_SIDE}
         turns={turns}
         partialText={partial?.speaker === 'sg' ? partial.text : null}
+        partialSrc={partial?.speaker === 'sg' ? (partial.srcText ?? null) : null}
         isRecording={activeSpeaker === 'sg'}
         disabled={!isConnected || (activeSpeaker !== null && activeSpeaker !== 'sg')}
-        onTalk={() => void handleTalk('sg')}
+        onStart={() => void startTalk('sg')}
+        onStop={() => void stopTalk('sg')}
       />
       <Panel
         side={VN_SIDE}
         turns={turns}
         partialText={partial?.speaker === 'vn' ? partial.text : null}
+        partialSrc={partial?.speaker === 'vn' ? (partial.srcText ?? null) : null}
         isRecording={activeSpeaker === 'vn'}
         disabled={!isConnected || (activeSpeaker !== null && activeSpeaker !== 'vn')}
-        onTalk={() => void handleTalk('vn')}
+        onStart={() => void startTalk('vn')}
+        onStop={() => void stopTalk('vn')}
       />
     </div>
   );
@@ -198,13 +211,28 @@ function LatencyHud({
 interface PanelProps {
   side: SideConfig;
   turns: TranslatorTurn[];
+  /** Bản dịch tạm (ngôn ngữ đích) khi đang nói. */
   partialText: string | null;
+  /** Câu nguồn nhận dạng tạm (ngôn ngữ nói) khi đang nói. */
+  partialSrc: string | null;
   isRecording: boolean;
   disabled: boolean;
-  onTalk: () => void;
+  /** Bắt đầu khi NHẤN GIỮ nút. */
+  onStart: () => void;
+  /** Kết thúc khi THẢ nút (hoặc pointer bị huỷ). */
+  onStop: () => void;
 }
 
-function Panel({ side, turns, partialText, isRecording, disabled, onTalk }: PanelProps) {
+function Panel({
+  side,
+  turns,
+  partialText,
+  partialSrc,
+  isRecording,
+  disabled,
+  onStart,
+  onStop,
+}: PanelProps) {
   const own = turns.filter((t) => t.speaker === side.speaker);
   return (
     <section
@@ -218,16 +246,29 @@ function Panel({ side, turns, partialText, isRecording, disabled, onTalk }: Pane
         <Button
           size="sm"
           variant={isRecording ? 'danger' : 'primary'}
-          onClick={onTalk}
           disabled={disabled}
+          className={cn('touch-none select-none', isRecording && 'animate-pulse')}
+          // Giữ để nói: pointer capture đảm bảo nhận được pointerup kể cả khi
+          // ngón tay/chuột rời khỏi nút, nên không cần onPointerLeave.
+          onPointerDown={(e) => {
+            e.preventDefault();
+            e.currentTarget.setPointerCapture(e.pointerId);
+            onStart();
+          }}
+          onPointerUp={(e) => {
+            e.preventDefault();
+            onStop();
+          }}
+          onPointerCancel={() => onStop()}
+          onContextMenu={(e) => e.preventDefault()}
         >
-          {isRecording ? '■ Dừng & Dịch' : '● Nhấn để nói'}
+          {isRecording ? '🔴 Đang nghe… (thả để dịch)' : '🎙 Giữ để nói'}
         </Button>
       </div>
 
       <div className="flex-1 space-y-2 overflow-y-auto">
-        {own.length === 0 && !partialText && (
-          <p className="text-sm text-gray-400">Chưa có lượt nói nào.</p>
+        {own.length === 0 && !partialText && !isRecording && (
+          <p className="text-sm text-gray-400">Chưa có lượt nói nào. Giữ nút để nói.</p>
         )}
         {own.map((turn) => (
           <div
@@ -242,9 +283,24 @@ function Panel({ side, turns, partialText, isRecording, disabled, onTalk }: Pane
             <p className="font-medium text-primary dark:text-primary-light">{turn.dstText}</p>
           </div>
         ))}
-        {partialText && (
-          <div className="rounded-lg border border-dashed border-gray-300 p-3 text-gray-500 dark:border-gray-600">
-            {isRecording ? '🎙 Đang nghe…' : `⏳ Đang dịch: ${partialText}`}
+        {(isRecording || partialText || partialSrc) && (
+          <div className="rounded-lg border border-dashed border-primary/50 p-3 dark:border-primary/50">
+            {/* Câu nguồn nhận dạng tạm (nhỏ, mờ). */}
+            {partialSrc && (
+              <>
+                <p className="text-xs uppercase tracking-wide text-gray-400">
+                  {side.spokenLabel}
+                </p>
+                <p className="text-gray-500 dark:text-gray-400">{partialSrc}</p>
+              </>
+            )}
+            {/* Bản dịch trực tiếp (ngôn ngữ đích) — nổi bật. */}
+            <p className="mt-1 text-xs uppercase tracking-wide text-gray-400">
+              {isRecording ? `🎙 ${side.translatedLabel} (dịch trực tiếp)` : `⏳ ${side.translatedLabel}`}
+            </p>
+            <p className="font-medium text-primary dark:text-primary-light">
+              {partialText || '…'}
+            </p>
           </div>
         )}
       </div>

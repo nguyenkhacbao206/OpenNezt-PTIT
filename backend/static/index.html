@@ -72,9 +72,9 @@
     <button id="end" class="wide ghost" disabled>End session</button>
 
     <h2 style="margin-top:20px">Speak</h2>
-    <button id="rec" class="rec wide" disabled>● Record (click to start)</button>
+    <button id="rec" class="rec wide" disabled>🎙 Giữ để nói (hold to talk)</button>
     <button id="fake" class="wide ghost" disabled>Send fake audio (mock test)</button>
-    <p class="hint">Thu mic → WAV 16kHz mono → gửi <code>audio.chunk</code>. Cloud/offline dùng mic; mock có thể dùng nút fake.</p>
+    <p class="hint"><b>Giữ</b> nút để nói: audio tích luỹ được gửi <code>audio.stream</code> mỗi ~900ms → transcript nguồn hiện real-time. <b>Thả</b> ra → gửi <code>audio.chunk</code> chạy full dịch. Mock có thể dùng nút fake.</p>
   </section>
 
   <!-- ------------ Output ------------ -->
@@ -96,6 +96,8 @@
 const $ = (id) => document.getElementById(id);
 let ws = null, audioCtx = null, stream = null, processor = null, sourceNode = null;
 let recording = false, chunks = [], inRate = 48000, curTurn = null;
+let partialTimer = null, pendingStop = false, streaming = false;
+const PARTIAL_INTERVAL_MS = 900;
 
 // ---------- logging ----------
 function log(dir, type, data) {
@@ -126,7 +128,7 @@ function connect() {
   ws.onerror = () => { setStatus("error", "err"); log("err", "ws.error", "connection failed"); };
   ws.onmessage = (ev) => handleEvent(JSON.parse(ev.data));
 }
-function send(type, data) { ws.send(JSON.stringify({ type, data })); log("out", type, type === "audio.chunk" ? "<audio…>" : data); }
+function send(type, data) { ws.send(JSON.stringify({ type, data })); log("out", type, (type === "audio.chunk" || type === "audio.stream") ? "<audio…>" : data); }
 function resetButtons() {
   $("connect").disabled = false; $("end").disabled = true;
   $("rec").disabled = true; $("fake").disabled = true;
@@ -137,6 +139,11 @@ function handleEvent(msg) {
   log("in", type, type === "tts.audio" ? `<audio ${data.audio.length}b64>` : data);
   switch (type) {
     case "stt.partial": $("partial").textContent = `… ${data.text}`; break;
+    case "nmt.partial":
+      // Preview khi đang nói: hiện bản DỊCH trực tiếp (kèm câu nguồn nhỏ).
+      $("partial").innerHTML =
+        `<span style="opacity:.6">${data.srcText}</span><br>→ <b>${data.dstText}</b>`;
+      break;
     case "stt.final":
       $("partial").textContent = "";
       curTurn = newTurn(data.speaker, data.lang);
@@ -171,6 +178,7 @@ function playAudio(b64) {
 
 // ---------- mic capture → 16kHz mono WAV ----------
 async function startRec() {
+  pendingStop = false;
   stream = await navigator.mediaDevices.getUserMedia({ audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true } });
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   inRate = audioCtx.sampleRate;
@@ -180,16 +188,34 @@ async function startRec() {
   processor.onaudioprocess = (e) => chunks.push(new Float32Array(e.inputBuffer.getChannelData(0)));
   sourceNode.connect(processor); processor.connect(audioCtx.destination);
   recording = true;
-  $("rec").classList.add("active"); $("rec").textContent = "■ Stop &amp; send";
+  $("rec").classList.add("active"); $("rec").textContent = "🔴 Đang nghe… (thả để dịch)";
+  // Streaming: định kỳ gửi audio-tới-hiện-tại để hiện transcript nguồn real-time.
+  partialTimer = setInterval(sendPartial, PARTIAL_INTERVAL_MS);
+  // Nếu người dùng đã thả tay trước khi getUserMedia xong → dừng ngay.
+  if (pendingStop) stopRec();
+}
+// Đóng gói PCM tích luỹ (chưa dừng) → WAV → gửi audio.stream (STT-only preview).
+function sendPartial() {
+  if (!recording || streaming || chunks.length === 0) return;
+  streaming = true;
+  try {
+    const merged = mergeChunks(chunks);
+    const down = downsample(merged, inRate, 16000);
+    const wav = encodeWav(down, 16000);
+    send("audio.stream", { speaker: "me", audio: abToB64(wav) });
+  } finally {
+    streaming = false;
+  }
 }
 function stopRec() {
+  if (partialTimer) { clearInterval(partialTimer); partialTimer = null; }
   recording = false;
   processor.disconnect(); sourceNode.disconnect();
   stream.getTracks().forEach((t) => t.stop());
   audioCtx.close();
-  $("rec").classList.remove("active"); $("rec").textContent = "● Record (click to start)";
+  $("rec").classList.remove("active"); $("rec").textContent = "🎙 Giữ để nói (hold to talk)";
 
-  // merge → downsample → WAV → base64
+  // merge → downsample → WAV → base64  (lượt nói chính thức: full STT→NMT→TTS)
   const merged = mergeChunks(chunks);
   const down = downsample(merged, inRate, 16000);
   const wav = encodeWav(down, 16000);
@@ -237,7 +263,19 @@ function sendFake() {
 // ---------- wire buttons ----------
 $("connect").onclick = connect;
 $("end").onclick = () => { send("session.end", {}); ws.close(); };
-$("rec").onclick = () => (recording ? stopRec() : startRec().catch((e) => log("err", "mic", e.message)));
+// Giữ để nói: pointer capture đảm bảo nhận pointerup kể cả khi con trỏ rời nút.
+$("rec").onpointerdown = (e) => {
+  e.preventDefault();
+  if (recording) return;
+  $("rec").setPointerCapture(e.pointerId);
+  startRec().catch((err) => { recording = false; log("err", "mic", err.message); });
+};
+$("rec").onpointerup = (e) => {
+  e.preventDefault();
+  if (recording) stopRec(); else pendingStop = true; // thả trước khi mic sẵn sàng
+};
+$("rec").onpointercancel = () => { if (recording) stopRec(); else pendingStop = true; };
+$("rec").oncontextmenu = (e) => e.preventDefault();
 $("fake").onclick = sendFake;
 $("ttsOn").onchange = () => { if (ws && ws.readyState === 1) send("config.update", { ttsOn: $("ttsOn").checked }); };
 $("mode").onchange = () => { if (ws && ws.readyState === 1) send("config.update", { mode: $("mode").value }); };

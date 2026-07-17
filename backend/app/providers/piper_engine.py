@@ -24,7 +24,7 @@ Reading "exactly like the text":
 """
 from __future__ import annotations
 
-import io
+import io   
 import logging
 import re
 import unicodedata

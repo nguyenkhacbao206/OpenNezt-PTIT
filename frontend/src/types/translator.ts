@@ -42,10 +42,13 @@ export interface TranslatorTurn {
   dstText: string;
 }
 
-/** Phụ đề tạm thời khi đang nhận dạng. */
+/** Phụ đề tạm thời khi đang nói (streaming). */
 export interface PartialLine {
   speaker: Speaker;
+  /** Bản DỊCH tạm (ngôn ngữ đích) — hiện trực tiếp khi đang nói. */
   text: string;
+  /** Câu nguồn nhận dạng được (nếu có). */
+  srcText?: string;
 }
 
 // --------------------------------------------------------------------------
@@ -62,6 +65,15 @@ export interface AudioChunkMessage {
   data: { speaker: Speaker; audio: string };
 }
 
+export interface AudioStreamMessage {
+  type: 'audio.stream';
+  /**
+   * Chunk tạm khi ĐANG giữ mic: WAV 16kHz mono luỹ kế (accumulated-so-far),
+   * mã hoá base64. Backend chỉ chạy STT và trả `stt.partial` (không NMT/TTS).
+   */
+  data: { speaker: Speaker; audio: string };
+}
+
 export interface ConfigUpdateMessage {
   type: 'config.update';
   data: { mode?: TranslatorMode; ttsOn?: boolean; glossaryId?: string };
@@ -75,6 +87,7 @@ export interface SessionEndMessage {
 export type ClientMessage =
   | SessionStartMessage
   | AudioChunkMessage
+  | AudioStreamMessage
   | ConfigUpdateMessage
   | SessionEndMessage;
 
@@ -100,6 +113,12 @@ export interface SttPartialEvent {
 export interface SttFinalEvent {
   type: 'stt.final';
   data: { speaker: Speaker; text: string; lang: Lang };
+}
+
+export interface NmtPartialEvent {
+  type: 'nmt.partial';
+  /** Bản dịch tạm khi ĐANG nói (từ `audio.stream`) — chưa chốt lượt. */
+  data: { speaker: Speaker; srcText: string; dstText: string };
 }
 
 export interface NmtResultEvent {
@@ -136,6 +155,7 @@ export type ServerEvent =
   | SessionStartedEvent
   | SttPartialEvent
   | SttFinalEvent
+  | NmtPartialEvent
   | NmtResultEvent
   | TtsAudioEvent
   | MetricsEvent

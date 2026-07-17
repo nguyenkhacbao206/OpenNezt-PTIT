@@ -48,6 +48,9 @@ export interface TranslatorSlice {
   connect: () => void;
   disconnect: () => void;
   setTranslatorMode: (mode: TranslatorMode) => void;
+  /** Gửi chunk tạm khi ĐANG giữ mic → hiện transcript nguồn real-time. */
+  streamPartial: (speaker: Speaker, audioBase64: string) => void;
+  /** Chốt lượt nói khi THẢ mic → chạy full STT→NMT→TTS. */
   sendTurn: (speaker: Speaker, audioBase64: string) => void;
   clearTurns: () => void;
 }
@@ -65,6 +68,16 @@ export const createTranslatorSlice: StateCreator<
         break;
       case 'stt.partial':
         set({ partial: { speaker: event.data.speaker, text: event.data.text } });
+        break;
+      case 'nmt.partial':
+        // Preview khi đang nói: hiện bản DỊCH trực tiếp (kèm câu nguồn).
+        set({
+          partial: {
+            speaker: event.data.speaker,
+            text: event.data.dstText,
+            srcText: event.data.srcText,
+          },
+        });
         break;
       case 'nmt.result':
         set({
@@ -92,6 +105,28 @@ export const createTranslatorSlice: StateCreator<
       default:
         break;
     }
+  };
+
+  /**
+   * Đảm bảo đã gửi `session.start` đúng mode/hướng cho `speaker`. Trả về false
+   * nếu chưa kết nối (kèm set lỗi). Dùng chung cho streamPartial & sendTurn.
+   */
+  const ensureSession = (speaker: Speaker): boolean => {
+    const { _socket, translatorMode, _direction } = get();
+    if (!_socket || !_socket.isOpen) {
+      set({ translatorError: 'Chưa kết nối tới backend. Bấm "Kết nối" trước.' });
+      return false;
+    }
+    const { source, target } = directionFor(speaker);
+    const dir = `${translatorMode}:${source}->${target}`;
+    if (_direction !== dir) {
+      _socket.send({
+        type: 'session.start',
+        data: { mode: translatorMode, sourceLang: source, targetLang: target },
+      });
+      set({ _direction: dir });
+    }
+    return true;
   };
 
   return {
@@ -130,23 +165,17 @@ export const createTranslatorSlice: StateCreator<
       set({ translatorMode: mode, _direction: null });
     },
 
+    streamPartial: (speaker, audioBase64) => {
+      if (!ensureSession(speaker)) return;
+      // Không set partial ở đây: `stt.partial` từ server sẽ cập nhật text thật.
+      get()._socket?.send({ type: 'audio.stream', data: { speaker, audio: audioBase64 } });
+    },
+
     sendTurn: (speaker, audioBase64) => {
-      const { _socket, translatorMode, _direction } = get();
-      if (!_socket || !_socket.isOpen) {
-        set({ translatorError: 'Chưa kết nối tới backend. Bấm "Kết nối" trước.' });
-        return;
-      }
-      const { source, target } = directionFor(speaker);
-      const dir = `${translatorMode}:${source}->${target}`;
-      if (_direction !== dir) {
-        _socket.send({
-          type: 'session.start',
-          data: { mode: translatorMode, sourceLang: source, targetLang: target },
-        });
-        set({ _direction: dir });
-      }
-      set({ translatorError: null, partial: { speaker, text: '…' } });
-      _socket.send({ type: 'audio.chunk', data: { speaker, audio: audioBase64 } });
+      if (!ensureSession(speaker)) return;
+      // Giữ nguyên transcript live đang hiện cho tới khi `nmt.result` về.
+      set({ translatorError: null });
+      get()._socket?.send({ type: 'audio.chunk', data: { speaker, audio: audioBase64 } });
     },
 
     clearTurns: () => set({ turns: [], partial: null, metrics: null }),
