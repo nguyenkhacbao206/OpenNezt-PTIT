@@ -35,6 +35,22 @@ class Settings(BaseSettings):
     # CORS allow-list. "*" is fine for local hackathon dev.
     cors_origins: str = "*"
 
+    # --- Offline STT engine selection ------------------------------------
+    # Which local STT engine `mode=offline` uses:
+    #   "whisper" -> Faster-Whisper (one multilingual model, auto-detect)
+    #   "sherpa"  -> sherpa-onnx per-language Zipformer (gipformer VI + zipformer EN)
+    stt_engine: str = "whisper"
+
+    # --- sherpa-onnx STT (used when stt_engine == "sherpa") --------------
+    # Root folder holding one subfolder per language code: <dir>/vi, <dir>/en, ...
+    sherpa_models_dir: str = "models"
+    # Prefer the int8-quantized ONNX variant when a model ships both.
+    sherpa_use_int8: bool = False
+    # ONNX Runtime intra-op threads per recognizer.
+    sherpa_num_threads: int = 2
+    # "greedy_search" (fast) or "modified_beam_search" (slightly better WER).
+    sherpa_decoding_method: str = "greedy_search"
+
     # --- Cloud STT (e.g. OpenAI Whisper API, Google STT, ...) -------------
     stt_api_key: str | None = None
     stt_api_url: str | None = None

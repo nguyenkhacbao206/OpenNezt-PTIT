@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:huggingface.co)",
+      "Bash(python -m py_compile app/providers/sherpa_engine.py app/providers/sherpa.py app/providers/factory.py app/core/config.py tools/download_sherpa_models.py tools/record_stt.py)",
+      "Bash(git -C /d/OpenNezt-PTIT status --short)",
+      "Bash(git -C /d/OpenNezt-PTIT diff --stat)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebSearch",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" \"https://huggingface.co/api/models/g-group-ai-lab/gipformer-65M-rnnt\")",
+      "Bash(curl -s \"https://huggingface.co/api/models/g-group-ai-lab/gipformer-65M-rnnt\")"
+    ]
+  }
+}

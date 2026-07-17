@@ -29,7 +29,10 @@ backend/
       base.py               # STTProvider / NMTProvider / TTSProvider (abstract)
       mock.py               # working fake providers
       cloud.py              # API stubs (env keys, mock fallback)
-      offline.py            # local-model stubs (plug models here)
+      offline.py            # local-model stubs (Whisper STT wired; NLLB/Piper TODO)
+      sherpa.py             # sherpa-onnx STT provider (gipformer VI + zipformer EN)
+      sherpa_engine.py      # per-language sherpa-onnx recognizer loader
+      whisper_engine.py     # shared Faster-Whisper engine
       factory.py            # mode -> provider trio
     core/
       session.py            # SessionState + zero-retention cleanup
@@ -94,6 +97,41 @@ Output: a Markdown transcript at `transcripts/transcript-<timestamp>.md` (or
 `--out <path>`) with the full text, detected language, model, and timed segments.
 Options: `--lang vi|en|auto`, `--model tiny|base|small|medium`. Audio stays in
 RAM only — no audio file is written to disk.
+
+## Sherpa-onnx STT — gipformer (VI) + zipformer (EN)
+
+An alternative offline STT engine using **k2/sherpa-onnx** Zipformer transducers,
+one **independent model per language** (there is no multilingual model):
+
+- **Vietnamese** → [gipformer](https://github.com/ggroup-ai-lab/gipformer)
+  (65M params, robust on noisy/telephony audio, N/C/S accents)
+- **English** → [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx) zipformer-en
+
+It runs behind the same `STTProvider` contract, so NMT/TTS and the WS/UI code
+are untouched. Because each language is its own model, the source language must
+be explicit (no `auto`) — which fits the "each machine has a fixed spoken
+language" meeting flow.
+
+```bash
+cd backend
+pip install -r requirements.txt          # installs sherpa-onnx + huggingface_hub
+
+# 1) Download the models into models/vi and models/en
+python tools/download_sherpa_models.py            # both, or --langs vi
+
+# 2a) Try it straight from the mic (VI model)
+python tools/record_stt.py --engine sherpa --lang vi
+
+# 2b) Or use it in the server pipeline: set in .env then run uvicorn
+#     STT_ENGINE=sherpa
+#     DEFAULT_MODE=offline
+```
+
+Config (`.env`): `STT_ENGINE=sherpa|whisper`, `SHERPA_MODELS_DIR`,
+`SHERPA_USE_INT8` (smaller/faster), `SHERPA_NUM_THREADS`, `SHERPA_DECODING_METHOD`
+(`greedy_search` | `modified_beam_search`). Adding a new low-resource language =
+drop its sherpa-onnx transducer folder under `models/<code>/` and pass
+`--lang <code>` (the engine auto-discovers encoder/decoder/joiner/tokens).
 
 ## WebSocket contract
 
