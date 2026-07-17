@@ -1,0 +1,11 @@
+# Keep the image small and NEVER bake secrets.
+.env
+.venv/
+**/__pycache__/
+*.pyc
+models/
+transcripts/
+tests/
+tools/
+docs/
+*.md
