@@ -21,7 +21,10 @@ class SessionState:
     mode: str = "mock"
     source_lang: str = "vi"
     target_lang: str = "en"
-    tts_on: bool = True
+    # TTS off by default: the main flow is text captions/translation only, and no
+    # TTS engine is wired (Piper/offline not installed, cloud TTS not implemented).
+    # A client can still enable it via config.update once a TTS provider exists.
+    tts_on: bool = False
     glossary_id: str | None = "biz-default"
     started: bool = False
 
