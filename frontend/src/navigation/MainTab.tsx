@@ -7,6 +7,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 import { HomeScreen } from '@/screens/Home';
 import { ProfileScreen } from '@/screens/Profile';
+import { TranslatorScreen } from '@/screens/Translator';
 import { colors } from '@/config/theme';
 import type { MainTabParamList } from './types';
 
@@ -23,7 +24,7 @@ function TabIcon({ icon, focused }: { icon: string; focused: boolean }) {
 export function MainTab() {
   return (
     <Tab.Navigator
-      initialRouteName="Home"
+      initialRouteName="Translator"
       screenOptions={{
         headerStyle: { backgroundColor: colors.surface },
         headerTintColor: colors.text,
@@ -32,6 +33,14 @@ export function MainTab() {
         tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border },
       }}
     >
+      <Tab.Screen
+        name="Translator"
+        component={TranslatorScreen}
+        options={{
+          title: 'Translator',
+          tabBarIcon: ({ focused }) => <TabIcon icon="🎙️" focused={focused} />,
+        }}
+      />
       <Tab.Screen
         name="Home"
         component={HomeScreen}

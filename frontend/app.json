@@ -19,6 +19,9 @@
     },
     "extra": {
       "apiUrl": "https://api.example.com"
-    }
+    },
+    "plugins": [
+      "expo-audio"
+    ]
   }
 }
