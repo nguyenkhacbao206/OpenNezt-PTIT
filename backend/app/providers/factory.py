@@ -26,7 +26,12 @@ def build_tts() -> TTSProvider:
     the engine is unavailable or misconfigured, the caller catches the error and
     the handler emits a `tts_failed` event without aborting the turn.
     """
-    if settings.tts_engine.lower() == "piper":
+    engine = settings.tts_engine.lower()
+    if engine == "edge":
+        from .tts_edge import EdgeTTSProvider
+
+        return EdgeTTSProvider()
+    if engine == "piper":
         return OfflineTTSProvider()
     return MockTTSProvider()
 

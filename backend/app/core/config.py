@@ -51,11 +51,16 @@ class Settings(BaseSettings):
     # "greedy_search" (fast) or "modified_beam_search" (slightly better WER).
     sherpa_decoding_method: str = "greedy_search"
 
-    # --- Offline TTS engine (Piper) --------------------------------------
+    # --- TTS engine ------------------------------------------------------
     # TTS is decoupled from the session mode: the SAME voice engine is used
-    # whether STT/NMT run in cloud or offline. Set to "mock" to emit a silent
-    # placeholder clip (zero dependencies), or "piper" for real local voices.
-    tts_engine: str = "piper"
+    # whether STT/NMT run in cloud or offline. Options:
+    #   "edge"  -> edge-tts online neural voices (free, no key, real VN + EN);
+    #              server-side audio -> works on web AND mobile clients. (default)
+    #   "piper" -> local Piper voices (needs models); "mock" -> silent clip.
+    tts_engine: str = "edge"
+    # edge-tts voices (see `edge-tts --list-voices`).
+    edge_voice_vi: str = "vi-VN-HoaiMyNeural"
+    edge_voice_en: str = "en-US-AriaNeural"
     # Root folder holding one subfolder per language: <dir>/vi, <dir>/en, ...
     # Each folder contains a Piper voice pair: <name>.onnx + <name>.onnx.json
     # (fetch with tools/download_piper_models.py).

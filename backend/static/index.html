@@ -201,7 +201,7 @@ function connect() {
   ws.onopen = () => {
     setStatus("đã kết nối", "on");
     send("session.start", { mode: $("mode").value, sourceLang: $("src").value, targetLang: $("dst").value });
-    // Backend TTS (Piper) stays OFF — audio is read by the browser voice instead.
+    send("config.update", { ttsOn: $("ttsOn").checked });   // audio đọc bằng edge-tts (backend)
     $("end").disabled = false; $("rec").disabled = false; $("fake").disabled = false;
     $("connect").disabled = true;
   };
@@ -242,12 +242,9 @@ function handleEvent(msg) {
       hideLive();
       if (!curTurn) curTurn = newTurn(data.speaker, "");
       curTurn.querySelector(".src").textContent = data.srcText;
-      // Chốt: hiện dần từng chữ + đọc giọng trình duyệt (onboundary khớp chữ↔tiếng).
-      {
-        const willSpeak = $("ttsOn").checked && "speechSynthesis" in window;
-        startReveal(curTurn.querySelector(".dst"), data.dstText, willSpeak ? 300 : 110);
-        speak(data.dstText, $("dst").value);
-      }
+      // Chốt: hiện dần từng chữ. Audio (edge-tts) tới qua tts.audio và khi nạp
+      // xong sẽ khớp lại nhịp chữ theo độ dài audio (chữ & tiếng chạy cùng lúc).
+      startReveal(curTurn.querySelector(".dst"), data.dstText, 130);
       break;
     case "tts.audio": playAudio(data.audio); break;
     case "metrics":
@@ -268,9 +265,17 @@ function newTurn(speaker, lang) {
 function showLive() { $("live").style.display = ""; }
 function hideLive() { $("live").style.display = "none"; $("liveSrc").textContent = ""; $("liveDst").textContent = ""; }
 function playAudio(b64) {
-  const url = "data:audio/wav;base64," + b64;
-  $("player").src = url;
-  $("player").play().catch((e) => log("err", "audio.play", e.message));
+  const mime = b64.startsWith("UklGR") ? "audio/wav" : "audio/mpeg";   // WAV (mock) vs MP3 (edge-tts)
+  const p = $("player");
+  p.src = "data:" + mime + ";base64," + b64;
+  // Khớp nhịp hiện chữ theo độ dài audio -> chữ & tiếng chạy cùng lúc.
+  p.onloadedmetadata = () => { if (isFinite(p.duration) && p.duration > 0) repaceReveal(p.duration * 1000); };
+  p.play().catch((e) => log("err", "audio.play", e.message));
+}
+// Điều chỉnh nhịp reveal đang chạy để kết thúc quanh lúc audio kết thúc.
+function repaceReveal(durationMs) {
+  if (!reveal || durationMs < 400) return;
+  reveal.cadence = Math.max(50, Math.round(durationMs / Math.max(1, reveal.words.length)));
 }
 
 // ---------- word-by-word reveal (debounce, real-time) ----------
@@ -298,12 +303,33 @@ function syncRevealTo(n) {
 }
 
 // ---------- browser voice (speechSynthesis) — no backend/Piper needed ----------
+// getVoices() có thể rỗng cho tới khi sự kiện 'voiceschanged'.
+let voices = [];
+function loadVoices() { if ("speechSynthesis" in window) voices = window.speechSynthesis.getVoices() || []; }
+if ("speechSynthesis" in window) { loadVoices(); window.speechSynthesis.onvoiceschanged = loadVoices; }
+// Chọn ĐÚNG giọng theo ngôn ngữ (không để trình duyệt đọc VN bằng giọng EN).
+function pickVoice(lang) {
+  const want = lang === "vi" ? "vi" : "en";
+  const list = voices.length ? voices : (("speechSynthesis" in window) ? window.speechSynthesis.getVoices() : []);
+  const m = list.filter((v) => (v.lang || "").toLowerCase().startsWith(want));
+  return m.find((v) => /natural|online/i.test(v.name)) || m[0] || null;  // ưu tiên giọng "Natural/Online"
+}
+let noViWarned = false;
 function speak(text, lang) {
   if (!$("ttsOn").checked || !("speechSynthesis" in window) || !text) return;
+  const v = pickVoice(lang);
+  if (!v && lang === "vi") {
+    if (!noViWarned) {
+      noViWarned = true;
+      log("t", "tts", "Trình duyệt chưa có giọng TIẾNG VIỆT — bỏ đọc để tránh sai âm. Cài: Windows → Cài đặt → Thời gian & Ngôn ngữ → Giọng nói → Thêm giọng (Tiếng Việt), hoặc mở bằng Microsoft Edge.");
+    }
+    return;   // reveal chữ vẫn chạy (timer); chỉ không đọc sai âm.
+  }
   try {
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
-    u.lang = lang === "vi" ? "vi-VN" : "en-US";
+    if (v) u.voice = v;
+    u.lang = v ? v.lang : (lang === "vi" ? "vi-VN" : "en-US");
     u.rate = 1.0;
     u.onboundary = (e) => {
       if (e.name && e.name !== "word") return;
@@ -403,7 +429,10 @@ $("connect").onclick = connect;
 $("end").onclick = () => { send("session.end", {}); ws.close(); };
 $("rec").onclick = () => (recording ? stopRec() : startRec().catch((e) => log("err", "mic", e.message)));
 $("fake").onclick = sendFake;
-$("ttsOn").onchange = () => { if (!$("ttsOn").checked && "speechSynthesis" in window) window.speechSynthesis.cancel(); };
+$("ttsOn").onchange = () => {
+  if (ws && ws.readyState === 1) send("config.update", { ttsOn: $("ttsOn").checked });
+  if (!$("ttsOn").checked && "speechSynthesis" in window) window.speechSynthesis.cancel();
+};
 $("mode").onchange = () => { if (ws && ws.readyState === 1) send("config.update", { mode: $("mode").value }); };
 // Đổi Nguồn/Đích giữa các lượt -> gửi lại session.start để backend theo đúng chiều dịch.
 $("src").onchange = $("dst").onchange = () => {
