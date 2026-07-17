@@ -50,8 +50,11 @@ async function blobToWav16kBase64(blob: Blob): Promise<string | null> {
   return arrayBufferToBase64(encodeWavPcm16(samples, TARGET_SAMPLE_RATE));
 }
 
-/** Chu kỳ phát bản dịch dự đoán khi đang nói (ms). */
-const PARTIAL_INTERVAL_MS = 1200;
+/**
+ * Chu kỳ xử lý streaming (ms). Giãn về ~3s để giảm số lần gọi model, tránh
+ * rate-limit (429). Kết hợp với cổng `canSend` (chỉ 1 request in-flight).
+ */
+const PROCESS_INTERVAL_MS = 3000;
 
 /** Callback nhận WAV base64 của cửa sổ audio đang lớn dần (streaming). */
 export type OnPartial = (audioBase64: string) => void;
@@ -59,8 +62,12 @@ export type OnPartial = (audioBase64: string) => void;
 export interface UseMic {
   isRecording: boolean;
   error: string | null;
-  /** Bắt đầu thu; `onPartial` (nếu có) được gọi định kỳ với cửa sổ audio tích luỹ. */
-  start: (onPartial?: OnPartial) => Promise<void>;
+  /**
+   * Bắt đầu thu; mỗi ~3s, nếu `canSend?.()` cho phép (mặc định true), giải mã cửa
+   * sổ audio tích luỹ và gọi `onPartial`. Dùng `canSend` để coalesce khi còn
+   * request đang chờ phản hồi.
+   */
+  start: (onPartial?: OnPartial, canSend?: () => boolean) => Promise<void>;
   /** Dừng thu; resolve base64 WAV của cả lượt, hoặc null nếu không có dữ liệu. */
   stop: () => Promise<string | null>;
 }
@@ -73,7 +80,10 @@ export function useMic(): UseMic {
   const chunksRef = useRef<Blob[]>([]);
   const partialBusyRef = useRef(false);
 
-  const start = useCallback(async (onPartial?: OnPartial): Promise<void> => {
+  const start = useCallback(async (
+    onPartial?: OnPartial,
+    canSend?: () => boolean,
+  ): Promise<void> => {
     setError(null);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -85,9 +95,15 @@ export function useMic(): UseMic {
       const recorder = new MediaRecorder(stream);
       recorder.ondataavailable = (ev: BlobEvent) => {
         if (ev.data.size > 0) chunksRef.current.push(ev.data);
-        // Streaming: giải mã cửa sổ tích luỹ và phát bản dịch dự đoán.
-        // Bỏ qua nếu lần trước còn đang xử lý (tránh chồng request).
-        if (onPartial && !partialBusyRef.current && chunksRef.current.length > 0) {
+        // Streaming: mỗi ~3s giải mã cửa sổ tích luỹ và gửi partial.
+        // Bỏ qua nếu đang giải mã dở HOẶC còn request đang chờ phản hồi (coalesce)
+        // -> tránh dồn call model gây rate-limit.
+        if (
+          onPartial &&
+          !partialBusyRef.current &&
+          (canSend?.() ?? true) &&
+          chunksRef.current.length > 0
+        ) {
           partialBusyRef.current = true;
           const window = new Blob(chunksRef.current, {
             type: recorder.mimeType || 'audio/webm',
@@ -102,8 +118,8 @@ export function useMic(): UseMic {
             });
         }
       };
-      // timeslice -> ondataavailable đều đặn để phát partial khi đang nói.
-      recorder.start(onPartial ? PARTIAL_INTERVAL_MS : undefined);
+      // timeslice -> ondataavailable đều đặn (~3s) để xử lý cửa sổ khi đang nói.
+      recorder.start(onPartial ? PROCESS_INTERVAL_MS : undefined);
       recorderRef.current = recorder;
       setIsRecording(true);
     } catch {

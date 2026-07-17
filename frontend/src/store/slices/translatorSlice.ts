@@ -42,11 +42,15 @@ export interface TranslatorSlice {
   liveOriginal: PartialLine | null;
   /** Bản dịch của phần đã nói (hiện ngay khi đang nói, chưa chốt). */
   liveTranslation: PartialLine | null;
+  /** Có một audio.partial đang chờ phản hồi (để coalesce, tránh dồn call Groq). */
+  awaitingPartial: boolean;
   metrics: TurnMetrics | null;
 
   /** Nội bộ — KHÔNG select trong component. */
   _socket: TranslatorSocket | null;
   _direction: string | null;
+  /** Mốc gửi audio.partial gần nhất (ms) — dùng cho stale timeout. */
+  _lastPartialAt: number;
 
   connect: () => void;
   disconnect: () => void;
@@ -102,8 +106,10 @@ export const createTranslatorSlice: StateCreator<
         break;
       case 'nmt.partial':
         // Bản dịch phần đã nói — hiện ngay ở panel bên kia, chưa chốt.
+        // Đồng thời gỡ cờ chờ để tick sau được phép gửi partial mới (coalesce).
         set({
           liveTranslation: { speaker: event.data.speaker, text: event.data.dstText },
+          awaitingPartial: false,
         });
         break;
       case 'nmt.result':
@@ -111,6 +117,7 @@ export const createTranslatorSlice: StateCreator<
         set({
           liveOriginal: null,
           liveTranslation: null,
+          awaitingPartial: false,
           turns: [
             ...get().turns,
             {
@@ -129,6 +136,7 @@ export const createTranslatorSlice: StateCreator<
         set({
           liveOriginal: null,
           liveTranslation: null,
+          awaitingPartial: false,
           translatorError: `[${event.data.code}] ${event.data.message}`,
         });
         break;
@@ -144,9 +152,11 @@ export const createTranslatorSlice: StateCreator<
     turns: [],
     liveOriginal: null,
     liveTranslation: null,
+    awaitingPartial: false,
     metrics: null,
     _socket: null,
     _direction: null,
+    _lastPartialAt: 0,
 
     connect: () => {
       const socket = new TranslatorSocket();
@@ -166,7 +176,7 @@ export const createTranslatorSlice: StateCreator<
         _socket.send({ type: 'session.end', data: {} });
         _socket.close();
       }
-      set({ translatorStatus: 'disconnected', _socket: null, _direction: null });
+      set({ translatorStatus: 'disconnected', _socket: null, _direction: null, awaitingPartial: false });
     },
 
     setTranslatorMode: (mode) => {
@@ -178,6 +188,8 @@ export const createTranslatorSlice: StateCreator<
       const socket = ensureDirection(speaker);
       if (!socket) return;
       socket.send({ type: 'audio.partial', data: { speaker, audio: audioBase64 } });
+      // Đánh dấu đang chờ phản hồi -> tick sau bị coalesce cho tới khi nmt.* về.
+      set({ awaitingPartial: true, _lastPartialAt: Date.now() });
     },
 
     sendTurn: (speaker, audioBase64) => {
@@ -202,6 +214,12 @@ export const createTranslatorSlice: StateCreator<
       set({ liveOriginal: text ? { speaker, text } : null }),
 
     clearTurns: () =>
-      set({ turns: [], liveOriginal: null, liveTranslation: null, metrics: null }),
+      set({
+        turns: [],
+        liveOriginal: null,
+        liveTranslation: null,
+        awaitingPartial: false,
+        metrics: null,
+      }),
   };
 };

@@ -37,6 +37,9 @@ const VN_SIDE: SideConfig = {
   accent: 'bg-emerald-50 dark:bg-emerald-950/30',
 };
 
+/** Nếu partial không được phản hồi trong khoảng này -> coi như xong để không kẹt. */
+const PARTIAL_STALE_MS = 8000;
+
 export function TranslatorPage() {
   const status = useAppStore((s) => s.translatorStatus);
   const mode = useAppStore((s) => s.translatorMode);
@@ -71,6 +74,12 @@ export function TranslatorPage() {
       window.clearTimeout(watchdogRef.current);
       watchdogRef.current = null;
     }
+  }, []);
+
+  // Coalesce: chỉ gửi audio.partial mới khi partial trước đã có phản hồi (hoặc quá hạn).
+  const canSendPartial = useCallback(() => {
+    const s = useAppStore.getState();
+    return !s.awaitingPartial || Date.now() - s._lastPartialAt > PARTIAL_STALE_MS;
   }, []);
 
   const segmenter = useTranslationSegmenter({
@@ -123,9 +132,9 @@ export function TranslatorPage() {
       segmenter.reset();
       lastTranscriptRef.current = '';
       setSpeechBroken(true); // các lượt sau dùng thẳng Whisper
-      void mic.start((audioBase64) => sendPartial(speaker, audioBase64));
+      void mic.start((audioBase64) => sendPartial(speaker, audioBase64), canSendPartial);
     },
-    [clearWatchdog, speech, segmenter, mic, sendPartial],
+    [clearWatchdog, speech, segmenter, mic, sendPartial, canSendPartial],
   );
   switchToWhisperRef.current = switchToWhisper;
 
@@ -175,7 +184,7 @@ export function TranslatorPage() {
             }
           }, 2500);
         } else {
-          await mic.start((audioBase64) => sendPartial(speaker, audioBase64));
+          await mic.start((audioBase64) => sendPartial(speaker, audioBase64), canSendPartial);
         }
       }
     },
@@ -190,6 +199,7 @@ export function TranslatorPage() {
       setCaption,
       clearWatchdog,
       switchToWhisper,
+      canSendPartial,
     ],
   );
 
