@@ -22,6 +22,10 @@ huggingface_hub>=0.23    # tools/download_sherpa_models.py (fetch gipformer)
 # --- Cloud provider HTTP calls (CloudSTTProvider / CloudNMTProvider via Gemini) ---
 httpx>=0.27
 
+# --- Real TTS: Piper local voices (OfflineTTSProvider, used in cloud+offline) ---
+# Ships Windows/macOS/Linux wheels and bundles espeak-ng (>=1.3). Voices are
+# fetched separately via tools/download_piper_models.py.
+piper-tts>=1.3
+
 # --- Reserved for the rest of the real pipeline (uncomment when wiring) ---
 # transformers>=4.40     # OfflineNMTProvider (NLLB)
-# piper-tts              # OfflineTTSProvider (TTS)

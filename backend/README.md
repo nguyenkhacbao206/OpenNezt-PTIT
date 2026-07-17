@@ -133,6 +133,50 @@ Config (`.env`): `STT_ENGINE=sherpa|whisper`, `SHERPA_MODELS_DIR`,
 drop its sherpa-onnx transducer folder under `models/<code>/` and pass
 `--lang <code>` (the engine auto-discovers encoder/decoder/joiner/tokens).
 
+## Text-to-Speech — Piper (real local voices)
+
+The translated text is spoken back with **Piper** offline neural voices, one
+**independent voice per language** (VI + EN). TTS is **decoupled from the
+session mode**: the same voice engine runs whether STT/NMT are `cloud` (Groq /
+Gemini) or `offline`, so a cloud session still returns real audio. The clip is
+always synthesized from the exact translated text (`dstText`) in the target
+language, so the voice matches the text by construction.
+
+```bash
+cd backend
+pip install -r requirements.txt          # installs piper-tts (bundles espeak-ng)
+
+# 1) Download the voices into models/tts/vi and models/tts/en
+python tools/download_piper_models.py            # both, or --langs vi
+
+# 2) It is on by default (TTS_ENGINE=piper). Turn it off per session with
+#    config.update { "ttsOn": false }, or globally with TTS_ENGINE=mock.
+```
+
+The **voice follows the text, not the session's target language**: the engine
+detects whether the text to speak is Vietnamese or English (`detect_lang`) and
+picks that voice — so Vietnamese output is always read by the VI voice and
+English by the EN voice, even if the `targetLang` hint disagrees.
+
+The engine reads **exactly the text**: input is normalized first (markdown,
+emoji and stray symbols are stripped so they are never spoken), then split at
+punctuation so each clause gets a controlled pause — `,`≈275ms, `;`≈425ms,
+`. ! ?`≈650ms, line break≈950ms, paragraph≈1250ms (`PAUSE_MS` in
+`app/providers/piper_engine.py`). `PIPER_LENGTH_SCALE` sets the speaking rate.
+
+Hear it without the server:
+
+```bash
+python tools/tts_say.py --demo                       # writes demo_en.wav + demo_vi.wav
+python tools/tts_say.py --lang vi --text "Xin chào, bắt đầu họp."
+```
+
+Config (`.env`): `TTS_ENGINE=piper|mock`, `PIPER_MODELS_DIR` (default
+`models/tts`), `PIPER_LENGTH_SCALE` (>1 slower, <1 faster). Adding a new
+language = drop its Piper voice pair (`<name>.onnx` + `<name>.onnx.json`) under
+`models/tts/<code>/` — the engine auto-discovers it. Voices come from
+[rhasspy/piper-voices](https://huggingface.co/rhasspy/piper-voices).
+
 ## WebSocket contract
 
 Envelope: `{"type": <event>, "data": {...}}` in both directions.
@@ -186,8 +230,9 @@ All insertion points are marked with `TODO(...)` comments.
   final `STTResult`s from `transcribe`.
 - **NLLB (NMT)** → `OfflineNMTProvider` (`TODO(offline-nmt)`): return the
   translated string from `translate`.
-- **Piper (TTS)** → `OfflineTTSProvider` (`TODO(offline-tts)`): return
-  base64 audio from `synthesize`.
+- **Piper (TTS)** → already wired in `OfflineTTSProvider` via the shared
+  `PiperEngine` (`app/providers/piper_engine.py`); used for cloud + offline
+  modes. See "Text-to-Speech — Piper" above.
 
 Uncomment the corresponding lines in `requirements.txt`.
 

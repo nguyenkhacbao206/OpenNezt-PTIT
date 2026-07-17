@@ -51,6 +51,18 @@ class Settings(BaseSettings):
     # "greedy_search" (fast) or "modified_beam_search" (slightly better WER).
     sherpa_decoding_method: str = "greedy_search"
 
+    # --- Offline TTS engine (Piper) --------------------------------------
+    # TTS is decoupled from the session mode: the SAME voice engine is used
+    # whether STT/NMT run in cloud or offline. Set to "mock" to emit a silent
+    # placeholder clip (zero dependencies), or "piper" for real local voices.
+    tts_engine: str = "piper"
+    # Root folder holding one subfolder per language: <dir>/vi, <dir>/en, ...
+    # Each folder contains a Piper voice pair: <name>.onnx + <name>.onnx.json
+    # (fetch with tools/download_piper_models.py).
+    piper_models_dir: str = "models/tts"
+    # Speaking rate. >1.0 = slower, <1.0 = faster. Applied to every language.
+    piper_length_scale: float = 1.0
+
     # --- Cloud STT (e.g. OpenAI Whisper API, Google STT, ...) -------------
     stt_api_key: str | None = None
     stt_api_url: str | None = None
