@@ -76,15 +76,32 @@ class OfflineNMTProvider(NMTProvider):
 
 
 class OfflineTTSProvider(TTSProvider):
-    """Local TTS stub. Plug Piper here."""
+    """Local TTS via Piper (shared PiperEngine), one voice per language.
+
+    Used for BOTH cloud and offline sessions (TTS is decoupled from the STT/NMT
+    mode in the factory), so the translated text always comes back as a real
+    spoken clip in the target language.
+    """
 
     name = "offline-tts"
 
     def __init__(self) -> None:
-        # TODO(offline-tts): load Piper voice once.
-        log.info("OfflineTTSProvider constructed (model not loaded).")
+        # The heavy voice is loaded lazily on first synthesize and cached by
+        # get_piper_engine, so constructing the provider is cheap.
+        from ..core.config import settings
+        from .piper_engine import get_piper_engine
+
+        self._engine = get_piper_engine(
+            models_dir=settings.piper_models_dir,
+            length_scale=settings.piper_length_scale,
+        )
+        log.info("OfflineTTSProvider constructed (Piper voice loads on first use).")
 
     async def synthesize(self, text: str, lang: str) -> str:
-        """Not implemented yet -> raises so the handler can emit a fallback."""
-        log.warning("OfflineTTSProvider.synthesize called but not implemented.")
-        raise NotImplementedError("Plug Piper into OfflineTTSProvider.")
+        """Synthesize `text` in `lang` to base64-encoded WAV bytes."""
+        import asyncio
+        import base64
+
+        log.info("OfflineTTSProvider synthesizing %d chars in %s.", len(text), lang)
+        wav = await asyncio.to_thread(self._engine.synthesize, text, lang)
+        return base64.b64encode(wav).decode("ascii")

@@ -47,3 +47,7 @@ models/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# TTS test artifacts
+demo_*.wav
+tts_out.wav

@@ -5,9 +5,14 @@ Run with:  uvicorn app.main:app --reload
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+
+# Static test console (served at /app so getUserMedia has a secure context).
+STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 
 from .core.config import settings
 from .core.glossary import list_glossaries
@@ -48,6 +53,12 @@ async def root() -> dict:
         "glossaries": list_glossaries(),
         "ws": "/ws",
     }
+
+
+@app.get("/app")
+async def test_console() -> FileResponse:
+    """Serve the single-file browser test console (mic → STT/NMT/TTS → playback)."""
+    return FileResponse(STATIC_DIR / "index.html")
 
 
 @app.websocket("/ws")
