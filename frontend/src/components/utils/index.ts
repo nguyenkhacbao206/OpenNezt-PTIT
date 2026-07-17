@@ -5,3 +5,4 @@ export { isValidEmail, validatePassword, isBlank } from './validate';
 export { cn } from './classNames';
 export { encodeWavPcm16, arrayBufferToBase64 } from './audio';
 export { dbg } from './debug';
+export { withSentenceBreaks } from './text';

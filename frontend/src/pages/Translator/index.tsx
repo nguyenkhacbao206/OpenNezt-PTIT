@@ -9,7 +9,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui';
 import { useMic, useWordReveal, useSpeechRecognition, useTranslationSegmenter } from '@/components/hooks';
-import { cn, dbg } from '@/components/utils';
+import { cn, dbg, withSentenceBreaks } from '@/components/utils';
 import { useAppStore } from '@/store';
 import type { PartialLine, Speaker, TranslatorTurn } from '@/types';
 
@@ -428,12 +428,13 @@ function Panel({
               </p>
               <p
                 className={cn(
+                  'whitespace-pre-line',
                   isOwn
                     ? 'text-gray-800 dark:text-gray-100'
                     : 'font-medium text-primary dark:text-primary-light',
                 )}
               >
-                {shown}
+                {withSentenceBreaks(shown)}
                 {revealing && <span className="ml-0.5 animate-pulse">▋</span>}
               </p>
             </div>
@@ -444,8 +445,8 @@ function Panel({
         {originalText && (
           <div className="rounded-lg border border-dashed border-gray-300 p-3 dark:border-gray-600">
             <p className="text-xs uppercase tracking-wide text-gray-400">🎙 Đang nói…</p>
-            <p className="text-gray-700 dark:text-gray-200">
-              {revealedOriginal}
+            <p className="whitespace-pre-line text-gray-700 dark:text-gray-200">
+              {withSentenceBreaks(revealedOriginal)}
               <span className="ml-0.5 animate-pulse">▋</span>
             </p>
           </div>
@@ -457,8 +458,8 @@ function Panel({
             <p className="text-xs uppercase tracking-wide text-amber-600 dark:text-amber-400">
               ⏳ Đang dịch…
             </p>
-            <p className="font-medium text-amber-700 dark:text-amber-300">
-              {revealedTranslation}
+            <p className="whitespace-pre-line font-medium text-amber-700 dark:text-amber-300">
+              {withSentenceBreaks(revealedTranslation)}
               <span className="ml-0.5 animate-pulse">▋</span>
             </p>
           </div>
