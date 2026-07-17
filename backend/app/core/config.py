@@ -68,6 +68,22 @@ class Settings(BaseSettings):
     # This selects the model used for both transcription and translation.
     gemini_model: str = "gemini-2.0-flash"
 
+    # --- Cloud backend selection -----------------------------------------
+    # Which vendor `mode=cloud` uses: "groq" (default, generous free tier) or
+    # "gemini". Both do STT + bidirectional NMT; providers fall back to mock
+    # when the selected vendor's key is missing.
+    cloud_provider: str = "groq"
+
+    # --- Groq (console.groq.com) — free tier STT (Whisper) + NMT (LLM) ---
+    # One key `gsk_...` powers both transcription and translation.
+    groq_api_key: str | None = None
+    # OpenAI-compatible Groq base URL (rarely changed).
+    groq_api_url: str = "https://api.groq.com/openai/v1"
+    # Whisper model for speech-to-text.
+    groq_stt_model: str = "whisper-large-v3"
+    # Chat model used to translate the transcript (both directions).
+    groq_nmt_model: str = "llama-3.3-70b-versatile"
+
     @property
     def cors_origin_list(self) -> list[str]:
         """Parse the comma-separated CORS origins into a list."""
