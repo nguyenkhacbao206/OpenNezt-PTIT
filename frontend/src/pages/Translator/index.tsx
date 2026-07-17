@@ -6,9 +6,9 @@
  * CỦA CHÍNH NÓ — panel người nói hiện câu GỐC, panel bên kia hiện BẢN DỊCH — và
  * text hiện ra theo từng chữ (word-by-word).
  */
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui';
-import { useMic, useWordReveal } from '@/components/hooks';
+import { useMic, useWordReveal, useSpeechRecognition, useTranslationSegmenter } from '@/components/hooks';
 import { cn } from '@/components/utils';
 import { useAppStore } from '@/store';
 import type { PartialLine, Speaker, TranslatorTurn } from '@/types';
@@ -52,9 +52,40 @@ export function TranslatorPage() {
   const sendPartial = useAppStore((s) => s.sendPartial);
   const sendTurn = useAppStore((s) => s.sendTurn);
   const clearTurns = useAppStore((s) => s.clearTurns);
+  const sendTextPartial = useAppStore((s) => s.sendTextPartial);
+  const sendTextFinal = useAppStore((s) => s.sendTextFinal);
+  const setCaption = useAppStore((s) => s.setCaption);
 
   const mic = useMic();
   const [activeSpeaker, setActiveSpeaker] = useState<Speaker | null>(null);
+  const speakerRef = useRef<Speaker | null>(null);
+  const lastTranscriptRef = useRef<string>('');
+
+  const segmenter = useTranslationSegmenter({
+    onCaption: (text) => {
+      const sp = speakerRef.current;
+      if (sp) setCaption(sp, text || null);
+    },
+    onPartial: (text) => {
+      const sp = speakerRef.current;
+      if (sp) sendTextPartial(sp, text);
+    },
+    onFinal: (text) => {
+      const sp = speakerRef.current;
+      if (sp) sendTextFinal(sp, text);
+    },
+  });
+  const speech = useSpeechRecognition({
+    onInterim: (text) => {
+      lastTranscriptRef.current = text;
+      segmenter.push(text, false);
+    },
+    onFinal: (text) => {
+      lastTranscriptRef.current = '';
+      segmenter.push(text, true);
+    },
+  });
+  const useSpeechPath = mode === 'cloud' && speech.supported;
 
   // Tự kết nối khi vào trang, tự đóng khi rời trang (zero-retention).
   useEffect(() => {
@@ -66,16 +97,34 @@ export function TranslatorPage() {
   const handleTalk = useCallback(
     async (speaker: Speaker): Promise<void> => {
       if (activeSpeaker === speaker) {
+        // Dừng
+        if (useSpeechPath) {
+          speech.stop();
+          const last = lastTranscriptRef.current;
+          if (last.trim()) segmenter.push(last, true); // chốt đuôi cuối TRƯỚC khi bỏ speaker
+          segmenter.reset();
+          lastTranscriptRef.current = '';
+          setCaption(speaker, null);
+        } else {
+          const audio = await mic.stop();
+          if (audio) sendTurn(speaker, audio);
+        }
         setActiveSpeaker(null);
-        const audio = await mic.stop();
-        if (audio) sendTurn(speaker, audio); // chốt câu -> bản dịch chính thức
+        speakerRef.current = null;
       } else if (activeSpeaker === null) {
+        // Bắt đầu
         setActiveSpeaker(speaker);
-        // Streaming: mỗi cửa sổ audio -> dịch phần đã nói ngay, không chờ hết câu.
-        await mic.start((audioBase64) => sendPartial(speaker, audioBase64));
+        speakerRef.current = speaker;
+        if (useSpeechPath) {
+          segmenter.reset();
+          lastTranscriptRef.current = '';
+          speech.start(speaker === 'vn' ? 'vi-VN' : 'en-US');
+        } else {
+          await mic.start((audioBase64) => sendPartial(speaker, audioBase64));
+        }
       }
     },
-    [activeSpeaker, mic, sendPartial, sendTurn],
+    [activeSpeaker, mic, sendPartial, sendTurn, useSpeechPath, speech, segmenter, setCaption],
   );
 
   const isConnected = status === 'connected';
@@ -114,9 +163,14 @@ export function TranslatorPage() {
         </div>
       </header>
 
-      {(error || mic.error) && (
+      {(error || mic.error || speech.error) && (
         <div className="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger">
-          {mic.error ?? error}
+          {speech.error ?? mic.error ?? error}
+        </div>
+      )}
+      {mode === 'cloud' && !speech.supported && (
+        <div className="rounded-lg border border-amber-400/40 bg-amber-50/60 px-3 py-2 text-xs text-amber-700 dark:bg-amber-950/20 dark:text-amber-300">
+          Trình duyệt không hỗ trợ nhận dạng giọng nói — tự dùng luồng Whisper (windowed).
         </div>
       )}
 
