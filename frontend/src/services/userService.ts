@@ -1,42 +1,26 @@
 /**
- * userService — các API liên quan tới người dùng.
+ * User API — profile fetching and updates.
  */
-import { httpClient } from '@/config/axios';
-import type {
-  ListQueryParams,
-  PaginatedResponse,
-  UpdateUserProfilePayload,
-  User,
-  UserListItem,
-} from '@/types';
+
+import { api } from '@/config/axios';
+import type { ApiResponse, Paginated } from '@/types/common';
+import type { UpdateProfilePayload, User } from '@/types/user';
 
 export const userService = {
-  /** Lấy thông tin người dùng đang đăng nhập. */
-  async getCurrentUser(): Promise<User> {
-    const { data } = await httpClient.get<User>('/users/me');
-    return data;
+  async getProfile(userId: string): Promise<User> {
+    const { data } = await api.get<ApiResponse<User>>(`/users/${userId}`);
+    return data.data;
   },
 
-  /** Cập nhật hồ sơ cá nhân. */
-  async updateProfile(payload: UpdateUserProfilePayload): Promise<User> {
-    const { data } = await httpClient.patch<User>('/users/me', payload);
-    return data;
+  async updateProfile(userId: string, payload: UpdateProfilePayload): Promise<User> {
+    const { data } = await api.patch<ApiResponse<User>>(`/users/${userId}`, payload);
+    return data.data;
   },
 
-  /** Lấy danh sách người dùng (có phân trang). */
-  async getUsers(
-    params: ListQueryParams = {},
-  ): Promise<PaginatedResponse<UserListItem>> {
-    const { data } = await httpClient.get<PaginatedResponse<UserListItem>>(
-      '/users',
-      { params },
-    );
-    return data;
-  },
-
-  /** Lấy chi tiết 1 người dùng theo id. */
-  async getUserById(id: string): Promise<User> {
-    const { data } = await httpClient.get<User>(`/users/${id}`);
-    return data;
+  async list(page = 1, pageSize = 20): Promise<Paginated<User>> {
+    const { data } = await api.get<ApiResponse<Paginated<User>>>('/users', {
+      params: { page, pageSize },
+    });
+    return data.data;
   },
 };

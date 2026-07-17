@@ -1,5 +1,3 @@
-/** Barrel export cho các layout hệ thống. */
-export { Navbar } from './Navbar';
-export { Sidebar } from './Sidebar';
-export { Footer } from './Footer';
-export { MainLayout } from './MainLayout';
+export { SafeAreaWrapper, type SafeAreaWrapperProps } from './SafeAreaWrapper';
+export { Container, type ContainerProps } from './Container';
+export { HeaderBar, type HeaderBarProps } from './HeaderBar';

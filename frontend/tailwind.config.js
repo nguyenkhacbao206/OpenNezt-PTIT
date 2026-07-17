@@ -1,29 +1,31 @@
 /** @type {import('tailwindcss').Config} */
-export default {
-  // Bật dark mode bằng class => điều khiển qua config/theme.ts
-  darkMode: 'class',
-  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+module.exports = {
+  // NativeWind v4 needs to scan every file that uses className.
+  content: ['./src/**/*.{ts,tsx}', './App.tsx'],
+  presets: [require('nativewind/preset')],
   theme: {
     extend: {
+      // Keep these tokens in sync with src/config/theme.ts.
       colors: {
-        // Palette thương hiệu — tuỳ biến theo design system của dự án
         primary: {
           DEFAULT: '#2563eb',
-          hover: '#1d4ed8',
-          light: '#3b82f6',
-          dark: '#1e40af',
+          light: '#60a5fa',
+          dark: '#1d4ed8',
         },
         secondary: {
-          DEFAULT: '#64748b',
-          hover: '#475569',
+          DEFAULT: '#7c3aed',
+          light: '#a78bfa',
+          dark: '#5b21b6',
         },
-        danger: {
-          DEFAULT: '#dc2626',
-          hover: '#b91c1c',
-        },
+        success: '#16a34a',
+        danger: '#dc2626',
+        warning: '#f59e0b',
+        muted: '#6b7280',
+        background: '#f9fafb',
+        surface: '#ffffff',
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['System'],
       },
     },
   },

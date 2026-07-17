@@ -1,0 +1,24 @@
+{
+  "expo": {
+    "name": "OpenNezt Mobile",
+    "slug": "opennezt-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "opennezt",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.opennezt.mobile"
+    },
+    "android": {
+      "package": "com.opennezt.mobile"
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "extra": {
+      "apiUrl": "https://api.example.com"
+    }
+  }
+}
