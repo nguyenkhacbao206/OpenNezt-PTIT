@@ -20,7 +20,8 @@
       "Bash(PYTHONUTF8=1 D:/OpenNezt-PTIT/.venv/Scripts/python.exe -c ' *)",
       "Bash(xxd)",
       "Bash(iconv -f UTF-16LE -t UTF-8 README.md)",
-      "Bash(mv -f README.utf8.md README.md)"
+      "Bash(mv -f README.utf8.md README.md)",
+      "Bash(npm run *)"
     ]
   }
 }

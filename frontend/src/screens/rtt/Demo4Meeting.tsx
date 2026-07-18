@@ -12,7 +12,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { History, Lock, Mic, PhoneOff, Volume2 } from 'lucide-react-native';
+import { AlertTriangle, History, Lock, Mic, PhoneOff, Volume2 } from 'lucide-react-native';
 
 import { useMeetingMic, useResponsive } from '@/components/hooks';
 import type { RttStackScreenProps } from '@/navigation/rttTypes';
@@ -153,6 +153,8 @@ export function Demo4Meeting({ navigation }: RttStackScreenProps<'Meeting'>) {
   const speaker: Speaker = srcLang === 'vi' ? 'vn' : 'sg';
   const speaking = mic.recording;
   const peerName = room?.peer.name ?? 'Đối tác';
+  // Hai bên cùng một ngôn ngữ → không có gì để dịch (nguồn = đích). Cảnh báo.
+  const sameLang = srcLang === dstLang;
 
   // Đối tác rời/mất kết nối → về lobby.
   useEffect(() => {
@@ -279,6 +281,20 @@ export function Demo4Meeting({ navigation }: RttStackScreenProps<'Meeting'>) {
           </Pressable>
         </View>
       </View>
+
+      {/* Cảnh báo: cả hai chọn cùng ngôn ngữ → không có bản dịch thực sự. */}
+      {sameLang && (
+        <View
+          className={`flex-row items-center gap-2.5 border-b ${compact ? 'px-4 py-3' : 'px-8 py-3.5'}`}
+          style={{ borderColor: '#5a2a2e', backgroundColor: '#2a1518' }}
+        >
+          <AlertTriangle size={18} color={TP.red} />
+          <Text className="flex-1 text-[13px]" style={{ color: '#ff8a99' }}>
+            Bạn và {peerName} đang dùng cùng ngôn ngữ ({srcLang.toUpperCase()}). Sẽ không có bản
+            dịch — hãy để một người đổi sang ngôn ngữ khác.
+          </Text>
+        </View>
+      )}
 
       {/* HERO — voice + bản dịch giữa màn (kẹp số dòng để không tràn) */}
       <View className="flex-1 items-center justify-center px-6">

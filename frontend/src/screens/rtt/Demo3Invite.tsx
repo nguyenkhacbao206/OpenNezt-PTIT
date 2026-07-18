@@ -8,12 +8,12 @@
 import { useEffect } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Check, Laptop, Loader } from 'lucide-react-native';
+import { AlertTriangle, Check, Laptop, Loader } from 'lucide-react-native';
 
 import type { RttStackScreenProps } from '@/navigation/rttTypes';
 import { useStore } from '@/store';
 
-const TP = { accent: '#5EEAD4', text2: '#9AA0A6', black: '#000000' };
+const TP = { accent: '#5EEAD4', text2: '#9AA0A6', red: '#ff6669', black: '#000000' };
 
 function langLabel(lang: string): string {
   return lang === 'vi' ? 'Tiếng Việt (VI)' : 'English (EN)';
@@ -30,9 +30,13 @@ function Circle({ children }: { children: React.ReactNode }) {
 export function Demo3Invite({ navigation }: RttStackScreenProps<'Invite'>) {
   const insets = useSafeAreaInsets();
   const incomingInvite = useStore((s) => s.incomingInvite);
+  const srcLang = useStore((s) => s.srcLang);
   const room = useStore((s) => s.room);
   const acceptInvite = useStore((s) => s.acceptInvite);
   const declineInvite = useStore((s) => s.declineInvite);
+
+  // Người mời cùng ngôn ngữ với mình → ghép cặp sẽ không có bản dịch. Vẫn cho chấp nhận.
+  const sameLang = incomingInvite?.fromLang === srcLang;
 
   // Ghép phòng xong → vào cuộc họp (thay màn để Back không quay lại lời mời).
   useEffect(() => {
@@ -75,6 +79,18 @@ export function Demo3Invite({ navigation }: RttStackScreenProps<'Invite'>) {
             <Text className="text-sm text-tp-text2">
               Ngôn ngữ: {langLabel(incomingInvite.fromLang)}
             </Text>
+            {sameLang && (
+              <View
+                className="w-full flex-row items-center gap-2.5 rounded-xl border px-4 py-3"
+                style={{ borderColor: '#5a2a2e', backgroundColor: '#2a1518' }}
+              >
+                <AlertTriangle size={18} color={TP.red} />
+                <Text className="flex-1 text-[13px]" style={{ color: '#ff8a99' }}>
+                  Cùng ngôn ngữ với bạn ({srcLang.toUpperCase()}) — sẽ không có bản dịch. Bạn vẫn
+                  có thể chấp nhận để vào phòng.
+                </Text>
+              </View>
+            )}
             <View className="w-full flex-row gap-3">
               <Pressable
                 onPress={onDecline}

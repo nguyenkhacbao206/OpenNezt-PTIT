@@ -5,15 +5,15 @@
  * event `lobby`). Bấm "Mời" → gửi `invite`; nhận lời mời → sang Demo3; ghép được
  * phòng → sang Meeting.
  */
-import { useEffect } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Languages, Laptop, Loader, UserPlus, Users } from 'lucide-react-native';
+import { AlertTriangle, Languages, Laptop, Loader, UserPlus, Users } from 'lucide-react-native';
 
 import { useResponsive } from '@/components/hooks';
 import type { RttStackScreenProps } from '@/navigation/rttTypes';
 import { useStore } from '@/store';
-import type { Lang } from '@/types/translator';
+import type { Device, Lang } from '@/types/translator';
 
 const TP = { accent: '#5EEAD4', text2: '#9AA0A6', muted: '#585E66', red: '#ff6669', black: '#000000' };
 
@@ -41,6 +41,15 @@ export function Demo2Devices({ navigation }: RttStackScreenProps<'Devices'>) {
   const room = useStore((s) => s.room);
   const translatorError = useStore((s) => s.translatorError);
   const invitePeer = useStore((s) => s.invitePeer);
+
+  // Thiết bị đang chờ xác nhận mời khi cùng ngôn ngữ (mở popup cảnh báo), hoặc null.
+  const [confirmDevice, setConfirmDevice] = useState<Device | null>(null);
+
+  // Mời thiết bị: cùng ngôn ngữ với mình → mở popup cảnh báo trước; khác thì mời luôn.
+  const requestInvite = (dev: Device) => {
+    if (dev.lang === srcLang) setConfirmDevice(dev);
+    else invitePeer(dev.clientId);
+  };
 
   // Nhận lời mời đến → sang màn Lời mời (bên nhận).
   useEffect(() => {
@@ -138,16 +147,26 @@ export function Demo2Devices({ navigation }: RttStackScreenProps<'Devices'>) {
           <View className="gap-3">
             {devices.map((dev) => {
               const waiting = pendingInviteTo === dev.clientId;
+              // Cùng ngôn ngữ với mình → ghép cặp sẽ không có bản dịch. Cảnh báo.
+              const sameLang = dev.lang === srcLang;
               return (
                 <View
                   key={dev.clientId}
                   className="flex-row items-center justify-between rounded-[14px] border border-tp-border bg-tp-surface p-[18px]"
                 >
-                  <View className="flex-row items-center gap-3.5">
+                  <View className="flex-1 flex-row items-center gap-3.5">
                     <Laptop size={24} color={dev.busy ? TP.muted : TP.text2} />
-                    <View className="gap-[3px]">
+                    <View className="flex-1 gap-[3px]">
                       <Text className="text-base font-semibold text-tp-text">{dev.name}</Text>
                       <Text className="text-xs text-tp-muted">Ngôn ngữ: {langLabel(dev.lang)}</Text>
+                      {sameLang && !dev.busy && (
+                        <View className="mt-0.5 flex-row items-center gap-1.5">
+                          <AlertTriangle size={12} color={TP.red} />
+                          <Text className="text-[11px]" style={{ color: '#ff8a99' }}>
+                            Cùng ngôn ngữ với bạn — sẽ không có bản dịch
+                          </Text>
+                        </View>
+                      )}
                     </View>
                   </View>
                   {dev.busy ? (
@@ -161,7 +180,7 @@ export function Demo2Devices({ navigation }: RttStackScreenProps<'Devices'>) {
                     </View>
                   ) : (
                     <Pressable
-                      onPress={() => invitePeer(dev.clientId)}
+                      onPress={() => requestInvite(dev)}
                       disabled={status !== 'connected' || pendingInviteTo !== null}
                       className="flex-row items-center gap-2 rounded-full bg-tp-accent px-5 py-2.5"
                       style={{ opacity: status !== 'connected' || pendingInviteTo !== null ? 0.5 : 1 }}
@@ -176,6 +195,51 @@ export function Demo2Devices({ navigation }: RttStackScreenProps<'Devices'>) {
           </View>
         )}
       </ScrollView>
+
+      {/* Popup cảnh báo khi mời thiết bị cùng ngôn ngữ — vẫn cho tiếp tục mời. */}
+      <Modal
+        transparent
+        visible={confirmDevice !== null}
+        animationType="fade"
+        statusBarTranslucent
+        onRequestClose={() => setConfirmDevice(null)}
+      >
+        <Pressable
+          className="flex-1 items-center justify-center bg-black/60 px-6"
+          onPress={() => setConfirmDevice(null)}
+        >
+          <Pressable
+            onPress={(e) => e.stopPropagation()}
+            className="w-full max-w-md gap-4 rounded-2xl border border-tp-border bg-tp-surface p-6"
+          >
+            <View className="flex-row items-center gap-2.5">
+              <AlertTriangle size={22} color={TP.red} />
+              <Text className="text-lg font-semibold text-tp-text">Cùng ngôn ngữ</Text>
+            </View>
+            <Text className="text-[14px] leading-[20px] text-tp-text2">
+              “{confirmDevice?.name}” đang dùng {confirmDevice ? langLabel(confirmDevice.lang) : ''},
+              cùng ngôn ngữ với bạn. Nếu ghép cặp sẽ không có bản dịch. Bạn vẫn muốn tiếp tục mời?
+            </Text>
+            <View className="flex-row gap-3">
+              <Pressable
+                onPress={() => setConfirmDevice(null)}
+                className="flex-1 items-center justify-center rounded-full border border-tp-border bg-tp-surface p-[13px]"
+              >
+                <Text className="text-[15px] font-medium text-tp-text">Huỷ</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  if (confirmDevice) invitePeer(confirmDevice.clientId);
+                  setConfirmDevice(null);
+                }}
+                className="flex-1 items-center justify-center rounded-full bg-tp-accent p-[13px]"
+              >
+                <Text className="text-[15px] font-semibold text-tp-bg">Vẫn mời</Text>
+              </Pressable>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
