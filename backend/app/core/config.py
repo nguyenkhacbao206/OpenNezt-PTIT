@@ -85,6 +85,17 @@ class Settings(BaseSettings):
     # Chat model used to translate the transcript (both directions).
     groq_nmt_model: str = "llama-3.3-70b-versatile"
 
+    # --- Offline NMT (CTranslate2 + NLLB-200) ----------------------------
+    # Path to a CTranslate2 int8 NLLB model dir (with tokenizer files), built
+    # by tools/prepare_nllb.py. Unset -> offline NMT raises a clear error.
+    offline_nmt_model_dir: str | None = None
+    # Beam size for the authoritative translation (audio.chunk / text.final).
+    offline_nmt_beam_final: int = 4
+    # Beam size for streaming partials (audio.partial / text.partial); 1 = greedy.
+    offline_nmt_beam_partial: int = 1
+    # CTranslate2 intra-op threads; 0 = let CTranslate2 choose.
+    offline_nmt_intra_threads: int = 0
+
     # --- STT hallucination guard -----------------------------------------
     # Windows quieter than this normalized RMS (0..1), or shorter than this many
     # ms, are treated as silence and NEVER sent to Whisper (which hallucinates on
