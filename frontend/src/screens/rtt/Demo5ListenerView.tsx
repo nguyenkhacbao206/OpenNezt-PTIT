@@ -7,20 +7,22 @@
 import { Pressable, Text, View } from 'react-native';
 import { Lock, Volume2 } from 'lucide-react-native';
 
+import { useRttT } from '@/components/hooks';
 import type { RttStackScreenProps } from '@/navigation/rttTypes';
 
 const TP = { accent: '#5EEAD4', text2: '#9AA0A6', muted: '#585E66' };
 
 export function Demo5ListenerView({ navigation }: RttStackScreenProps<'ListenerView'>) {
+  const t = useRttT();
   return (
     <Pressable className="flex-1 bg-tp-bg" onPress={() => navigation.navigate('Meeting')}>
       {/* Top bar */}
       <View className="flex-row items-center justify-between px-8 py-[18px]">
         <View className="flex-row items-center gap-[7px] rounded-full border border-tp-border bg-tp-surface px-3.5 py-[7px]">
           <Lock size={15} color={TP.accent} />
-          <Text className="text-[13px] font-medium text-tp-text">OFFLINE</Text>
+          <Text className="text-[13px] font-medium text-tp-text">{t.demo5.offline}</Text>
         </View>
-        <Text className="text-[15px] font-medium text-tp-text2">EN sang VI</Text>
+        <Text className="text-[15px] font-medium text-tp-text2">{t.demo5.direction}</Text>
         <View className="flex-row items-center gap-3">
           <Text className="text-[13px] font-semibold text-tp-accent">● LIVE</Text>
           <View className="h-[9px] w-[9px] rounded-full bg-tp-accent" />
@@ -29,17 +31,17 @@ export function Demo5ListenerView({ navigation }: RttStackScreenProps<'ListenerV
 
       {/* Hero */}
       <View className="flex-1 items-center justify-center gap-7 px-24 py-10">
-        <Text className="text-sm font-semibold tracking-[2px] text-tp-accent">ĐANG NGHE</Text>
+        <Text className="text-sm font-semibold tracking-[2px] text-tp-accent">{t.demo5.listening}</Text>
         <Text
           className="text-center text-[64px] font-semibold leading-[74px] text-tp-text"
           style={{ maxWidth: 1000 }}
         >
-          Chúng tôi đề xuất 2,5 triệu đô cho 18 tháng đầu.
+          {t.demo5.bigText}
         </Text>
         <View className="items-center gap-2.5">
-          <Text className="text-xl text-tp-muted">gốc</Text>
+          <Text className="text-xl text-tp-muted">{t.demo5.original}</Text>
           <Text className="text-center text-2xl text-tp-text2" style={{ maxWidth: 760 }}>
-            We&apos;re proposing 2.5 million dollars for the first 18 months.
+            {t.demo5.originalText}
           </Text>
         </View>
       </View>
@@ -47,7 +49,7 @@ export function Demo5ListenerView({ navigation }: RttStackScreenProps<'ListenerV
       {/* Speaking strip */}
       <View className="flex-row items-center justify-center gap-3.5 border-t border-tp-border bg-tp-surface px-8 py-4">
         <Volume2 size={18} color={TP.accent} />
-        <Text className="text-[15px] text-tp-text2">Đang đọc to bản dịch...</Text>
+        <Text className="text-[15px] text-tp-text2">{t.demo5.readingAloud}</Text>
       </View>
     </Pressable>
   );

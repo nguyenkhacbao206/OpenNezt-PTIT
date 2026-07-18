@@ -16,6 +16,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { StateCreator } from 'zustand';
 
 import { env } from '@/config/env';
+import { rttText, uiLangFromLang } from '@/i18n/rtt';
 import { TranslatorSocket } from '@/services';
 import { playBase64Audio } from '@/services/audioPlayback';
 import type {
@@ -142,6 +143,9 @@ export const createTranslatorSlice: StateCreator<RootStore, [], [], TranslatorSl
     return `${s.translatorMode}:${s.srcLang}->${s.dstLang}`;
   };
 
+  /** Thông báo lỗi theo NGÔN NGỮ của người dùng (srcLang) — khớp với UI. */
+  const errs = () => rttText[uiLangFromLang(get().srcLang)].errors;
+
   /** Đảm bảo đã gửi session.start đúng chiều dịch hiện tại (gửi lại nếu đổi). */
   const ensureSession = (): void => {
     const s = get();
@@ -176,7 +180,7 @@ export const createTranslatorSlice: StateCreator<RootStore, [], [], TranslatorSl
         // sử của mình để máy tôi có bản ghi đúng những gì tôi đã nói. Backend đã
         // chặn im lặng nên không còn câu ảo lọt vào đây.
         const text = event.data.text.trim();
-        const next: { partialResponses: number; turns?: TranslatorTurn[] } = {
+        const next: { partialResponses: number; turns?: TranslatorTurn[]; live?: LiveLine | null } = {
           partialResponses: get().partialResponses + 1,
         };
         if (text) {
@@ -189,6 +193,13 @@ export const createTranslatorSlice: StateCreator<RootStore, [], [], TranslatorSl
             mine: true,
           };
           next.turns = [...get().turns, mineTurn];
+          // Cập nhật hero người nói bằng CHÍNH câu vừa chốt. Nếu không, khi một cụm
+          // được chốt mà không kèm stt.partial nào (VAD cắt cụm ngắn), `live` sẽ kẹt
+          // ở câu trước → người nói vẫn thấy câu 1 dù đối tác đã nhận câu 2.
+          next.live = { speaker: event.data.speaker, srcText: text, dstText: get().live?.dstText ?? '' };
+        } else {
+          // Cụm im lặng/rỗng → xoá bong bóng cũ để không hiện lại câu trước.
+          next.live = null;
         }
         set({ ...next, audioCue: null });
         break;
@@ -290,7 +301,7 @@ export const createTranslatorSlice: StateCreator<RootStore, [], [], TranslatorSl
         set({
           pendingInviteTo: null,
           translatorError:
-            event.data.reason === 'busy' ? 'Thiết bị đang bận.' : 'Lời mời bị từ chối.',
+            event.data.reason === 'busy' ? errs().deviceBusy : errs().inviteDeclined,
         });
         break;
       case 'room.joined': {
@@ -322,8 +333,8 @@ export const createTranslatorSlice: StateCreator<RootStore, [], [], TranslatorSl
           live: null,
           translatorError:
             event.data.reason === 'peer_disconnected'
-              ? 'Đối tác đã rời hoặc mất kết nối.'
-              : 'Phòng đã đóng.',
+              ? errs().peerDisconnected
+              : errs().roomClosed,
         });
         break;
       default:
@@ -418,7 +429,7 @@ export const createTranslatorSlice: StateCreator<RootStore, [], [], TranslatorSl
         onEvent: handleEvent,
         onClose: () => set({ translatorStatus: 'disconnected', _direction: null }),
         onError: () =>
-          set({ translatorStatus: 'error', translatorError: 'Lỗi kết nối WebSocket tới backend.' }),
+          set({ translatorStatus: 'error', translatorError: errs().wsError }),
       });
     },
 
@@ -475,7 +486,7 @@ export const createTranslatorSlice: StateCreator<RootStore, [], [], TranslatorSl
             room: null,
           }),
         onError: () =>
-          set({ translatorStatus: 'error', translatorError: 'Lỗi kết nối WebSocket tới backend.' }),
+          set({ translatorStatus: 'error', translatorError: errs().wsError }),
       });
     },
 
@@ -542,7 +553,7 @@ export const createTranslatorSlice: StateCreator<RootStore, [], [], TranslatorSl
     endTurn: (speaker, wavBase64) => {
       const { _socket } = get();
       if (!_socket || !_socket.isOpen) {
-        set({ translatorError: 'Chưa kết nối tới backend. Bấm "Kết nối" trước.' });
+        set({ translatorError: errs().notConnected });
         return;
       }
       ensureSession();
