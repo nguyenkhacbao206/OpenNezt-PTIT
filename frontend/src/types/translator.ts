@@ -187,6 +187,12 @@ export interface NmtResultEvent {
   data: { speaker: Speaker; srcText: string; dstText: string };
 }
 
+/** Bản dịch của CHÍNH MÌNH gửi về lại người nói (để bong bóng mình có cả gốc + dịch). */
+export interface NmtSelfEvent {
+  type: 'nmt.self';
+  data: { speaker: Speaker; srcText: string; dstText: string };
+}
+
 export interface TtsAudioEvent {
   type: 'tts.audio';
   data: { speaker: Speaker; audio: string };
@@ -249,6 +255,7 @@ export type ServerEvent =
   | SttFinalEvent
   | NmtPartialEvent
   | NmtResultEvent
+  | NmtSelfEvent
   | TtsAudioEvent
   | MetricsEvent
   | ConfigUpdatedEvent

@@ -15,6 +15,7 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Globe, Languages, Server } from 'lucide-react-native';
 
 import type { RttStackScreenProps } from '@/navigation/rttTypes';
@@ -39,6 +40,7 @@ export function Demo1Language({ navigation }: RttStackScreenProps<'Language'>) {
   const [showAdv, setShowAdv] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
   const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const compact = width < 600; // điện thoại: gọn padding lại cho vừa màn
 
   // Cuộn xuống cuối để ô đang nhập nhảy lên trên bàn phím, dễ nhìn.
@@ -74,6 +76,7 @@ export function Demo1Language({ navigation }: RttStackScreenProps<'Language'>) {
   return (
     <KeyboardAvoidingView
       className="flex-1 bg-tp-bg"
+      style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView

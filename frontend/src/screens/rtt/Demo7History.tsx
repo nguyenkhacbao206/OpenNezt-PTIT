@@ -6,6 +6,7 @@
  */
 import { useState } from 'react';
 import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, Download, Volume2, X } from 'lucide-react-native';
 
 import { useResponsive } from '@/components/hooks';
@@ -17,6 +18,7 @@ const TP = { accent: '#5EEAD4', text2: '#9AA0A6', muted: '#585E66' };
 
 export function Demo7History({ navigation }: RttStackScreenProps<'History'>) {
   const { compact } = useResponsive();
+  const insets = useSafeAreaInsets();
   const turns = useStore((s) => s.turns);
   const srcLang = useStore((s) => s.srcLang);
   const dstLang = useStore((s) => s.dstLang);
@@ -24,7 +26,7 @@ export function Demo7History({ navigation }: RttStackScreenProps<'History'>) {
   const [selected, setSelected] = useState<TranslatorTurn | null>(null);
 
   return (
-    <View className="flex-1 bg-tp-bg">
+    <View className="flex-1 bg-tp-bg" style={{ paddingTop: insets.top }}>
       {/* Top bar */}
       <View
         className={`flex-row items-center justify-between border-b border-tp-border ${
@@ -50,7 +52,14 @@ export function Demo7History({ navigation }: RttStackScreenProps<'History'>) {
       </View>
 
       {/* Transcript */}
-      <ScrollView contentContainerStyle={{ paddingHorizontal: compact ? 16 : 32, paddingVertical: 8, gap: 14 }}>
+      <ScrollView
+        contentContainerStyle={{
+          paddingHorizontal: compact ? 16 : 32,
+          paddingTop: 8,
+          paddingBottom: 8 + insets.bottom,
+          gap: 14,
+        }}
+      >
         {turns.length === 0 && (
           <Text className="py-10 text-center text-base text-tp-muted">
             Chưa có câu nào. Vào phòng họp và nhấn “Nhấn để nói”.
@@ -80,13 +89,20 @@ export function Demo7History({ navigation }: RttStackScreenProps<'History'>) {
                   <Volume2 size={15} color={TP.text2} />
                 </View>
                 <Text className="text-[17px] leading-[23px] text-tp-text" numberOfLines={3}>
-                  {t.dstText}
+                  {mine ? t.srcText : t.dstText}
                 </Text>
-                {!mine && (
-                  <Text className="text-[13px] leading-[18px] text-tp-muted" numberOfLines={2}>
-                    Gốc: {t.srcText}
-                  </Text>
-                )}
+                {mine
+                  ? !!t.dstText && (
+                      <Text className="text-[13px] leading-[18px] text-tp-muted" numberOfLines={2}>
+                        Dịch: {t.dstText}
+                      </Text>
+                    )
+                  : !!t.srcText &&
+                    t.srcText !== t.dstText && (
+                      <Text className="text-[13px] leading-[18px] text-tp-muted" numberOfLines={2}>
+                        Gốc: {t.srcText}
+                      </Text>
+                    )}
               </Pressable>
             </View>
           );
