@@ -29,10 +29,13 @@ def main() -> int:
     out = Path(args.output_dir)
     out.parent.mkdir(parents=True, exist_ok=True)
 
-    # 1) Convert weights -> CTranslate2 int8.
+    # 1) Convert weights -> CTranslate2 int8. Invoke the converter through THIS
+    # interpreter (sys.executable) so it uses the same venv that has both
+    # ctranslate2 and transformers — the bare `ct2-transformers-converter` on
+    # PATH may resolve to a different Python without transformers installed.
     subprocess.run(
         [
-            "ct2-transformers-converter",
+            sys.executable, "-m", "ctranslate2.converters.transformers",
             "--model", args.model,
             "--output_dir", str(out),
             "--quantization", args.quantization,
