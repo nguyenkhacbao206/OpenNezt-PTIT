@@ -14,7 +14,9 @@ const TARGET_RATE = 16000;
 
 // VAD năng lượng (port từ backend/static/index.html). Chỉnh SPEECH_RMS nếu mic to/nhỏ.
 const SPEECH_RMS = 0.012; // ngưỡng coi là đang nói
-const SILENCE_MS = 650; // ngừng bao lâu thì chốt cụm
+const SILENCE_MS = 1000; // ngừng bao lâu thì chốt cụm — đặt ở mức ngắt HẾT CÂU
+// (không phải ngắt hơi ~650ms) để mỗi cụm ≈ một câu, tránh Whisper chấm câu giữa
+// chừng làm cắt câu làm đôi + khựng giữa clip.
 const MIN_SEG_MS = 500; // cụm tối thiểu (bỏ tiếng động ngắn)
 const MAX_SEG_MS = 6000; // cụm dài liền mạch → cắt cưỡng bức
 
