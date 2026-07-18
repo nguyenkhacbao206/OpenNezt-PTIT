@@ -210,12 +210,16 @@ export function Demo4Meeting({ navigation }: RttStackScreenProps<'Meeting'>) {
     () => [...turns].reverse().find((t) => t.mine !== true) ?? null,
     [turns],
   );
+  // Cụm đang được ĐỌC (audio đang phát) — hero bám theo để chữ khớp tai; audio
+  // phát cuốn chiếu (hàng đợi) nên trễ hơn lúc chữ về.
+  const playingTurn = audioCue ? turns.find((t) => t.id === audioCue.turnId) ?? null : null;
   // Dùng `||` (không phải `??`) để chuỗi rỗng cũng rơi xuống fallback.
-  const heroBig = speaking ? live?.srcText || '' : live?.dstText || lastPeer?.dstText || '';
-  const heroSrc = speaking ? '' : live?.srcText || lastPeer?.srcText || '';
-  // Hero chỉ khớp audio khi ĐANG NGHE lượt đối tác đã chốt (không phải khi mình
-  // nói, và không trong lúc còn `live` preview dự đoán).
-  const heroTurnId = !speaking && !live ? lastPeer?.id : undefined;
+  const heroBig = speaking
+    ? live?.srcText || ''
+    : playingTurn?.dstText || lastPeer?.dstText || '';
+  const heroSrc = speaking ? '' : playingTurn?.srcText || lastPeer?.srcText || '';
+  // Hero khớp audio khi ĐANG NGHE: ưu tiên cụm đang phát, fallback lượt gần nhất.
+  const heroTurnId = !speaking ? playingTurn?.id ?? lastPeer?.id : undefined;
   const cue = audioCue && audioCue.turnId === heroTurnId ? audioCue : null;
   const typed = useReveal(heroBig, { syncMs: cue?.durationMs, syncKey: heroTurnId });
   const typing = typed.length < heroBig.length;
