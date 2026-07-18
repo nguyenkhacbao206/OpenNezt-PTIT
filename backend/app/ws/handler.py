@@ -57,6 +57,34 @@ async def _emit(
     await send(ws, event, data)
 
 
+async def _emit_translation(
+    ws: WebSocket,
+    session: SessionState,
+    manager: "ConnectionManager | None",
+    speaker: str,
+    src_text: str,
+    dst_text: str,
+) -> None:
+    """Deliver a finalized translation of the speaker's turn.
+
+    In a 1:1 room the translation lands on the PEER (`nmt.result`, their left
+    bubble) AND a copy returns to the SPEAKER (`nmt.self`) so their own bubble can
+    show both the original and its translation. With no peer (the `/app` console),
+    it falls back to a single `nmt.result` to self — the self-loop, unchanged.
+    """
+    payload = {"speaker": speaker, "srcText": src_text, "dstText": dst_text}
+    peer_id = (
+        manager.peer_id_of(session.client_id)
+        if manager is not None and session.client_id
+        else None
+    )
+    if peer_id:
+        await manager.send_to(peer_id, "nmt.result", payload)
+        await send(ws, "nmt.self", payload)
+    else:
+        await send(ws, "nmt.result", payload)
+
+
 async def send_error(
     ws: WebSocket, code: str, message: str, can_fallback: bool = True
 ) -> None:
@@ -328,9 +356,7 @@ async def _on_text_final(
             )
         dst_text = apply_glossary(dst_text, session.glossary_id)
         metrics.nmt_ms = sw_nmt.ms
-        await _emit(ws, session, manager, "nmt.result", {
-            "speaker": speaker, "srcText": text, "dstText": dst_text,
-        }, to_peer=True)
+        await _emit_translation(ws, session, manager, speaker, text, dst_text)
     except Exception as exc:  # noqa: BLE001
         await send_error(ws, "nmt_failed", f"NMT provider failed: {exc}")
         return
@@ -398,11 +424,7 @@ async def _on_audio_chunk(
         dst_text = apply_glossary(dst_text, session.glossary_id)
         metrics.nmt_ms = sw_nmt.ms
         # Translation goes to the listener (peer) in a room; self on the console.
-        await _emit(ws, session, manager, "nmt.result", {
-            "speaker": speaker,
-            "srcText": final_text,
-            "dstText": dst_text,
-        }, to_peer=True)
+        await _emit_translation(ws, session, manager, speaker, final_text, dst_text)
     except Exception as exc:  # noqa: BLE001
         await send_error(ws, "nmt_failed", f"NMT provider failed: {exc}")
         return

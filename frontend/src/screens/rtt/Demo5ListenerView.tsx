@@ -13,7 +13,7 @@ const TP = { accent: '#5EEAD4', text2: '#9AA0A6', muted: '#585E66' };
 
 export function Demo5ListenerView({ navigation }: RttStackScreenProps<'ListenerView'>) {
   return (
-    <Pressable className="flex-1 bg-tp-bg" onPress={() => navigation.navigate('YourTurn')}>
+    <Pressable className="flex-1 bg-tp-bg" onPress={() => navigation.navigate('Meeting')}>
       {/* Top bar */}
       <View className="flex-row items-center justify-between px-8 py-[18px]">
         <View className="flex-row items-center gap-[7px] rounded-full border border-tp-border bg-tp-surface px-3.5 py-[7px]">

@@ -5,6 +5,7 @@
  * thiết bị hoặc xuất bản ghi. Chỉ UI.
  */
 import { Pressable, ScrollView, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CheckCheck, Download, List } from 'lucide-react-native';
 
 import { useResponsive } from '@/components/hooks';
@@ -15,6 +16,7 @@ const TP = { accent: '#5EEAD4', text2: '#9AA0A6', black: '#000000' };
 
 export function Demo8EndSession({ navigation }: RttStackScreenProps<'EndSession'>) {
   const { compact } = useResponsive();
+  const insets = useSafeAreaInsets();
   const turns = useStore((s) => s.turns);
   const clearTurns = useStore((s) => s.clearTurns);
 
@@ -30,7 +32,7 @@ export function Demo8EndSession({ navigation }: RttStackScreenProps<'EndSession'
   };
 
   return (
-    <View className="flex-1 bg-tp-bg">
+    <View className="flex-1 bg-tp-bg" style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}>
       <ScrollView
         contentContainerStyle={{
           flexGrow: 1,

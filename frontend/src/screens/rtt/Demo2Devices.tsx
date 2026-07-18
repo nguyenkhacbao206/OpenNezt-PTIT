@@ -7,7 +7,8 @@
  */
 import { useEffect } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
-import { Languages, Laptop, Loader, UserPlus, Users, Wifi } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Languages, Laptop, Loader, UserPlus, Users } from 'lucide-react-native';
 
 import { useResponsive } from '@/components/hooks';
 import type { RttStackScreenProps } from '@/navigation/rttTypes';
@@ -20,13 +21,6 @@ function langLabel(lang: Lang): string {
   return lang === 'vi' ? 'Tiếng Việt (VI)' : 'English (EN)';
 }
 
-const STATUS_LABEL: Record<string, string> = {
-  disconnected: 'Chưa kết nối',
-  connecting: 'Đang kết nối…',
-  connected: 'Đang quét mạng…',
-  error: 'Lỗi kết nối',
-};
-
 function Pill({ children }: { children: React.ReactNode }) {
   return (
     <View className="flex-row items-center gap-2 rounded-full border border-tp-border bg-tp-surface px-3.5 py-2">
@@ -37,6 +31,7 @@ function Pill({ children }: { children: React.ReactNode }) {
 
 export function Demo2Devices({ navigation }: RttStackScreenProps<'Devices'>) {
   const { compact } = useResponsive();
+  const insets = useSafeAreaInsets();
   const devices = useStore((s) => s.devices);
   const myName = useStore((s) => s.myName);
   const srcLang = useStore((s) => s.srcLang);
@@ -58,7 +53,7 @@ export function Demo2Devices({ navigation }: RttStackScreenProps<'Devices'>) {
   }, [room, navigation]);
 
   return (
-    <View className="flex-1 bg-tp-bg">
+    <View className="flex-1 bg-tp-bg" style={{ paddingTop: insets.top }}>
       {/* Top bar */}
       <View
         className={`flex-row flex-wrap items-center justify-between gap-y-2 border-b border-tp-border ${
@@ -73,10 +68,6 @@ export function Demo2Devices({ navigation }: RttStackScreenProps<'Devices'>) {
         </View>
         <View className="flex-row flex-wrap items-center gap-2">
           <Pill>
-            <Wifi size={15} color={status === 'connected' ? TP.accent : TP.muted} />
-            <Text className="text-[13px] text-tp-text2">{STATUS_LABEL[status] ?? status}</Text>
-          </Pill>
-          <Pill>
             <Users size={15} color={TP.accent} />
             <Text className="text-[13px] font-medium text-tp-text">
               {devices.length} thiết bị khác
@@ -85,7 +76,13 @@ export function Demo2Devices({ navigation }: RttStackScreenProps<'Devices'>) {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: compact ? 16 : 32, gap: compact ? 16 : 24 }}>
+      <ScrollView
+        contentContainerStyle={{
+          padding: compact ? 16 : 32,
+          paddingBottom: (compact ? 16 : 32) + insets.bottom,
+          gap: compact ? 16 : 24,
+        }}
+      >
         {/* Your device */}
         <View className="flex-row items-center justify-between rounded-2xl border border-tp-border bg-tp-surface p-5">
           <View className="flex-row items-center gap-3.5">
@@ -122,7 +119,7 @@ export function Demo2Devices({ navigation }: RttStackScreenProps<'Devices'>) {
           <View className="flex-row items-center gap-[7px]">
             <Loader size={14} color={TP.muted} />
             <Text className="text-[13px] text-tp-muted">
-              {status === 'connected' ? 'Đang lắng nghe…' : 'Chưa kết nối'}
+              {status === 'connected' ? 'Đang tìm thiết bị…' : 'Chưa kết nối'}
             </Text>
           </View>
         </View>

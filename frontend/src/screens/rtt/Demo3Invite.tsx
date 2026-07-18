@@ -7,6 +7,7 @@
  */
 import { useEffect } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Check, Laptop, Loader } from 'lucide-react-native';
 
 import type { RttStackScreenProps } from '@/navigation/rttTypes';
@@ -27,6 +28,7 @@ function Circle({ children }: { children: React.ReactNode }) {
 }
 
 export function Demo3Invite({ navigation }: RttStackScreenProps<'Invite'>) {
+  const insets = useSafeAreaInsets();
   const incomingInvite = useStore((s) => s.incomingInvite);
   const room = useStore((s) => s.room);
   const acceptInvite = useStore((s) => s.acceptInvite);
@@ -55,7 +57,7 @@ export function Demo3Invite({ navigation }: RttStackScreenProps<'Invite'>) {
   };
 
   return (
-    <View className="flex-1 bg-tp-bg">
+    <View className="flex-1 bg-tp-bg" style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}>
       <ScrollView
         contentContainerStyle={{ flexGrow: 1, alignItems: 'center', justifyContent: 'center', padding: 40, gap: 40 }}
       >
