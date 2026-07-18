@@ -103,32 +103,31 @@ class OfflineNMTProvider(NMTProvider):
         return self._dir
 
     async def translate(self, text: str, source_lang: str, target_lang: str) -> str:
-        """Authoritative translation: per-sentence, beam search."""
+        """Authoritative translation of the whole segment (beam search).
+
+        No sentence-splitting: the client streams short VAD segments (dịch từng
+        cụm, đuổi theo giọng), and splitting on "." would break decimals like
+        "2.5" ("two point five"). Translating the segment as one unit keeps
+        numbers intact.
+        """
         import asyncio
 
-        from .ct2_nmt import split_sentences, translate_one
+        from .ct2_nmt import translate_one
 
         model_dir = self._require_dir()
-        sentences = split_sentences(text)
-        if not sentences:
+        if not text or not text.strip():
             return ""
-
-        def _run() -> str:
-            return " ".join(
-                translate_one(
-                    model_dir,
-                    self._threads,
-                    s,
-                    source_lang,
-                    target_lang,
-                    self._beam_final,
-                    self._device,
-                    self._compute_type,
-                )
-                for s in sentences
-            )
-
-        return await asyncio.to_thread(_run)
+        return await asyncio.to_thread(
+            translate_one,
+            model_dir,
+            self._threads,
+            text,
+            source_lang,
+            target_lang,
+            self._beam_final,
+            self._device,
+            self._compute_type,
+        )
 
     async def translate_partial(
         self, text: str, source_lang: str, target_lang: str
