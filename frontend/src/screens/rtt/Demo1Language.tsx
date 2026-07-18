@@ -4,8 +4,17 @@
  * Lần đầu mở app: người dùng chọn ngôn ngữ mặc định (lưu trên thiết bị). Chỉ UI,
  * chưa gắn logic — `onContinue` điều hướng sang bước kế.
  */
-import { useState } from 'react';
-import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { useRef, useState } from 'react';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { Globe, Languages, Server } from 'lucide-react-native';
 
 import type { RttStackScreenProps } from '@/navigation/rttTypes';
@@ -28,6 +37,22 @@ const LANGS: LangOption[] = [
 export function Demo1Language({ navigation }: RttStackScreenProps<'Language'>) {
   const [selected, setSelected] = useState('vi');
   const [showAdv, setShowAdv] = useState(false);
+  const scrollRef = useRef<ScrollView>(null);
+  const { width } = useWindowDimensions();
+  const compact = width < 600; // điện thoại: gọn padding lại cho vừa màn
+
+  // Cuộn xuống cuối để ô đang nhập nhảy lên trên bàn phím, dễ nhìn.
+  const scrollToInput = () => {
+    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 60);
+  };
+
+  const toggleAdv = () => {
+    setShowAdv((v) => {
+      const next = !v;
+      if (next) scrollToInput();
+      return next;
+    });
+  };
   const setLangs = useStore((s) => s.setLangs);
   const wsUrl = useStore((s) => s.wsUrl);
   const setWsUrl = useStore((s) => s.setWsUrl);
@@ -47,9 +72,20 @@ export function Demo1Language({ navigation }: RttStackScreenProps<'Language'>) {
   };
 
   return (
-    <View className="flex-1 bg-tp-bg">
+    <KeyboardAvoidingView
+      className="flex-1 bg-tp-bg"
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
       <ScrollView
-        contentContainerStyle={{ flexGrow: 1, alignItems: 'center', justifyContent: 'center', padding: 40, gap: 36 }}
+        ref={scrollRef}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{
+          flexGrow: 1,
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: compact ? 20 : 40,
+          gap: compact ? 24 : 36,
+        }}
       >
         {/* Wordmark */}
         <View className="flex-row items-center gap-2.5">
@@ -61,10 +97,14 @@ export function Demo1Language({ navigation }: RttStackScreenProps<'Language'>) {
 
         {/* Card */}
         <View
-          className="w-full max-w-[560px] gap-6 rounded-[20px] border border-tp-border bg-tp-surface p-10"
+          className={`w-full max-w-[560px] gap-6 rounded-[20px] border border-tp-border bg-tp-surface ${
+            compact ? 'p-5' : 'p-10'
+          }`}
         >
           <View className="gap-2">
-            <Text className="text-[28px] font-semibold text-tp-text">Chọn ngôn ngữ của bạn</Text>
+            <Text className={`${compact ? 'text-[22px]' : 'text-[28px]'} font-semibold text-tp-text`}>
+              Chọn ngôn ngữ của bạn
+            </Text>
             <Text className="text-[15px] leading-[21px] text-tp-text2">
               Ngôn ngữ này được lưu trên thiết bị và dùng làm mặc định cho các phiên họp.
             </Text>
@@ -125,7 +165,7 @@ export function Demo1Language({ navigation }: RttStackScreenProps<'Language'>) {
 
           {/* Cài đặt backend (WS URL) — cần khi chạy trên thiết bị LAN */}
           <Pressable
-            onPress={() => setShowAdv((v) => !v)}
+            onPress={toggleAdv}
             className="mt-1 flex-row items-center justify-center gap-1.5"
           >
             <Server size={13} color="#585E66" />
@@ -141,6 +181,7 @@ export function Demo1Language({ navigation }: RttStackScreenProps<'Language'>) {
               <TextInput
                 value={wsUrl}
                 onChangeText={setWsUrl}
+                onFocus={scrollToInput}
                 autoCapitalize="none"
                 autoCorrect={false}
                 placeholder="ws://localhost:8000/ws"
@@ -151,6 +192,6 @@ export function Demo1Language({ navigation }: RttStackScreenProps<'Language'>) {
           )}
         </View>
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
