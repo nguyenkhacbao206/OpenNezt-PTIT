@@ -1,9 +1,13 @@
 /**
  * RttStack — luồng demo RTT 8 bước (rtt_hackathon.pen).
  * Các màn đã cắt dùng component thật; màn chưa cắt dùng placeholder tạm.
+ *
+ * Mọi màn được bọc `withRttCanvas`: trên desktop giữ nguyên, trên điện thoại
+ * (màn hẹp) tự thu nhỏ layout desktop cho vừa khít để test.
  */
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
+import { withRttCanvas } from '@/components/layout';
 import { Demo1Language } from '@/screens/rtt/Demo1Language';
 import { Demo2Devices } from '@/screens/rtt/Demo2Devices';
 import { Demo3Invite } from '@/screens/rtt/Demo3Invite';
@@ -16,17 +20,27 @@ import type { RttStackParamList } from './rttTypes';
 
 const Stack = createNativeStackNavigator<RttStackParamList>();
 
+// Bọc canvas MỘT lần ở tầng module (không bọc trong render) để tránh remount màn.
+const LanguageScreen = withRttCanvas(Demo1Language);
+const DevicesScreen = withRttCanvas(Demo2Devices);
+const InviteScreen = withRttCanvas(Demo3Invite);
+const MeetingScreen = withRttCanvas(Demo4Meeting);
+const ListenerViewScreen = withRttCanvas(Demo5ListenerView);
+const YourTurnScreen = withRttCanvas(Demo6YourTurn);
+const HistoryScreen = withRttCanvas(Demo7History);
+const EndSessionScreen = withRttCanvas(Demo8EndSession);
+
 export function RttStack() {
   return (
     <Stack.Navigator initialRouteName="Language" screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Language" component={Demo1Language} />
-      <Stack.Screen name="Devices" component={Demo2Devices} />
-      <Stack.Screen name="Invite" component={Demo3Invite} />
-      <Stack.Screen name="Meeting" component={Demo4Meeting} />
-      <Stack.Screen name="ListenerView" component={Demo5ListenerView} />
-      <Stack.Screen name="YourTurn" component={Demo6YourTurn} />
-      <Stack.Screen name="History" component={Demo7History} />
-      <Stack.Screen name="EndSession" component={Demo8EndSession} />
+      <Stack.Screen name="Language" component={LanguageScreen} />
+      <Stack.Screen name="Devices" component={DevicesScreen} />
+      <Stack.Screen name="Invite" component={InviteScreen} />
+      <Stack.Screen name="Meeting" component={MeetingScreen} />
+      <Stack.Screen name="ListenerView" component={ListenerViewScreen} />
+      <Stack.Screen name="YourTurn" component={YourTurnScreen} />
+      <Stack.Screen name="History" component={HistoryScreen} />
+      <Stack.Screen name="EndSession" component={EndSessionScreen} />
     </Stack.Navigator>
   );
 }
