@@ -13,10 +13,12 @@ import { create } from 'zustand';
 
 import { createAuthSlice, type AuthSlice } from './slices/authSlice';
 import { createSettingSlice, type SettingSlice } from './slices/settingSlice';
+import { createTranslatorSlice, type TranslatorSlice } from './slices/translatorSlice';
 
-export type RootStore = AuthSlice & SettingSlice;
+export type RootStore = AuthSlice & SettingSlice & TranslatorSlice;
 
 export const useStore = create<RootStore>()((...args) => ({
   ...createAuthSlice(...args),
   ...createSettingSlice(...args),
+  ...createTranslatorSlice(...args),
 }));

@@ -13,6 +13,8 @@ interface Env {
   API_TIMEOUT: number;
   APP_ENV: AppEnvironment;
   IS_DEV: boolean;
+  /** WebSocket của backend phiên dịch real-time (STT/NMT/TTS). Có thể đổi trong app. */
+  wsUrl: string;
 }
 
 function required(value: string | undefined, key: string): string {
@@ -32,4 +34,5 @@ export const env: Env = {
   API_TIMEOUT: Number(process.env.EXPO_PUBLIC_API_TIMEOUT ?? 15000),
   APP_ENV: appEnv,
   IS_DEV: appEnv === 'development',
+  wsUrl: process.env.EXPO_PUBLIC_WS_URL ?? 'ws://localhost:8000/ws',
 };

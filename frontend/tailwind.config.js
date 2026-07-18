@@ -23,6 +23,16 @@ module.exports = {
         muted: '#6b7280',
         background: '#f9fafb',
         surface: '#ffffff',
+        // --- RTT desktop design tokens (rtt_hackathon.pen) ---
+        tp: {
+          bg: '#000000',
+          surface: '#141414',
+          border: '#262626',
+          text: '#FFFFFF',
+          text2: '#9AA0A6',
+          muted: '#585E66',
+          accent: '#5EEAD4',
+        },
       },
       fontFamily: {
         sans: ['System'],

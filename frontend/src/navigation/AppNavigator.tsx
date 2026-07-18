@@ -1,14 +1,12 @@
 /**
- * Root navigator — orchestrates the Auth ⇄ Main flows based on the auth state.
+ * Root navigator.
  *
- *  - Runs `bootstrap()` once on mount to restore a persisted session.
- *  - Shows a splash while `hydrated` is false to avoid an auth-screen flash.
- *  - Selects the stack purely from `isAuthenticated`; the two `Stack.Screen`
- *    entries are mutually exclusive so the whole tree swaps atomically.
+ * Auth is currently DISABLED for the backend demo build: the app boots straight
+ * into the Main flow (see the Translator demo tab). The Auth stack and the
+ * `isAuthenticated` gate are kept in the codebase — re-enable them by restoring
+ * the commented conditional below when auth is needed again.
  */
 
-import { useEffect } from 'react';
-import { ActivityIndicator, View } from 'react-native';
 import {
   DefaultTheme,
   NavigationContainer,
@@ -16,10 +14,7 @@ import {
 } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-import { colors } from '@/config/theme';
-import { useStore } from '@/store';
-import { AuthStack } from './AuthStack';
-import { MainTab } from './MainTab';
+import { RttStack } from './RttStack';
 import type { RootStackParamList } from './types';
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
@@ -28,50 +23,22 @@ const navigationTheme: NavTheme = {
   ...DefaultTheme,
   colors: {
     ...DefaultTheme.colors,
-    primary: colors.primary,
-    background: colors.background,
-    card: colors.surface,
-    text: colors.text,
-    border: colors.border,
+    primary: '#5EEAD4',
+    background: '#000000',
+    card: '#141414',
+    text: '#FFFFFF',
+    border: '#262626',
   },
 };
 
-function SplashScreen() {
-  return (
-    <View
-      style={{
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: colors.background,
-      }}
-    >
-      <ActivityIndicator size="large" color={colors.primary} />
-    </View>
-  );
-}
-
 export function AppNavigator() {
-  const hydrated = useStore((s) => s.hydrated);
-  const isAuthenticated = useStore((s) => s.user !== null);
-  const bootstrap = useStore((s) => s.bootstrap);
-
-  useEffect(() => {
-    void bootstrap();
-  }, [bootstrap]);
-
-  if (!hydrated) {
-    return <SplashScreen />;
-  }
-
+  // Auth gate disabled for the demo — always enter the Main flow.
+  // To restore auth, bring back `bootstrap()`, the `hydrated` splash and the
+  // `isAuthenticated ? <Main/> : <Auth/>` conditional (see git history).
   return (
     <NavigationContainer theme={navigationTheme}>
       <RootStack.Navigator screenOptions={{ headerShown: false }}>
-        {isAuthenticated ? (
-          <RootStack.Screen name="Main" component={MainTab} />
-        ) : (
-          <RootStack.Screen name="Auth" component={AuthStack} />
-        )}
+        <RootStack.Screen name="Main" component={RttStack} />
       </RootStack.Navigator>
     </NavigationContainer>
   );
