@@ -10,7 +10,7 @@
  *   - Đang nói (giữ nút/Space): hero accent = lời bạn + "Đang gửi tới đối tác…".
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AlertTriangle, History, Lock, Mic, PhoneOff, Volume2 } from 'lucide-react-native';
 
@@ -249,6 +249,34 @@ export function Demo4Meeting({ navigation }: RttStackScreenProps<'Meeting'>) {
   // Vừa nói xong: không giữ mic, không có audio đối tác đang phát, và lượt gần
   // nhất là của MÌNH (đối tác chưa gửi bản dịch nào mới).
   const justSpoke = !speaking && !playingTurn && lastTurn?.mine === true;
+
+  // "Đang xử lý" ngay sau khi thả mic: chờ transcript cụm VỪA nói quay về để
+  // KHÔNG nháy câu CŨ (stt.final của cụm mới thường về trễ vài trăm ms). Bắt cạnh
+  // thả mic (speaking true→false), giữ loading tới khi có lượt-của-mình MỚI, hoặc
+  // hết 4s (dự phòng: cụm cuối im lặng → backend không trả stt.final).
+  const [awaitingMine, setAwaitingMine] = useState(false);
+  const prevSpeaking = useRef(false);
+  const mineIdAtRelease = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    if (prevSpeaking.current && !speaking) {
+      mineIdAtRelease.current = lastMine?.id;
+      setAwaitingMine(true);
+    }
+    prevSpeaking.current = speaking;
+  }, [speaking, lastMine?.id]);
+  useEffect(() => {
+    if (awaitingMine && lastMine?.id && lastMine.id !== mineIdAtRelease.current) {
+      setAwaitingMine(false);
+    }
+  }, [lastMine?.id, awaitingMine]);
+  useEffect(() => {
+    if (!awaitingMine) return undefined;
+    const timer = setTimeout(() => setAwaitingMine(false), 4000);
+    return () => clearTimeout(timer);
+  }, [awaitingMine]);
+  // Chỉ hiện loading khi vừa nói xong và chưa nghe đối tác (không đè lúc đang nghe).
+  const showMineLoading = awaitingMine && !speaking && !playingTurn;
+
   // Dùng `||` (không phải `??`) để chuỗi rỗng cũng rơi xuống fallback.
   const heroBig = speaking
     ? live?.srcText || ''
@@ -339,15 +367,28 @@ export function Demo4Meeting({ navigation }: RttStackScreenProps<'Meeting'>) {
       <View className="flex-1 items-center justify-center px-6">
         <Text
           className="text-[13px] font-semibold tracking-[2px]"
-          style={{ color: speaking || justSpoke ? TP.accent : TP.text2 }}
+          style={{ color: speaking || justSpoke || showMineLoading ? TP.accent : TP.text2 }}
         >
-          {speaking ? t.demo4.statusSpeaking : justSpoke ? t.demo4.statusSpoke : t.demo4.statusListening}
+          {speaking
+            ? t.demo4.statusSpeaking
+            : showMineLoading
+              ? t.demo4.statusProcessing
+              : justSpoke
+                ? t.demo4.statusSpoke
+                : t.demo4.statusListening}
         </Text>
         <View
           style={{ maxHeight: compact ? 220 : 380, overflow: 'hidden', maxWidth: 1000 }}
           className="mt-5 items-center"
         >
-          {heroBig ? (
+          {showMineLoading ? (
+            <View className="flex-row items-center gap-3">
+              <ActivityIndicator color={TP.accent} />
+              <Text className="text-center text-lg text-tp-text2" style={{ maxWidth: 720 }}>
+                {t.demo4.processing}
+              </Text>
+            </View>
+          ) : heroBig ? (
             <Text
               numberOfLines={compact ? 4 : 5}
               className={`text-center font-semibold ${
@@ -368,7 +409,7 @@ export function Demo4Meeting({ navigation }: RttStackScreenProps<'Meeting'>) {
             </Text>
           )}
         </View>
-        {speaking ? (
+        {showMineLoading ? null : speaking ? (
           <Text className="mt-5 text-center text-base text-tp-text2" numberOfLines={2} style={{ maxWidth: 800 }}>
             {t.demo4.sendingTranslation(peerName)}
           </Text>

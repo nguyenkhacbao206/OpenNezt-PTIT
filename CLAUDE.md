@@ -43,8 +43,13 @@ python tools/record_stt.py             # mic → real Faster-Whisper STT → Mar
 python tools/prepare_nllb.py           # build CTranslate2 int8 NLLB dir for offline NMT (offline_nmt_model_dir)
 python tools/prepare_phowhisper.py     # build CT2 PhoWhisper VI model for STT_ENGINE=phowhisper
 python tools/download_sherpa_models.py # fetch sherpa-onnx models for STT_ENGINE=sherpa
+python tools/download_piper_models.py  # fetch Piper voices -> models/tts/{vi,en} for TTS_ENGINE=piper
 ```
-There is no pytest suite: `tests/test_client.py` is a manual end-to-end WS client.
+Tests: `tests/` has **pytest unit tests** for pure helpers (`test_ct2_nmt.py`,
+`test_offline_nmt_config.py`, `test_offline_*`) — run `python -m pytest tests/`
+or a single file/test (`python -m pytest tests/test_ct2_nmt.py -q`,
+`... -k test_to_flores_known`). **pytest is not in `requirements.txt`** — install
+it separately. `tests/test_client.py` is instead a manual end-to-end WS client.
 Run one-off backend checks with an in-process `fastapi.testclient.TestClient`
 websocket for the **single-connection** pipeline. **Do NOT use TestClient to
 verify pairing/routing** — it cannot deliver cross-connection sends (a handler
@@ -94,6 +99,15 @@ abstract contract in `app/providers/base.py`. Concrete trios implement it:
     (`local_nmt.py`, OpenAI-compatible local chat — Ollama/vLLM).
   - **TTS** is Piper (`piper_engine.py`), but reached via `build_tts()` /
     `TTS_ENGINE=piper` (see below), not the offline trio.
+  - **Device/precision is config-driven** (previously hard-coded CPU/int8):
+    STT reads `STT_DEVICE`/`STT_COMPUTE_TYPE`/`STT_MODEL_SIZE`, NMT reads
+    `OFFLINE_NMT_DEVICE`/`OFFLINE_NMT_COMPUTE_TYPE` — default CPU+int8, set
+    `cuda`+`float16` on a GPU box.
+  - **MKL guard.** Both offline STT (faster-whisper) and NMT (NLLB) run on
+    **CTranslate2**, so `app/__init__.py` sets **`CT2_USE_MKL=0`** (oneDNN
+    backend) *before any ctranslate2 import* — the Intel-MKL default throws
+    `mkl_malloc: failed to allocate memory` on some Windows/low-RAM machines.
+    Override with `CT2_USE_MKL=1`.
 
 The active trio is chosen by session `mode` (`mock`/`cloud`/`offline`) in
 `app/providers/factory.py` — **the only file that knows concrete provider
@@ -105,8 +119,10 @@ it in `factory.py`. Never import a concrete provider into the handler.
 TTS is decoupled from the STT/NMT mode (`build_tts()` in `factory.py`, chosen by
 `TTS_ENGINE`, **default `edge`**): `edge` → `tts_edge.py` (Microsoft edge-tts
 online neural voices — free, no key, real Vietnamese voice `vi-VN-HoaiMyNeural`);
-`piper` → local Piper; else Mock. So a cloud STT/NMT session still gets edge-tts
-audio. `session.tts_on` still defaults **False**; the RN client enables it via
+`piper` → local Piper (`piper_engine.py`; **offline**, needs the `piper-tts`
+package + voices — fetch with `python tools/download_piper_models.py` into
+`models/tts/{vi,en}` and set `PIPER_MODELS_DIR`); else Mock. So a cloud STT/NMT
+session still gets edge-tts audio. `session.tts_on` still defaults **False**; the RN client enables it via
 `config.update {ttsOn}` (the pairing flow does this on `room.joined`).
 
 `STTProvider.transcribe` is an **async generator**: it yields partial
@@ -125,7 +141,9 @@ audio. `session.tts_on` still defaults **False**; the RN client enables it via
   (backend runs STT+NMT → `stt.partial` + `nmt.partial`); `audio.chunk` is the
   final lock → `stt.final` + `nmt.result`. `_on_audio_partial` is best-effort
   (swallows errors). Clients should coalesce (≤1 partial in flight) to avoid Groq
-  rate limits.
+  rate limits. **Note:** the RN meeting mic (`useMeetingMic`) now sends **only
+  per-VAD-segment `audio.chunk`** (no `audio.partial`); the partial path remains
+  for the `/app` console and other clients.
 - **Text path** — client already has the transcript (e.g. browser STT) and sends
   `text.partial` / `text.final`; the backend only **translates** (no STT) →
   `nmt.partial` / `nmt.result`.
@@ -135,6 +153,13 @@ audio. `session.tts_on` still defaults **False**; the RN client enables it via
 → optional TTS (only if `session.tts_on`) → `metrics` (`e2eMs`). Each stage is
 wrapped in try/except: a failure emits an `error` event with `canFallback` and
 keeps the connection alive; a TTS failure never aborts the turn.
+
+**Per-segment, no sentence-splitting (deliberate).** Each `audio.chunk` is one
+VAD segment, translated + TTS'd on its own (streaming "cuốn chiếu"). There is
+**no source buffering / sentence splitting** — `OfflineNMTProvider.translate`
+translates the whole segment as one unit, because splitting on "." breaks
+decimals like `2.5` ("two point five"). Do NOT reintroduce sentence-splitting in
+the source/NMT path (there is no `text_utils.py` / `_nmt_buffer` anymore).
 
 ### STT hallucination guard (`core/audio_utils.py`)
 Whisper hallucinates canned text ("Thank you.", "Let's go!", "Ghiền Mì Gõ") on
