@@ -96,6 +96,12 @@ export interface TranslatorSlice {
   _direction: string | null;
   /** nmt.result kế tiếp là bản CHỐT của lượt → gộp sessionSegments vào lịch sử. */
   _finalizePending: boolean;
+  /** Tên đang muốn vào lobby (khác null = đang cố kết nối, cho phép tự thử lại). */
+  _lobbyName: string | null;
+  /** Handle setTimeout của lần thử lại đang chờ (để huỷ khi ngắt). */
+  _reconnectTimer: ReturnType<typeof setTimeout> | null;
+  /** Số lần đã thử kết nối lobby liên tiếp (reset khi mở được). */
+  _reconnectAttempts: number;
 
   /** Nạp cài đặt đã lưu (wsUrl, ngôn ngữ, tts) khi mở app. */
   hydrateSettings: () => Promise<void>;
@@ -158,6 +164,60 @@ export const createTranslatorSlice: StateCreator<RootStore, [], [], TranslatorSl
       });
       set({ _direction: dir });
     }
+  };
+
+  // Backend desktop là exe PyInstaller, cold-start có thể mất vài chục giây mới
+  // listen cổng 8000. Nên khi vào lobby ta tự thử lại (backoff) thay vì báo lỗi
+  // ngay lần đầu ERR_CONNECTION_REFUSED. Ngừng khi: mở được, đã vào phòng, hoặc
+  // người dùng chủ động ngắt (_lobbyName = null).
+  const RECONNECT_MAX = 40; // ~40 lần
+  const scheduleReconnect = (): void => {
+    const attempts = get()._reconnectAttempts;
+    if (get()._lobbyName === null) return; // đã ngắt chủ động
+    if (attempts >= RECONNECT_MAX) {
+      set({
+        translatorStatus: 'error',
+        translatorError:
+          'Không kết nối được backend sau nhiều lần thử. Kiểm tra backend/WS URL rồi thử lại.',
+      });
+      return;
+    }
+    const delay = Math.min(3000, 500 + attempts * 300); // 0.5s → tối đa 3s
+    set({
+      translatorStatus: 'connecting',
+      translatorError: null,
+      _reconnectAttempts: attempts + 1,
+      _reconnectTimer: setTimeout(() => {
+        set({ _reconnectTimer: null });
+        if (get()._lobbyName !== null) connectLobby();
+      }, delay),
+    });
+  };
+
+  const connectLobby = (): void => {
+    if (get()._lobbyName === null) return;
+    const socket = new TranslatorSocket();
+    set({ translatorStatus: 'connecting', translatorError: null, _socket: socket, _direction: null });
+    socket.connect(get().wsUrl, {
+      onOpen: () => {
+        set({ translatorStatus: 'connected', _reconnectAttempts: 0, translatorError: null });
+        const s = get();
+        socket.send({ type: 'hello', data: { name: s.myName, lang: s.srcLang } });
+      },
+      onEvent: handleEvent,
+      onClose: () => {
+        set({ translatorStatus: 'disconnected', _direction: null, myClientId: null, devices: [], room: null });
+        // Rớt/không mở được trong khi vẫn muốn ở lobby → thử lại.
+        if (get()._lobbyName !== null) scheduleReconnect();
+      },
+      onError: () => {
+        // Chưa vào lobby được (backend đang khởi động) → im lặng thử lại.
+        // onClose thường theo sau onError nên việc lên lịch để onClose lo.
+        if (get()._lobbyName === null) {
+          set({ translatorStatus: 'error', translatorError: 'Lỗi kết nối WebSocket tới backend.' });
+        }
+      },
+    });
   };
 
   const handleEvent = (event: ServerEvent): void => {
@@ -368,6 +428,9 @@ export const createTranslatorSlice: StateCreator<RootStore, [], [], TranslatorSl
     _socket: null,
     _direction: null,
     _finalizePending: false,
+    _lobbyName: null,
+    _reconnectTimer: null,
+    _reconnectAttempts: 0,
 
     hydrateSettings: async () => {
       try {
@@ -434,7 +497,8 @@ export const createTranslatorSlice: StateCreator<RootStore, [], [], TranslatorSl
     },
 
     disconnect: () => {
-      const { _socket } = get();
+      const { _socket, _reconnectTimer } = get();
+      if (_reconnectTimer) clearTimeout(_reconnectTimer);
       if (_socket) {
         _socket.send({ type: 'session.end', data: {} });
         _socket.close();
@@ -444,6 +508,8 @@ export const createTranslatorSlice: StateCreator<RootStore, [], [], TranslatorSl
         _socket: null,
         _direction: null,
         _finalizePending: false,
+        _lobbyName: null,
+        _reconnectTimer: null,
         live: null,
         sessionSegments: [],
         myClientId: null,
@@ -455,12 +521,17 @@ export const createTranslatorSlice: StateCreator<RootStore, [], [], TranslatorSl
     },
 
     enterLobby: (name) => {
-      const socket = new TranslatorSocket();
+      // Huỷ mọi lần thử lại đang chờ + đóng kết nối cũ (khi đổi backend) trước khi
+      // bắt đầu phiên mới.
+      const prev = get()._reconnectTimer;
+      if (prev) clearTimeout(prev);
+      const prevSocket = get()._socket;
+      if (prevSocket) prevSocket.close();
       set({
-        translatorStatus: 'connecting',
+        _lobbyName: name,
+        _reconnectTimer: null,
+        _reconnectAttempts: 0,
         translatorError: null,
-        _socket: socket,
-        _direction: null,
         myName: name,
         myClientId: null,
         devices: [],
@@ -470,21 +541,26 @@ export const createTranslatorSlice: StateCreator<RootStore, [], [], TranslatorSl
         turns: [],
         live: null,
       });
+      const socket = new TranslatorSocket();
+      set({ translatorStatus: 'connecting', translatorError: null, _socket: socket, _direction: null });
       socket.connect(get().wsUrl, {
         onOpen: () => {
-          set({ translatorStatus: 'connected' });
+          set({ translatorStatus: 'connected', _reconnectAttempts: 0, translatorError: null });
           const s = get();
           socket.send({ type: 'hello', data: { name: s.myName, lang: s.srcLang } });
         },
         onEvent: handleEvent,
-        onClose: () =>
+        onClose: () => {
           set({
             translatorStatus: 'disconnected',
             _direction: null,
             myClientId: null,
             devices: [],
             room: null,
-          }),
+          });
+          // Rớt/không mở được trong khi vẫn muốn ở lobby → thử lại.
+          if (get()._lobbyName !== null) scheduleReconnect();
+        },
         onError: () =>
           set({ translatorStatus: 'error', translatorError: errs().wsError }),
       });
@@ -511,6 +587,7 @@ export const createTranslatorSlice: StateCreator<RootStore, [], [], TranslatorSl
 
     leaveRoom: () => {
       const s = get();
+      if (s._reconnectTimer) clearTimeout(s._reconnectTimer);
       if (s._socket?.isOpen) {
         s._socket.send({ type: 'room.leave', data: {} });
         s._socket.send({ type: 'session.end', data: {} });
@@ -521,6 +598,8 @@ export const createTranslatorSlice: StateCreator<RootStore, [], [], TranslatorSl
         _socket: null,
         _direction: null,
         _finalizePending: false,
+        _lobbyName: null,
+        _reconnectTimer: null,
         live: null,
         sessionSegments: [],
         myClientId: null,

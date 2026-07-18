@@ -8,10 +8,12 @@
 import { useEffect, useState } from 'react';
 import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { AlertTriangle, Languages, Laptop, Loader, UserPlus, Users } from 'lucide-react-native';
+import { AlertTriangle, Languages, Laptop, Link2, Loader, UserPlus, Users, Wifi } from 'lucide-react-native';
 
 import { useResponsive, useRttT } from '@/components/hooks';
 import type { RttStackScreenProps } from '@/navigation/rttTypes';
+import { isDesktop, onDevices } from '@/services/desktopBridge';
+import type { DesktopDevice } from '@/services/desktopBridge';
 import { useStore } from '@/store';
 import type { Device } from '@/types/translator';
 
@@ -38,6 +40,24 @@ export function Demo2Devices({ navigation }: RttStackScreenProps<'Devices'>) {
   const room = useStore((s) => s.room);
   const translatorError = useStore((s) => s.translatorError);
   const invitePeer = useStore((s) => s.invitePeer);
+  const wsUrl = useStore((s) => s.wsUrl);
+  const setWsUrl = useStore((s) => s.setWsUrl);
+  const enterLobby = useStore((s) => s.enterLobby);
+
+  // --- Discovery LAN (chỉ trong vỏ Electron desktop) ---
+  const desktop = isDesktop();
+  const [lanDevices, setLanDevices] = useState<DesktopDevice[]>([]);
+  useEffect(() => {
+    if (!desktop) return undefined;
+    return onDevices((list) => setLanDevices(list));
+  }, [desktop]);
+
+  // Bấm một máy cùng mạng → trỏ backend sang máy đó và vào lại lobby của nó.
+  // Cả hai máy khi đó cùng một backend nên mới thấy & mời được nhau.
+  const connectToLan = (dev: DesktopDevice) => {
+    setWsUrl(dev.ws);
+    enterLobby((myName || '').trim() || 'Thiết bị của tôi');
+  };
 
   // Thiết bị đang chờ xác nhận mời khi cùng ngôn ngữ (mở popup cảnh báo), hoặc null.
   const [confirmDevice, setConfirmDevice] = useState<Device | null>(null);
@@ -62,9 +82,8 @@ export function Demo2Devices({ navigation }: RttStackScreenProps<'Devices'>) {
     <View className="flex-1 bg-tp-bg" style={{ paddingTop: insets.top }}>
       {/* Top bar */}
       <View
-        className={`flex-row flex-wrap items-center justify-between gap-y-2 border-b border-tp-border ${
-          compact ? 'px-4 py-3' : 'px-8 py-5'
-        }`}
+        className={`flex-row flex-wrap items-center justify-between gap-y-2 border-b border-tp-border ${compact ? 'px-4 py-3' : 'px-8 py-5'
+          }`}
       >
         <View className="flex-row items-center gap-2.5">
           <View className="h-[30px] w-[30px] items-center justify-center rounded-lg bg-tp-accent">
@@ -115,6 +134,53 @@ export function Demo2Devices({ navigation }: RttStackScreenProps<'Devices'>) {
           <View className="rounded-xl border px-4 py-3" style={{ borderColor: '#5a2a2e', backgroundColor: '#2a1518' }}>
             <Text className="text-sm" style={{ color: '#ff8a99' }}>
               {translatorError}
+            </Text>
+          </View>
+        )}
+
+        {/* Thiết bị cùng mạng (discovery LAN) — bấm để nối tới backend máy đó */}
+        {desktop && lanDevices.length > 0 && (
+          <View className="gap-3">
+            <View className="flex-row items-center justify-between">
+              <View className="flex-row items-center gap-2">
+                <Wifi size={16} color={TP.accent} />
+                <Text className="text-lg font-semibold text-tp-text">Thiết bị cùng mạng</Text>
+              </View>
+              <Text className="text-[13px] text-tp-muted">{lanDevices.length} thiết bị</Text>
+            </View>
+            {lanDevices.map((dev) => {
+              const linked = wsUrl === dev.ws; // đang dùng chung backend máy này
+              return (
+                <View
+                  key={dev.id}
+                  className="flex-row items-center justify-between rounded-[14px] border border-tp-border bg-tp-surface p-[18px]"
+                >
+                  <View className="flex-row items-center gap-3.5">
+                    <Laptop size={24} color={linked ? TP.accent : TP.text2} />
+                    <View className="gap-[3px]">
+                      <Text className="text-base font-semibold text-tp-text">{dev.name}</Text>
+                      <Text className="text-xs text-tp-muted">{dev.ip}</Text>
+                    </View>
+                  </View>
+                  {linked ? (
+                    <View className="rounded-full border border-tp-accent bg-tp-surface px-5 py-2.5">
+                      <Text className="text-sm font-semibold text-tp-accent">Đã nối backend</Text>
+                    </View>
+                  ) : (
+                    <Pressable
+                      onPress={() => connectToLan(dev)}
+                      className="flex-row items-center gap-2 rounded-full bg-tp-accent px-5 py-2.5"
+                    >
+                      <Link2 size={15} color={TP.black} />
+                      <Text className="text-sm font-semibold text-tp-bg">Kết nối</Text>
+                    </Pressable>
+                  )}
+                </View>
+              );
+            })}
+            <Text className="text-[11px] text-tp-muted">
+              Bấm “Kết nối” để dùng chung backend với máy đó — sau đó cả hai sẽ hiện trong “Thiết bị
+              khả dụng” bên dưới để mời vào phòng. Chỉ cần MỘT máy bấm kết nối.
             </Text>
           </View>
         )}
