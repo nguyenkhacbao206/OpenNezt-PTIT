@@ -20,16 +20,16 @@ import type { RttStackParamList } from './rttTypes';
 
 const Stack = createNativeStackNavigator<RttStackParamList>();
 
-// Bọc canvas MỘT lần ở tầng module (không bọc trong render) để tránh remount màn.
-// Demo1 (chọn ngôn ngữ) đã responsive thật cho mobile → KHÔNG bọc canvas.
+// Các màn đã responsive thật cho mobile → dùng trực tiếp, KHÔNG scale canvas.
+// Chỉ Demo5 (màn tĩnh, ngoài luồng ghép phòng) còn giữ canvas thu-nhỏ desktop.
 const LanguageScreen = Demo1Language;
-const DevicesScreen = withRttCanvas(Demo2Devices);
-const InviteScreen = withRttCanvas(Demo3Invite);
-const MeetingScreen = withRttCanvas(Demo4Meeting);
+const DevicesScreen = Demo2Devices;
+const InviteScreen = Demo3Invite;
+const MeetingScreen = Demo4Meeting;
 const ListenerViewScreen = withRttCanvas(Demo5ListenerView);
-const YourTurnScreen = withRttCanvas(Demo6YourTurn);
-const HistoryScreen = withRttCanvas(Demo7History);
-const EndSessionScreen = withRttCanvas(Demo8EndSession);
+const YourTurnScreen = Demo6YourTurn;
+const HistoryScreen = Demo7History;
+const EndSessionScreen = Demo8EndSession;
 
 export function RttStack() {
   return (
