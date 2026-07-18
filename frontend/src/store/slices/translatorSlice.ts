@@ -51,6 +51,9 @@ function persist(data: { wsUrl: string; srcLang: Lang; dstLang: Lang; ttsOn: boo
   void AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 
+/** Clip TTS đang phát cho một lượt đối tác: id lượt, mốc bắt đầu, độ dài (ms). */
+export type AudioCue = { turnId: string; startedAt: number; durationMs: number };
+
 export interface TranslatorSlice {
   wsUrl: string;
   translatorStatus: ConnectionStatus;
@@ -70,6 +73,8 @@ export interface TranslatorSlice {
   /** Tăng mỗi khi một partial được phản hồi (nmt.partial/result/error) — dùng để
    *  mic coalesce: chỉ gửi cửa sổ kế tiếp khi cửa sổ trước đã có kết quả. */
   partialResponses: number;
+  /** Tín hiệu audio TTS đang phát cho lượt đối tác — để hero gõ chữ khớp giọng. */
+  audioCue: AudioCue | null;
 
   // -- Lobby / ghép phòng 1↔1 (chat nội bộ LAN) ---------------------------
   /** Id do server cấp cho thiết bị này (sau `hello`). */
@@ -129,6 +134,9 @@ export const createTranslatorSlice: StateCreator<RootStore, [], [], TranslatorSl
   set,
   get,
 ) => {
+  // Id của turn đối tác vừa chốt — dùng để gắn audioCue cho đúng lượt.
+  let lastPeerTurnId: string | null = null;
+
   const directionKey = () => {
     const s = get();
     return `${s.translatorMode}:${s.srcLang}->${s.dstLang}`;
@@ -182,7 +190,7 @@ export const createTranslatorSlice: StateCreator<RootStore, [], [], TranslatorSl
           };
           next.turns = [...get().turns, mineTurn];
         }
-        set(next);
+        set({ ...next, audioCue: null });
         break;
       }
       case 'nmt.partial':
@@ -237,17 +245,26 @@ export const createTranslatorSlice: StateCreator<RootStore, [], [], TranslatorSl
           dstText: event.data.dstText,
           mine: false,
         };
+        lastPeerTurnId = seg.id;
         set({
           live: null,
           turns: [...get().turns, seg],
           partialResponses: get().partialResponses + 1,
+          audioCue: null, // sẽ set lại khi tts.audio thực sự phát
         });
         break;
       }
-      case 'tts.audio':
-        // Audio bản dịch của đối tác — phát trên máy tôi (nếu bật đọc).
-        if (get().ttsOn) void playBase64Audio(event.data.audio);
+      case 'tts.audio': {
+        // Audio bản dịch của đối tác — phát trên máy tôi (nếu bật đọc). Khi clip
+        // thật sự phát, ghi audioCue để hero gõ chữ khớp độ dài giọng.
+        if (get().ttsOn) {
+          const turnId = lastPeerTurnId;
+          void playBase64Audio(event.data.audio, (durationMs) => {
+            if (turnId) set({ audioCue: { turnId, startedAt: Date.now(), durationMs } });
+          });
+        }
         break;
+      }
       case 'metrics':
         set({ metrics: event.data, partialResponses: get().partialResponses + 1 });
         break;
@@ -287,7 +304,9 @@ export const createTranslatorSlice: StateCreator<RootStore, [], [], TranslatorSl
           turns: [],
           live: null,
           translatorError: null,
+          audioCue: null,
         });
+        lastPeerTurnId = null;
         // Server đã start session (src=mình, tgt=đối tác); đồng bộ _direction để
         // không gửi lại session.start. Bật đọc để đối tác nhận audio.
         const s = get();
@@ -326,6 +345,7 @@ export const createTranslatorSlice: StateCreator<RootStore, [], [], TranslatorSl
     live: null,
     metrics: null,
     partialResponses: 0,
+    audioCue: null,
 
     myClientId: null,
     myName: 'Thiết bị của tôi',
@@ -527,9 +547,9 @@ export const createTranslatorSlice: StateCreator<RootStore, [], [], TranslatorSl
       }
       ensureSession();
       set({ _finalizePending: true });
-      _socket.send({ type: 'audio.chunk', data: { speaker, audio: wavBase64 } });
+      _socket.send({ type: 'audio.chunk', data: { speaker, audio: wavBase64, final: true } });
     },
 
-    clearTurns: () => set({ turns: [], sessionSegments: [], live: null, metrics: null }),
+    clearTurns: () => set({ turns: [], sessionSegments: [], live: null, metrics: null, audioCue: null }),
   };
 };

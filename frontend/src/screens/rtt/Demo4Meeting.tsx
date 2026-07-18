@@ -22,17 +22,51 @@ import { useStore } from '@/store';
 const TP = { accent: '#5EEAD4', text2: '#9AA0A6', muted: '#585E66', red: '#ff6669', black: '#000000' };
 const WAVE = [8, 16, 11, 20, 9, 15, 7];
 
-/** Chạy chữ dần theo từng từ để bản dịch hiện ra kiểu "đánh máy", tránh giật cả cụm. */
-function useReveal(text: string, cadence = 55): string {
+// Chữ dẫn trước tiếng: gõ hết chữ trong ~90% độ dài audio để chữ luôn nhỉnh hơn
+// giọng vài nhịp (voice "đuổi theo" text). Giảm số này nếu muốn chữ đi trước nhiều hơn.
+const REVEAL_LEAD = 0.9;
+
+/**
+ * Chạy chữ dần theo từng từ ("đánh máy"), tránh giật cả cụm.
+ * - `syncMs`: độ dài audio (ms) — nếu có, pace nhịp để chạy trọn audio (chữ dẫn
+ *   trước tiếng theo REVEAL_LEAD).
+ * - `syncKey`: đổi key ⇒ lượt mới, reset về đầu và gõ lại từ đầu.
+ * - Fallback: khi `syncKey` mới mà chưa có `syncMs`, hoãn bắt đầu gõ tối đa
+ *   ~400ms chờ audio; hết 400ms vẫn chưa có thì gõ nhịp mặc định.
+ */
+function useReveal(
+  text: string,
+  opts?: { syncMs?: number; syncKey?: string; cadence?: number },
+): string {
+  const { syncMs, syncKey, cadence: baseCadence = 55 } = opts ?? {};
   const [shown, setShown] = useState('');
   const wordsRef = useRef<string[]>([]);
   const iRef = useRef(0);
+  const keyRef = useRef<string | undefined>(undefined);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const words = (text || '').split(/\s+/).filter(Boolean);
     wordsRef.current = words;
+
+    // Lượt mới (syncKey đổi) → reset về đầu để gõ lại khớp audio.
+    if (syncKey !== keyRef.current) {
+      keyRef.current = syncKey;
+      iRef.current = 0;
+    }
     if (iRef.current > words.length) iRef.current = 0; // text ngắn lại → lượt mới
+
+    // Nhịp: có syncMs thì trải đều theo ~90% độ dài audio (chữ dẫn trước), kẹp 40..400ms.
+    const cadence =
+      syncMs && words.length > 0
+        ? Math.min(400, Math.max(40, (syncMs * REVEAL_LEAD) / words.length))
+        : baseCadence;
+
+    // Hoãn bắt đầu tối đa 400ms nếu đang chờ audio (có syncKey nhưng chưa có
+    // syncMs và chưa gõ chữ nào). Sau 400ms hoặc khi có syncMs → gõ ngay.
+    const waitingAudio = syncKey !== undefined && !syncMs && iRef.current === 0;
+    const startDelay = waitingAudio ? 400 : 0;
+
     const tick = () => {
       if (timer.current) clearTimeout(timer.current);
       if (iRef.current >= wordsRef.current.length) {
@@ -43,11 +77,12 @@ function useReveal(text: string, cadence = 55): string {
       setShown(wordsRef.current.slice(0, iRef.current).join(' '));
       timer.current = setTimeout(tick, cadence);
     };
-    tick();
+
+    timer.current = setTimeout(tick, startDelay);
     return () => {
       if (timer.current) clearTimeout(timer.current);
     };
-  }, [text, cadence]);
+  }, [text, syncMs, syncKey, baseCadence]);
 
   return shown;
 }
@@ -109,6 +144,7 @@ export function Demo4Meeting({ navigation }: RttStackScreenProps<'Meeting'>) {
   const dstLang = useStore((s) => s.dstLang);
   const room = useStore((s) => s.room);
   const ttsOn = useStore((s) => s.ttsOn);
+  const audioCue = useStore((s) => s.audioCue);
   const leaveRoom = useStore((s) => s.leaveRoom);
 
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -179,10 +215,18 @@ export function Demo4Meeting({ navigation }: RttStackScreenProps<'Meeting'>) {
     () => [...turns].reverse().find((t) => t.mine !== true) ?? null,
     [turns],
   );
+  // Cụm đang được ĐỌC (audio đang phát) — hero bám theo để chữ khớp tai; audio
+  // phát cuốn chiếu (hàng đợi) nên trễ hơn lúc chữ về.
+  const playingTurn = audioCue ? turns.find((t) => t.id === audioCue.turnId) ?? null : null;
   // Dùng `||` (không phải `??`) để chuỗi rỗng cũng rơi xuống fallback.
-  const heroBig = speaking ? live?.srcText || '' : live?.dstText || lastPeer?.dstText || '';
-  const heroSrc = speaking ? '' : live?.srcText || lastPeer?.srcText || '';
-  const typed = useReveal(heroBig);
+  const heroBig = speaking
+    ? live?.srcText || ''
+    : playingTurn?.dstText || lastPeer?.dstText || '';
+  const heroSrc = speaking ? '' : playingTurn?.srcText || lastPeer?.srcText || '';
+  // Hero khớp audio khi ĐANG NGHE: ưu tiên cụm đang phát, fallback lượt gần nhất.
+  const heroTurnId = !speaking ? playingTurn?.id ?? lastPeer?.id : undefined;
+  const cue = audioCue && audioCue.turnId === heroTurnId ? audioCue : null;
+  const typed = useReveal(heroBig, { syncMs: cue?.durationMs, syncKey: heroTurnId });
   const typing = typed.length < heroBig.length;
 
   const endMeeting = () => {

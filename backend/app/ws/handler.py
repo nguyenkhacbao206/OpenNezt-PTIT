@@ -21,6 +21,7 @@ from fastapi import WebSocket
 from ..core.glossary import apply_glossary
 from ..core.metrics import Stopwatch, TurnMetrics
 from ..core.session import SessionState
+from ..core.text_utils import split_sentences
 
 if TYPE_CHECKING:
     from .rooms import ConnectionManager
@@ -415,31 +416,50 @@ async def _on_audio_chunk(
         log.info("audio.chunk produced no speech for speaker=%s (silence/guarded)", speaker)
         return
 
-    # ---- NMT -------------------------------------------------------------
-    try:
-        with Stopwatch() as sw_nmt:
-            dst_text = await session.providers.nmt.translate(
-                final_text, session.source_lang, session.target_lang
-            )
-        dst_text = apply_glossary(dst_text, session.glossary_id)
-        metrics.nmt_ms = sw_nmt.ms
-        # Translation goes to the listener (peer) in a room; self on the console.
-        await _emit_translation(ws, session, manager, speaker, final_text, dst_text)
-    except Exception as exc:  # noqa: BLE001
-        await send_error(ws, "nmt_failed", f"NMT provider failed: {exc}")
+    # ---- Buffer nguồn tới đủ CÂU, rồi dịch + TTS cả câu (voice mượt) ------
+    session._nmt_buffer = (session._nmt_buffer + " " + final_text).strip()
+    sentences, remainder = split_sentences(session._nmt_buffer)
+    if bool(data.get("final")) and remainder:
+        # Thả nút: đọc nốt câu dở cuối dù chưa có dấu kết câu.
+        sentences.append(remainder)
+        remainder = ""
+    session._nmt_buffer = remainder
+
+    if not sentences:
+        # Chưa đủ một câu → chờ cụm sau (độ trễ "chậm hơn"). Chỉ báo metrics STT.
+        metrics.finish()
+        await send(ws, "metrics", metrics.as_event())
         return
 
-    # ---- TTS (optional) --------------------------------------------------
-    if session.tts_on:
+    nmt_ms = 0.0
+    for sentence in sentences:
+        # ---- NMT (cả câu) ------------------------------------------------
         try:
-            audio_b64 = await session.providers.tts.synthesize(dst_text, session.target_lang)
-            # Audio plays on the listener's device (peer); self on the console.
-            await _emit(ws, session, manager, "tts.audio", {
-                "speaker": speaker, "audio": audio_b64,
-            }, to_peer=True)
-        except Exception as exc:  # noqa: BLE001 - TTS failure must not kill the turn
-            await send_error(ws, "tts_failed", f"TTS provider failed: {exc}")
+            with Stopwatch() as sw_nmt:
+                dst_text = await session.providers.nmt.translate(
+                    sentence, session.source_lang, session.target_lang
+                )
+            dst_text = apply_glossary(dst_text, session.glossary_id)
+            nmt_ms += sw_nmt.ms
+            # Translation goes to the listener (peer) in a room; self on console.
+            await _emit_translation(ws, session, manager, speaker, sentence, dst_text)
+        except Exception as exc:  # noqa: BLE001
+            await send_error(ws, "nmt_failed", f"NMT provider failed: {exc}")
+            continue
 
+        # ---- TTS (optional) — audio từng câu, phát cuốn chiếu ------------
+        if session.tts_on:
+            try:
+                audio_b64 = await session.providers.tts.synthesize(
+                    dst_text, session.target_lang
+                )
+                await _emit(ws, session, manager, "tts.audio", {
+                    "speaker": speaker, "audio": audio_b64,
+                }, to_peer=True)
+            except Exception as exc:  # noqa: BLE001 - TTS failure must not kill the turn
+                await send_error(ws, "tts_failed", f"TTS provider failed: {exc}")
+
+    metrics.nmt_ms = nmt_ms
     # ---- Metrics ---------------------------------------------------------
     metrics.finish()
     await send(ws, "metrics", metrics.as_event())

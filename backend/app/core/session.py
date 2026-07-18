@@ -38,6 +38,8 @@ class SessionState:
     # In-RAM transient buffers (zero-retention: cleared on end/disconnect).
     _audio_buffer: dict[str, list[bytes]] = field(default_factory=dict, repr=False)
     _text_buffer: dict[str, list[str]] = field(default_factory=dict, repr=False)
+    # Nguồn tích luỹ chờ đủ một câu → dịch + TTS cả câu (buffered TTS).
+    _nmt_buffer: str = field(default="", repr=False)
 
     def start(self, mode: str, source_lang: str, target_lang: str) -> None:
         """Initialize the session and build providers for `mode`."""
@@ -46,6 +48,7 @@ class SessionState:
         self.target_lang = target_lang or self.target_lang
         self.providers = build_providers(self.mode)
         self.started = True
+        self._nmt_buffer = ""
         log.info(
             "Session started mode=%s %s->%s",
             self.providers.mode,
@@ -71,6 +74,7 @@ class SessionState:
         """Zero-retention wipe: drop all buffers and providers from memory."""
         self._audio_buffer.clear()
         self._text_buffer.clear()
+        self._nmt_buffer = ""
         self.providers = None
         self.started = False
         log.info("Session cleaned up (buffers wiped, zero retention).")
