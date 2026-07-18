@@ -547,7 +547,7 @@ export const createTranslatorSlice: StateCreator<RootStore, [], [], TranslatorSl
       }
       ensureSession();
       set({ _finalizePending: true });
-      _socket.send({ type: 'audio.chunk', data: { speaker, audio: wavBase64 } });
+      _socket.send({ type: 'audio.chunk', data: { speaker, audio: wavBase64, final: true } });
     },
 
     clearTurns: () => set({ turns: [], sessionSegments: [], live: null, metrics: null, audioCue: null }),

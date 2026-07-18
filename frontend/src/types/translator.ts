@@ -79,8 +79,9 @@ export interface SessionStartMessage {
 
 export interface AudioChunkMessage {
   type: 'audio.chunk';
-  /** `audio` là WAV 16kHz mono, mã hoá base64. Bản CHỐT của cả lượt. */
-  data: { speaker: Speaker; audio: string };
+  /** `audio` là WAV 16kHz mono base64. `final` = true khi thả nút (kết thúc lượt)
+   *  → backend flush nốt câu dở cuối. commitSegment KHÔNG gửi final. */
+  data: { speaker: Speaker; audio: string; final?: boolean };
 }
 
 export interface AudioPartialMessage {
