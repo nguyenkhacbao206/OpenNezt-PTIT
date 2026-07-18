@@ -143,6 +143,7 @@ TTS tách rời khỏi chế độ STT/NMT — luôn chọn theo `TTS_ENGINE` (m
 giọng online miễn phí). Vì vậy dù dùng cloud hay offline, âm thanh vẫn phát bình thường.
 
 ### Chuẩn bị model cho chế độ offline (tùy chọn)
+
 ```bash
 python tools/prepare_nllb.py            # tải NLLB (CTranslate2 int8) cho dịch offline
 python tools/prepare_phowhisper.py      # build PhoWhisper (STT tiếng Việt offline)
@@ -180,4 +181,5 @@ Muốn hiểu sâu kiến trúc (mô hình provider, luồng ghép cặp, giao t
 | Không có âm thanh dịch | Bật TTS (client gửi `config.update {ttsOn}`); kiểm tra `TTS_ENGINE=edge` và máy có internet (edge-tts là dịch vụ online) |
 | Lỗi thiếu Groq key | Đặt `GROQ_API_KEY` trong `.env`, hoặc dùng `DEFAULT_MODE=mock` để chạy thử |
 | Micro không hoạt động trên web | Dùng `localhost` hoặc https; trên máy thật dùng Expo Go |
+| `Unable to open file 'model.bin' in model '...-ct2-int8'` | Chưa build model offline. Cài PyTorch CPU (`pip install torch --index-url https://download.pytorch.org/whl/cpu`) rồi chạy `python tools/prepare_nllb.py`. Hoặc đổi `DEFAULT_MODE=mock`/`cloud` nếu không cần offline |
 | In tiếng Việt bị lỗi ký tự (Windows) | Đặt biến môi trường `PYTHONIOENCODING=utf-8` |
