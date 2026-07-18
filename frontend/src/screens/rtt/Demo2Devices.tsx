@@ -6,20 +6,11 @@
  * phòng → sang Meeting.
  */
 import { useEffect, useState } from 'react';
-<<<<<<< HEAD
-import { Pressable, ScrollView, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Languages, Laptop, Link2, Loader, UserPlus, Users, Wifi } from 'lucide-react-native';
-
-import { useResponsive } from '@/components/hooks';
-import { isDesktop, onDevices, type DesktopDevice } from '@/services/desktopBridge';
-=======
 import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AlertTriangle, Languages, Laptop, Loader, UserPlus, Users } from 'lucide-react-native';
 
 import { useResponsive, useRttT } from '@/components/hooks';
->>>>>>> 2bfd2511cbf030c9be441362fcc9722c01c1ac33
 import type { RttStackScreenProps } from '@/navigation/rttTypes';
 import { useStore } from '@/store';
 import type { Device } from '@/types/translator';
@@ -89,9 +80,8 @@ export function Demo2Devices({ navigation }: RttStackScreenProps<'Devices'>) {
     <View className="flex-1 bg-tp-bg" style={{ paddingTop: insets.top }}>
       {/* Top bar */}
       <View
-        className={`flex-row flex-wrap items-center justify-between gap-y-2 border-b border-tp-border ${
-          compact ? 'px-4 py-3' : 'px-8 py-5'
-        }`}
+        className={`flex-row flex-wrap items-center justify-between gap-y-2 border-b border-tp-border ${compact ? 'px-4 py-3' : 'px-8 py-5'
+          }`}
       >
         <View className="flex-row items-center gap-2.5">
           <View className="h-[30px] w-[30px] items-center justify-center rounded-lg bg-tp-accent">

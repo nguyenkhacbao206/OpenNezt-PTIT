@@ -541,9 +541,6 @@ export const createTranslatorSlice: StateCreator<RootStore, [], [], TranslatorSl
         turns: [],
         live: null,
       });
-<<<<<<< HEAD
-      connectLobby();
-=======
       socket.connect(get().wsUrl, {
         onOpen: () => {
           set({ translatorStatus: 'connected' });
@@ -562,7 +559,6 @@ export const createTranslatorSlice: StateCreator<RootStore, [], [], TranslatorSl
         onError: () =>
           set({ translatorStatus: 'error', translatorError: errs().wsError }),
       });
->>>>>>> 2bfd2511cbf030c9be441362fcc9722c01c1ac33
     },
 
     invitePeer: (toClientId) => {

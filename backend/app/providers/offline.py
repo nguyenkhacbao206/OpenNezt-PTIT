@@ -26,21 +26,6 @@ class OfflineSTTProvider(STTProvider):
 
     def __init__(self, model_size: str | None = None) -> None:
         # The heavy model is loaded lazily on first transcribe and cached by
-<<<<<<< HEAD
-        # get_engine, so constructing the provider is cheap. A bundled local CT2
-        # model dir (settings.offline_stt_model_dir) wins so nothing downloads at
-        # runtime; otherwise the size name is auto-downloaded.
-        from ..core.config import settings
-        from .whisper_engine import get_engine
-
-        model = settings.offline_stt_model_dir or model_size
-        self._engine = get_engine(
-            model_size=model,
-            device=settings.stt_device,
-            compute_type=settings.stt_compute_type,
-        )
-        log.info("OfflineSTTProvider constructed (model=%s, loads on first use).", model)
-=======
         # get_engine, so constructing the provider is cheap. Size/device/precision
         # come from settings so a GPU box can run large-v3 + float16 for accuracy.
         from ..core.config import settings
@@ -58,7 +43,6 @@ class OfflineSTTProvider(STTProvider):
             settings.stt_device,
             settings.stt_compute_type,
         )
->>>>>>> 2bfd2511cbf030c9be441362fcc9722c01c1ac33
 
     async def transcribe(
         self, audio: bytes, source_lang: str
