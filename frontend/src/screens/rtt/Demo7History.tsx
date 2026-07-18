@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { ArrowLeft, Download, Volume2, X } from 'lucide-react-native';
 
+import { useResponsive } from '@/components/hooks';
 import type { RttStackScreenProps } from '@/navigation/rttTypes';
 import type { TranslatorTurn } from '@/types/translator';
 import { useStore } from '@/store';
@@ -15,6 +16,7 @@ import { useStore } from '@/store';
 const TP = { accent: '#5EEAD4', text2: '#9AA0A6', muted: '#585E66' };
 
 export function Demo7History({ navigation }: RttStackScreenProps<'History'>) {
+  const { compact } = useResponsive();
   const turns = useStore((s) => s.turns);
   const srcLang = useStore((s) => s.srcLang);
   const dstLang = useStore((s) => s.dstLang);
@@ -24,12 +26,16 @@ export function Demo7History({ navigation }: RttStackScreenProps<'History'>) {
   return (
     <View className="flex-1 bg-tp-bg">
       {/* Top bar */}
-      <View className="flex-row items-center justify-between border-b border-tp-border px-8 py-[18px]">
+      <View
+        className={`flex-row items-center justify-between border-b border-tp-border ${
+          compact ? 'px-4 py-3' : 'px-8 py-[18px]'
+        }`}
+      >
         <Pressable onPress={() => navigation.goBack()} className="flex-row items-center gap-2.5">
           <ArrowLeft size={18} color={TP.text2} />
           <Text className="text-lg font-semibold text-tp-text">Lịch sử dịch</Text>
         </Pressable>
-        <Text className="text-sm text-tp-text2">Phiên họp hiện tại</Text>
+        {!compact && <Text className="text-sm text-tp-text2">Phiên họp hiện tại</Text>}
         <View className="flex-row items-center gap-2 rounded-full border border-tp-border bg-tp-surface px-[18px] py-[9px]">
           <Download size={15} color={TP.text2} />
           <Text className="text-sm text-tp-text">Xuất bản ghi</Text>
@@ -44,7 +50,7 @@ export function Demo7History({ navigation }: RttStackScreenProps<'History'>) {
       </View>
 
       {/* Transcript */}
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 32, paddingVertical: 8, gap: 14 }}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: compact ? 16 : 32, paddingVertical: 8, gap: 14 }}>
         {turns.length === 0 && (
           <Text className="py-10 text-center text-base text-tp-muted">
             Chưa có câu nào. Vào phòng họp và nhấn “Nhấn để nói”.
