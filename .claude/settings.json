@@ -17,7 +17,10 @@
       "Bash(PYTHONUTF8=1 \"D:/OpenNezt-PTIT/.venv/Scripts/python.exe\" -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --log-level info)",
       "Bash(curl -s http://127.0.0.1:8000/)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://127.0.0.1:8000/app)",
-      "Bash(PYTHONUTF8=1 D:/OpenNezt-PTIT/.venv/Scripts/python.exe -c ' *)"
+      "Bash(PYTHONUTF8=1 D:/OpenNezt-PTIT/.venv/Scripts/python.exe -c ' *)",
+      "Bash(xxd)",
+      "Bash(iconv -f UTF-16LE -t UTF-8 README.md)",
+      "Bash(mv -f README.utf8.md README.md)"
     ]
   }
 }
