@@ -31,9 +31,6 @@ interface LangOption {
 const LANGS: LangOption[] = [
   { code: 'vi', name: 'Tiếng Việt', native: 'Vietnamese' },
   { code: 'en', name: 'English', native: 'English' },
-  { code: 'ja', name: '日本語', native: 'Japanese' },
-  { code: 'zh', name: '中文', native: 'Chinese' },
-  { code: 'ko', name: '한국어', native: 'Korean' },
 ];
 
 export function Demo1Language({ navigation }: RttStackScreenProps<'Language'>) {
