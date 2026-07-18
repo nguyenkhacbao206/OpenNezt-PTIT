@@ -1,0 +1,46 @@
+{
+  "name": "opennezt-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "OpenNezt desktop (Electron): UI + backend nhúng + discovery LAN kiểu Open-to-LAN",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "cross-env DESKTOP_DEV=1 electron .",
+    "dev:web": "cross-env DESKTOP_DEV=1 DESKTOP_DEV_URL=http://localhost:8081 electron .",
+    "build:web": "cd ../frontend && npx expo export --platform web --output-dir ../desktop/web-dist",
+    "dist": "electron-builder"
+  },
+  "devDependencies": {
+    "cross-env": "^7.0.3",
+    "electron": "^32.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.opennezt.desktop",
+    "productName": "OpenNezt",
+    "files": [
+      "main.js",
+      "preload.js",
+      "discovery.js",
+      "backend.js",
+      "web-dist/**"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/backend",
+        "to": "backend",
+        "filter": ["**/*"]
+      }
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "mac": {
+      "target": "dmg"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
+  }
+}
