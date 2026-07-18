@@ -9,7 +9,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, type LayoutChangeEvent, Pressable, Text, View } from 'react-native';
 import { Lock, Mic, Square } from 'lucide-react-native';
 
-import { useMeetingMic } from '@/components/hooks';
+import { useMeetingMic, useResponsive } from '@/components/hooks';
 import type { RttStackScreenProps } from '@/navigation/rttTypes';
 import type { TranslatorTurn } from '@/types/translator';
 import { useStore } from '@/store';
@@ -90,6 +90,7 @@ function LeftCard({ turn, target }: { turn: TranslatorTurn; target: number }) {
 }
 
 export function Demo6YourTurn({ navigation }: RttStackScreenProps<'YourTurn'>) {
+  const { compact } = useResponsive();
   const mic = useMeetingMic();
   const live = useStore((s) => s.live);
   const segments = useStore((s) => s.sessionSegments);
@@ -133,7 +134,11 @@ export function Demo6YourTurn({ navigation }: RttStackScreenProps<'YourTurn'>) {
   return (
     <View className="flex-1 bg-tp-bg">
       {/* Top bar */}
-      <View className="flex-row items-center justify-between px-8 py-[18px]">
+      <View
+        className={`flex-row flex-wrap items-center justify-between gap-y-2 ${
+          compact ? 'px-4 py-3' : 'px-8 py-[18px]'
+        }`}
+      >
         <View className="flex-row items-center gap-2 rounded-full border border-tp-border bg-tp-surface px-3.5 py-2">
           <Lock size={14} color={TP.accent} />
           <Text className="text-[13px] font-semibold tracking-[1px] text-tp-text">
@@ -143,11 +148,13 @@ export function Demo6YourTurn({ navigation }: RttStackScreenProps<'YourTurn'>) {
         <View className="flex-row items-center gap-3">
           <Mic size={16} color={TP.accent} />
           <Text className="text-sm font-semibold tracking-[2px] text-tp-accent">BẠN ĐANG NÓI</Text>
-          <View className="h-[22px] flex-row items-center gap-[3px]">
-            {WAVE.map((h, i) => (
-              <View key={i} className="w-[3px] rounded-full bg-tp-accent" style={{ height: h }} />
-            ))}
-          </View>
+          {!compact && (
+            <View className="h-[22px] flex-row items-center gap-[3px]">
+              {WAVE.map((h, i) => (
+                <View key={i} className="w-[3px] rounded-full bg-tp-accent" style={{ height: h }} />
+              ))}
+            </View>
+          )}
         </View>
         <Pressable
           onPress={() => void stopAndBack()}
@@ -159,10 +166,10 @@ export function Demo6YourTurn({ navigation }: RttStackScreenProps<'YourTurn'>) {
         </Pressable>
       </View>
 
-      {/* Body */}
-      <View className="flex-1 flex-row px-8 py-4">
-        {/* Cột trái giữ cân đối */}
-        <View className="w-[340px] pr-6" />
+      {/* Body — desktop: 3 cột; điện thoại: dồn dọc (giữa + card dưới) */}
+      <View className={`flex-1 py-4 ${compact ? 'flex-col px-4' : 'flex-row px-8'}`}>
+        {/* Cột trái giữ cân đối (chỉ desktop) */}
+        {!compact && <View className="w-[340px] pr-6" />}
 
         {/* GIỮA — đoạn đang nói (chạy chữ; clip 4 dòng; vượt thì cắt) */}
         <View className="flex-1 items-center justify-center">
@@ -172,7 +179,9 @@ export function Demo6YourTurn({ navigation }: RttStackScreenProps<'YourTurn'>) {
           >
             <View onLayout={onCenterLayout} className="items-center gap-3">
               <Text
-                className="text-center text-[40px] font-semibold leading-[48px]"
+                className={`text-center font-semibold ${
+                  compact ? 'text-[24px] leading-[32px]' : 'text-[40px] leading-[48px]'
+                }`}
                 style={{ color: TP.accent }}
               >
                 {shownSrc || (mic.recording ? '🎙 Đang nghe…' : '…')}
@@ -192,8 +201,8 @@ export function Demo6YourTurn({ navigation }: RttStackScreenProps<'YourTurn'>) {
           )}
         </View>
 
-        {/* Cột PHẢI — segment đã chốt (từ TRÊN xuống, cũ mờ dần) */}
-        <View className="w-[340px] gap-2.5 pl-6">
+        {/* Segment đã chốt — desktop: cột phải; điện thoại: hàng dưới */}
+        <View className={compact ? 'gap-2.5 pt-3' : 'w-[340px] gap-2.5 pl-6'}>
           {visible.map((t, i) => (
             <LeftCard key={t.id} turn={t} target={CARD_OPACITY[visible.length - 1 - i] ?? 0.2} />
           ))}

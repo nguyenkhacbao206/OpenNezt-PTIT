@@ -4,10 +4,11 @@
  * Màn chính của phiên. Kết nối backend khi vào; hiển thị bản dịch gần nhất (hoặc
  * bản dịch tạm đang chạy). PTT → sang màn "Đến lượt bạn nói" để thu + dịch live.
  */
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { ChevronDown, History, Mic, PhoneOff, Volume2, VolumeX } from 'lucide-react-native';
 
+import { useResponsive } from '@/components/hooks';
 import type { RttStackScreenProps } from '@/navigation/rttTypes';
 import { useStore } from '@/store';
 
@@ -20,7 +21,38 @@ const STATUS_LABEL: Record<string, string> = {
   error: 'Lỗi kết nối',
 };
 
+/** Chạy chữ dần theo từng từ để bản dịch hiện ra kiểu "đánh máy", tránh giật cả cụm. */
+function useReveal(text: string, cadence = 55): string {
+  const [shown, setShown] = useState('');
+  const wordsRef = useRef<string[]>([]);
+  const iRef = useRef(0);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    const words = (text || '').split(/\s+/).filter(Boolean);
+    wordsRef.current = words;
+    if (iRef.current > words.length) iRef.current = 0; // text ngắn lại → lượt/bản dịch mới
+    const tick = () => {
+      if (timer.current) clearTimeout(timer.current);
+      if (iRef.current >= wordsRef.current.length) {
+        setShown(wordsRef.current.join(' '));
+        return;
+      }
+      iRef.current += 1;
+      setShown(wordsRef.current.slice(0, iRef.current).join(' '));
+      timer.current = setTimeout(tick, cadence);
+    };
+    tick();
+    return () => {
+      if (timer.current) clearTimeout(timer.current);
+    };
+  }, [text, cadence]);
+
+  return shown;
+}
+
 export function Demo4Meeting({ navigation }: RttStackScreenProps<'Meeting'>) {
+  const { compact } = useResponsive();
   const status = useStore((s) => s.translatorStatus);
   const live = useStore((s) => s.live);
   const turns = useStore((s) => s.turns);
@@ -39,6 +71,9 @@ export function Demo4Meeting({ navigation }: RttStackScreenProps<'Meeting'>) {
   // Nghe: đối tác đang nói → bản dịch TẠM (live). Đối tác nói xong → bản dịch
   // GẦN NHẤT dạng card gọn ở góc; chạm để mở Lịch sử.
   const shown = live;
+  // Bản dịch chạy chữ dần (typewriter) cho mượt.
+  const typed = useReveal(shown?.dstText ?? '');
+  const typing = !!shown && typed.length < (shown.dstText?.length ?? 0);
   // Card "bản dịch gần nhất" chỉ hiện lời ĐỐI TÁC gửi tới (bỏ qua lời mình).
   const lastTurn = [...turns].reverse().find((t) => t.mine !== true) ?? null;
   const dotColor = status === 'connected' ? TP.accent : status === 'error' ? TP.red : TP.muted;
@@ -56,12 +91,16 @@ export function Demo4Meeting({ navigation }: RttStackScreenProps<'Meeting'>) {
   return (
     <View className="flex-1 bg-tp-bg">
       {/* Top bar */}
-      <View className="flex-row items-center justify-between border-b border-tp-border px-8 py-[18px]">
+      <View
+        className={`flex-row flex-wrap items-center justify-between gap-y-2 border-b border-tp-border ${
+          compact ? 'px-4 py-3' : 'px-8 py-[18px]'
+        }`}
+      >
         <View className="flex-row items-center gap-2.5">
           <View className="h-[9px] w-[9px] rounded-full" style={{ backgroundColor: dotColor }} />
           <Text className="text-[15px] font-medium text-tp-text">{STATUS_LABEL[status] ?? status}</Text>
         </View>
-        <Text className="text-[15px] text-tp-text2">{partsLabel}</Text>
+        {!compact && <Text className="text-[15px] text-tp-text2">{partsLabel}</Text>}
         <Pressable
           onPress={endMeeting}
           className="flex-row items-center gap-2 rounded-full bg-tp-surface px-[18px] py-[9px]"
@@ -101,12 +140,14 @@ export function Demo4Meeting({ navigation }: RttStackScreenProps<'Meeting'>) {
       </View>
 
       {/* Main */}
-      <View className="flex-1 px-16 py-8">
+      <View className={`flex-1 ${compact ? 'px-5 py-4' : 'px-16 py-8'}`}>
         {/* Card "bản dịch gần nhất" — góc TRÊN-TRÁI, nhỏ gọn */}
         {!shown && lastTurn && (
           <Pressable
             onPress={() => navigation.navigate('History')}
-            className="absolute left-8 top-4 w-[300px] gap-1.5 rounded-xl border border-tp-border bg-tp-surface p-3.5"
+            className={`absolute top-4 gap-1.5 rounded-xl border border-tp-border bg-tp-surface p-3.5 ${
+              compact ? 'left-4 right-4' : 'left-8 w-[300px]'
+            }`}
           >
             <Text className="text-[10px] font-semibold tracking-[1.5px] text-tp-accent">
               BẢN DỊCH GẦN NHẤT
@@ -145,8 +186,13 @@ export function Demo4Meeting({ navigation }: RttStackScreenProps<'Meeting'>) {
                 style={{ maxHeight: 300, overflow: 'hidden', maxWidth: 1000 }}
                 className="items-center"
               >
-                <Text className="text-center text-[46px] font-semibold leading-[55px] text-tp-text">
-                  {shown.dstText || '…'}
+                <Text
+                  className={`text-center font-semibold text-tp-text ${
+                    compact ? 'text-[28px] leading-[36px]' : 'text-[46px] leading-[55px]'
+                  }`}
+                >
+                  {typed || (shown.dstText ? '' : '…')}
+                  {typing && <Text style={{ color: TP.accent }}>▍</Text>}
                 </Text>
               </View>
               {!!shown.srcText && (

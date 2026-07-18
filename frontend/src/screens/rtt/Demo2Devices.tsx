@@ -9,6 +9,7 @@ import { useEffect } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { Languages, Laptop, Loader, UserPlus, Users, Wifi } from 'lucide-react-native';
 
+import { useResponsive } from '@/components/hooks';
 import type { RttStackScreenProps } from '@/navigation/rttTypes';
 import { useStore } from '@/store';
 import type { Lang } from '@/types/translator';
@@ -35,6 +36,7 @@ function Pill({ children }: { children: React.ReactNode }) {
 }
 
 export function Demo2Devices({ navigation }: RttStackScreenProps<'Devices'>) {
+  const { compact } = useResponsive();
   const devices = useStore((s) => s.devices);
   const myName = useStore((s) => s.myName);
   const srcLang = useStore((s) => s.srcLang);
@@ -58,14 +60,18 @@ export function Demo2Devices({ navigation }: RttStackScreenProps<'Devices'>) {
   return (
     <View className="flex-1 bg-tp-bg">
       {/* Top bar */}
-      <View className="flex-row items-center justify-between border-b border-tp-border px-8 py-5">
+      <View
+        className={`flex-row flex-wrap items-center justify-between gap-y-2 border-b border-tp-border ${
+          compact ? 'px-4 py-3' : 'px-8 py-5'
+        }`}
+      >
         <View className="flex-row items-center gap-2.5">
           <View className="h-[30px] w-[30px] items-center justify-center rounded-lg bg-tp-accent">
             <Languages size={18} color={TP.black} />
           </View>
           <Text className="text-xl font-bold text-tp-text">RTT</Text>
         </View>
-        <View className="flex-row items-center gap-4">
+        <View className="flex-row flex-wrap items-center gap-2">
           <Pill>
             <Wifi size={15} color={status === 'connected' ? TP.accent : TP.muted} />
             <Text className="text-[13px] text-tp-text2">{STATUS_LABEL[status] ?? status}</Text>
@@ -79,7 +85,7 @@ export function Demo2Devices({ navigation }: RttStackScreenProps<'Devices'>) {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: 32, gap: 24 }}>
+      <ScrollView contentContainerStyle={{ padding: compact ? 16 : 32, gap: compact ? 16 : 24 }}>
         {/* Your device */}
         <View className="flex-row items-center justify-between rounded-2xl border border-tp-border bg-tp-surface p-5">
           <View className="flex-row items-center gap-3.5">
