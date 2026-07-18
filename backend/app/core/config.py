@@ -37,9 +37,29 @@ class Settings(BaseSettings):
 
     # --- Offline STT engine selection ------------------------------------
     # Which local STT engine `mode=offline` uses:
-    #   "whisper" -> Faster-Whisper (one multilingual model, auto-detect)
-    #   "sherpa"  -> sherpa-onnx per-language Zipformer (gipformer VI + zipformer EN)
+    #   "whisper"    -> Faster-Whisper (one multilingual model, auto-detect)
+    #   "sherpa"     -> sherpa-onnx per-language Zipformer (gipformer VI + zipformer EN)
+    #   "phowhisper" -> per-language Faster-Whisper: PhoWhisper (VinAI) for VI,
+    #                   standard Whisper for EN (PhoWhisper is Vietnamese-only)
     stt_engine: str = "whisper"
+
+    # --- Faster-Whisper runtime (shared by "whisper" and "phowhisper") ---
+    # "cpu" + "int8" is the safe default; set "cuda" + "float16" when a GPU is
+    # available (much faster, needed for real-time PhoWhisper-large).
+    stt_device: str = "cpu"
+    stt_compute_type: str = "int8"
+    # Multilingual Faster-Whisper model size for stt_engine == "whisper":
+    # "tiny"/"base" (fastest) .. "small" (default) .. "medium"/"large-v3"
+    # (best, GPU recommended). On a GPU bump this up; on CPU drop it for speed.
+    stt_model_size: str = "small"
+
+    # --- PhoWhisper STT (used when stt_engine == "phowhisper") -----------
+    # CTranslate2 model dir for the Vietnamese PhoWhisper model, built by
+    # tools/prepare_phowhisper.py. Unset -> the provider raises a clear error.
+    phowhisper_model_dir: str | None = None
+    # Faster-Whisper model for English (PhoWhisper does not cover EN). A size
+    # name ("small"/"medium") is auto-downloaded; a local CT2 dir also works.
+    whisper_en_model: str = "small"
 
     # --- sherpa-onnx STT (used when stt_engine == "sherpa") --------------
     # Root folder holding one subfolder per language code: <dir>/vi, <dir>/en, ...
@@ -84,6 +104,37 @@ class Settings(BaseSettings):
     groq_stt_model: str = "whisper-large-v3"
     # Chat model used to translate the transcript (both directions).
     groq_nmt_model: str = "llama-3.3-70b-versatile"
+
+    # --- Offline NMT engine selection ------------------------------------
+    # Which NMT engine `mode=offline` uses:
+    #   "nllb"   -> CTranslate2 NLLB-200 (light, fast, real-time on CPU; default)
+    #   "seallm" -> a local OpenAI-compatible chat endpoint (Ollama/vLLM) serving
+    #               SeaLLMs-v3 — better glossary/context following, needs a GPU.
+    nmt_engine: str = "nllb"
+
+    # --- Local chat NMT (used when nmt_engine == "seallm") ---------------
+    # OpenAI-compatible base URL of the local LLM server (Ollama default shown).
+    local_nmt_api_url: str = "http://localhost:11434/v1"
+    # Model name as registered in the server (e.g. `ollama create seallm-v3 ...`).
+    local_nmt_model: str = "seallm-v3"
+    # Ollama ignores auth but the OpenAI-style client still needs a bearer string.
+    local_nmt_api_key: str = "ollama"
+
+    # --- Offline NMT (CTranslate2 + NLLB-200) ----------------------------
+    # Path to a CTranslate2 int8 NLLB model dir (with tokenizer files), built
+    # by tools/prepare_nllb.py. Unset -> offline NMT raises a clear error.
+    offline_nmt_model_dir: str | None = None
+    # Beam size for the authoritative translation (audio.chunk / text.final).
+    # Higher = more accurate, slower. On GPU 5 is cheap; on CPU keep it low.
+    offline_nmt_beam_final: int = 4
+    # Beam size for streaming partials (audio.partial / text.partial); 1 = greedy.
+    offline_nmt_beam_partial: int = 1
+    # CTranslate2 intra-op threads; 0 = let CTranslate2 choose.
+    offline_nmt_intra_threads: int = 0
+    # CTranslate2 device/precision for NLLB. "cpu" + "int8" is the safe default;
+    # set "cuda" + "float16" on a GPU box (much faster, best accuracy).
+    offline_nmt_device: str = "cpu"
+    offline_nmt_compute_type: str = "int8"
 
     # --- STT hallucination guard -----------------------------------------
     # Windows quieter than this normalized RMS (0..1), or shorter than this many

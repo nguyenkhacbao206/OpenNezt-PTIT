@@ -57,6 +57,34 @@ async def _emit(
     await send(ws, event, data)
 
 
+async def _emit_translation(
+    ws: WebSocket,
+    session: SessionState,
+    manager: "ConnectionManager | None",
+    speaker: str,
+    src_text: str,
+    dst_text: str,
+) -> None:
+    """Deliver a finalized translation of the speaker's turn.
+
+    In a 1:1 room the translation lands on the PEER (`nmt.result`, their left
+    bubble) AND a copy returns to the SPEAKER (`nmt.self`) so their own bubble can
+    show both the original and its translation. With no peer (the `/app` console),
+    it falls back to a single `nmt.result` to self — the self-loop, unchanged.
+    """
+    payload = {"speaker": speaker, "srcText": src_text, "dstText": dst_text}
+    peer_id = (
+        manager.peer_id_of(session.client_id)
+        if manager is not None and session.client_id
+        else None
+    )
+    if peer_id:
+        await manager.send_to(peer_id, "nmt.result", payload)
+        await send(ws, "nmt.self", payload)
+    else:
+        await send(ws, "nmt.result", payload)
+
+
 async def send_error(
     ws: WebSocket, code: str, message: str, can_fallback: bool = True
 ) -> None:
@@ -328,9 +356,7 @@ async def _on_text_final(
             )
         dst_text = apply_glossary(dst_text, session.glossary_id)
         metrics.nmt_ms = sw_nmt.ms
-        await _emit(ws, session, manager, "nmt.result", {
-            "speaker": speaker, "srcText": text, "dstText": dst_text,
-        }, to_peer=True)
+        await _emit_translation(ws, session, manager, speaker, text, dst_text)
     except Exception as exc:  # noqa: BLE001
         await send_error(ws, "nmt_failed", f"NMT provider failed: {exc}")
         return
@@ -389,29 +415,34 @@ async def _on_audio_chunk(
         log.info("audio.chunk produced no speech for speaker=%s (silence/guarded)", speaker)
         return
 
+    # ---- Dịch + TTS NGUYÊN cụm STT (streaming voice, đọc cuốn chiếu) ------
+    # KHÔNG ngắt câu theo dấu câu: mỗi cụm VAD (một audio.chunk) được dịch và đọc
+    # ngay khi tới, nên số thập phân như "2.5" không bị tách ở dấu chấm. VAD phía
+    # client đã căn cụm theo nhịp ngắt hơi (SILENCE_MS) nên giọng vẫn liền mạch.
+    source_text = final_text.strip()
+
     # ---- NMT -------------------------------------------------------------
     try:
         with Stopwatch() as sw_nmt:
             dst_text = await session.providers.nmt.translate(
-                final_text, session.source_lang, session.target_lang
+                source_text, session.source_lang, session.target_lang
             )
         dst_text = apply_glossary(dst_text, session.glossary_id)
         metrics.nmt_ms = sw_nmt.ms
-        # Translation goes to the listener (peer) in a room; self on the console.
-        await _emit(ws, session, manager, "nmt.result", {
-            "speaker": speaker,
-            "srcText": final_text,
-            "dstText": dst_text,
-        }, to_peer=True)
+        # Translation goes to the listener (peer) in a room; self on console.
+        await _emit_translation(ws, session, manager, speaker, source_text, dst_text)
     except Exception as exc:  # noqa: BLE001
         await send_error(ws, "nmt_failed", f"NMT provider failed: {exc}")
+        metrics.finish()
+        await send(ws, "metrics", metrics.as_event())
         return
 
-    # ---- TTS (optional) --------------------------------------------------
+    # ---- TTS (optional) — audio từng cụm, phát cuốn chiếu ----------------
     if session.tts_on:
         try:
-            audio_b64 = await session.providers.tts.synthesize(dst_text, session.target_lang)
-            # Audio plays on the listener's device (peer); self on the console.
+            audio_b64 = await session.providers.tts.synthesize(
+                dst_text, session.target_lang
+            )
             await _emit(ws, session, manager, "tts.audio", {
                 "speaker": speaker, "audio": audio_b64,
             }, to_peer=True)

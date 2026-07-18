@@ -67,17 +67,33 @@ def build_providers(mode: str) -> ProviderBundle:
             mode="cloud",
         )
     if normalized == "offline":
-        # STT engine is config-selectable: Whisper (multilingual) or sherpa-onnx
-        # (per-language gipformer VI + zipformer EN). NMT is unchanged.
-        if settings.stt_engine.lower() == "sherpa":
+        # STT engine is config-selectable: Whisper (multilingual), sherpa-onnx
+        # (per-language gipformer VI + zipformer EN), or phowhisper (PhoWhisper
+        # for VI + Whisper for EN).
+        engine = settings.stt_engine.lower()
+        if engine == "sherpa":
             from .sherpa import SherpaSTTProvider
 
             stt: STTProvider = SherpaSTTProvider()
+        elif engine == "phowhisper":
+            from .phowhisper import PhoWhisperSTTProvider
+
+            stt = PhoWhisperSTTProvider()
         else:
             stt = OfflineSTTProvider()
+
+        # NMT engine is config-selectable: NLLB CT2 (default) or a local chat
+        # server (Ollama/vLLM) serving SeaLLM.
+        if settings.nmt_engine.lower() == "seallm":
+            from .local_nmt import LocalNMTProvider
+
+            nmt: NMTProvider = LocalNMTProvider()
+        else:
+            nmt = OfflineNMTProvider()
+
         return ProviderBundle(
             stt=stt,
-            nmt=OfflineNMTProvider(),
+            nmt=nmt,
             tts=build_tts(),
             mode="offline",
         )

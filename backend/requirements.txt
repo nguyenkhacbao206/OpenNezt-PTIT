@@ -29,5 +29,9 @@ edge-tts>=6.1
 # --- Optional TTS: Piper local voices (TTS_ENGINE=piper; needs voice models) ---
 # piper-tts>=1.3
 
-# --- Reserved for the rest of the real pipeline (uncomment when wiring) ---
-# transformers>=4.40     # OfflineNMTProvider (NLLB)
+# --- Offline NMT: CTranslate2 int8 + NLLB-200 (OfflineNMTProvider) --------
+# Runtime needs ctranslate2 + the NLLB tokenizer only. torch is required ONLY
+# for the one-time model conversion in tools/prepare_nllb.py (install ad-hoc).
+ctranslate2>=4.3         # int8 CPU inference engine (app/providers/ct2_nmt.py)
+transformers>=4.40       # NllbTokenizerFast (tokenize/detokenize)
+sentencepiece>=0.2       # tokenizer backend used by NLLB

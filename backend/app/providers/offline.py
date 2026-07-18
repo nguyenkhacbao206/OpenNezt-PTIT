@@ -24,13 +24,25 @@ class OfflineSTTProvider(STTProvider):
 
     name = "offline-stt"
 
-    def __init__(self, model_size: str = "small") -> None:
+    def __init__(self, model_size: str | None = None) -> None:
         # The heavy model is loaded lazily on first transcribe and cached by
-        # get_engine, so constructing the provider is cheap.
+        # get_engine, so constructing the provider is cheap. Size/device/precision
+        # come from settings so a GPU box can run large-v3 + float16 for accuracy.
+        from ..core.config import settings
         from .whisper_engine import get_engine
 
-        self._engine = get_engine(model_size=model_size)
-        log.info("OfflineSTTProvider constructed (model loads on first use).")
+        self._engine = get_engine(
+            model_size=model_size or settings.stt_model_size,
+            device=settings.stt_device,
+            compute_type=settings.stt_compute_type,
+        )
+        log.info(
+            "OfflineSTTProvider constructed size=%s device=%s compute=%s "
+            "(model loads on first use).",
+            model_size or settings.stt_model_size,
+            settings.stt_device,
+            settings.stt_compute_type,
+        )
 
     async def transcribe(
         self, audio: bytes, source_lang: str
@@ -61,18 +73,82 @@ class OfflineSTTProvider(STTProvider):
 
 
 class OfflineNMTProvider(NMTProvider):
-    """Local NMT stub. Plug NLLB here."""
+    """Local NMT via CTranslate2 int8 + NLLB-200 (see providers/ct2_nmt.py)."""
 
     name = "offline-nmt"
 
     def __init__(self) -> None:
-        # TODO(offline-nmt): load NLLB model + tokenizer once.
-        log.info("OfflineNMTProvider constructed (model not loaded).")
+        from ..core.config import settings
+
+        self._dir = settings.offline_nmt_model_dir
+        self._threads = settings.offline_nmt_intra_threads
+        self._beam_final = settings.offline_nmt_beam_final
+        self._beam_partial = settings.offline_nmt_beam_partial
+        self._device = settings.offline_nmt_device
+        self._compute_type = settings.offline_nmt_compute_type
+        log.info(
+            "OfflineNMTProvider constructed device=%s compute=%s beam=%d "
+            "(model loads on first use).",
+            self._device,
+            self._compute_type,
+            self._beam_final,
+        )
+
+    def _require_dir(self) -> str:
+        if not self._dir:
+            raise RuntimeError(
+                "Offline NMT model chưa sẵn sàng — chạy tools/prepare_nllb.py "
+                "và set OFFLINE_NMT_MODEL_DIR trong .env."
+            )
+        return self._dir
 
     async def translate(self, text: str, source_lang: str, target_lang: str) -> str:
-        """Not implemented yet -> raises so the handler can emit a fallback."""
-        log.warning("OfflineNMTProvider.translate called but not implemented.")
-        raise NotImplementedError("Plug NLLB into OfflineNMTProvider.")
+        """Authoritative translation of the whole segment (beam search).
+
+        No sentence-splitting: the client streams short VAD segments (dịch từng
+        cụm, đuổi theo giọng), and splitting on "." would break decimals like
+        "2.5" ("two point five"). Translating the segment as one unit keeps
+        numbers intact.
+        """
+        import asyncio
+
+        from .ct2_nmt import translate_one
+
+        model_dir = self._require_dir()
+        if not text or not text.strip():
+            return ""
+        return await asyncio.to_thread(
+            translate_one,
+            model_dir,
+            self._threads,
+            text,
+            source_lang,
+            target_lang,
+            self._beam_final,
+            self._device,
+            self._compute_type,
+        )
+
+    async def translate_partial(
+        self, text: str, source_lang: str, target_lang: str
+    ) -> str:
+        """Streaming translation: single pass, greedy (fast)."""
+        import asyncio
+
+        from .ct2_nmt import translate_one
+
+        model_dir = self._require_dir()
+        if not text or not text.strip():
+            return ""
+        return await asyncio.to_thread(
+            translate_one,
+            model_dir,
+            self._threads,
+            text,
+            source_lang,
+            target_lang,
+            self._beam_partial,
+        )
 
 
 class OfflineTTSProvider(TTSProvider):

@@ -12,6 +12,14 @@ import { fromByteArray } from 'base64-js';
 
 const TARGET_RATE = 16000;
 
+// VAD năng lượng (port từ backend/static/index.html). Chỉnh SPEECH_RMS nếu mic to/nhỏ.
+const SPEECH_RMS = 0.012; // ngưỡng coi là đang nói
+const SILENCE_MS = 1000; // ngừng bao lâu thì chốt cụm — đặt ở mức ngắt HẾT CÂU
+// (không phải ngắt hơi ~650ms) để mỗi cụm ≈ một câu, tránh Whisper chấm câu giữa
+// chừng làm cắt câu làm đôi + khựng giữa clip.
+const MIN_SEG_MS = 500; // cụm tối thiểu (bỏ tiếng động ngắn)
+const MAX_SEG_MS = 6000; // cụm dài liền mạch → cắt cưỡng bức
+
 export class WebMicRecorder {
   private stream: MediaStream | null = null;
   private audioCtx: AudioContext | null = null;
@@ -19,9 +27,13 @@ export class WebMicRecorder {
   private processor: ScriptProcessorNode | null = null;
   private chunks: Float32Array[] = [];
   private inRate = 48000;
+  private onSegment?: () => void;
+  private speaking = false;
+  private silenceMs = 0;
+  private segMs = 0;
 
   /** Bắt đầu thu; resolve khi đồ thị audio đã chạy (đã xin quyền mic). */
-  async start(): Promise<void> {
+  async start(onSegment?: () => void): Promise<void> {
     const stream = await navigator.mediaDevices.getUserMedia({
       audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true },
     });
@@ -34,8 +46,34 @@ export class WebMicRecorder {
     this.sourceNode = ctx.createMediaStreamSource(stream);
     this.processor = ctx.createScriptProcessor(4096, 1, 1);
     this.chunks = [];
+    this.onSegment = onSegment;
     this.processor.onaudioprocess = (e) => {
-      this.chunks.push(new Float32Array(e.inputBuffer.getChannelData(0)));
+      const frame = new Float32Array(e.inputBuffer.getChannelData(0));
+      const frameMs = (frame.length / this.inRate) * 1000;
+      let sum = 0;
+      for (let i = 0; i < frame.length; i++) sum += frame[i] * frame[i];
+      const rms = Math.sqrt(sum / frame.length);
+      if (rms > SPEECH_RMS) {
+        this.speaking = true;
+        this.silenceMs = 0;
+      } else if (this.speaking) {
+        this.silenceMs += frameMs;
+      }
+      // Chỉ gom frame khi đang nói → cụm là speech-only (bỏ im lặng thừa).
+      if (this.speaking) {
+        this.chunks.push(frame);
+        this.segMs += frameMs;
+      }
+      // Biên cụm: ngắt hơi đủ lâu (cụm ≥ min) hoặc cụm quá dài → chốt.
+      if (
+        (this.speaking && this.silenceMs >= SILENCE_MS && this.segMs >= MIN_SEG_MS) ||
+        this.segMs >= MAX_SEG_MS
+      ) {
+        this.speaking = false;
+        this.silenceMs = 0;
+        this.segMs = 0;
+        this.onSegment?.();
+      }
     };
     this.sourceNode.connect(this.processor);
     this.processor.connect(ctx.destination);
@@ -44,6 +82,9 @@ export class WebMicRecorder {
   /** Xoá mẫu đã tích luỹ nhưng VẪN thu tiếp (bắt đầu một segment mới). */
   reset(): void {
     this.chunks = [];
+    this.speaking = false;
+    this.silenceMs = 0;
+    this.segMs = 0;
   }
 
   /** WAV base64 của TOÀN BỘ audio tích luỹ tới hiện tại (không dừng thu). */
@@ -67,6 +108,7 @@ export class WebMicRecorder {
     }
     this.processor = this.sourceNode = this.audioCtx = this.stream = null;
     this.chunks = [];
+    this.onSegment = undefined;
     return result;
   }
 }
