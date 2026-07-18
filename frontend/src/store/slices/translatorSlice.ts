@@ -16,6 +16,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { StateCreator } from 'zustand';
 
 import { env } from '@/config/env';
+import { rttText, uiLangFromLang } from '@/i18n/rtt';
 import { TranslatorSocket } from '@/services';
 import { playBase64Audio } from '@/services/audioPlayback';
 import type {
@@ -141,6 +142,9 @@ export const createTranslatorSlice: StateCreator<RootStore, [], [], TranslatorSl
     const s = get();
     return `${s.translatorMode}:${s.srcLang}->${s.dstLang}`;
   };
+
+  /** Thông báo lỗi theo NGÔN NGỮ của người dùng (srcLang) — khớp với UI. */
+  const errs = () => rttText[uiLangFromLang(get().srcLang)].errors;
 
   /** Đảm bảo đã gửi session.start đúng chiều dịch hiện tại (gửi lại nếu đổi). */
   const ensureSession = (): void => {
@@ -297,7 +301,7 @@ export const createTranslatorSlice: StateCreator<RootStore, [], [], TranslatorSl
         set({
           pendingInviteTo: null,
           translatorError:
-            event.data.reason === 'busy' ? 'Thiết bị đang bận.' : 'Lời mời bị từ chối.',
+            event.data.reason === 'busy' ? errs().deviceBusy : errs().inviteDeclined,
         });
         break;
       case 'room.joined': {
@@ -329,8 +333,8 @@ export const createTranslatorSlice: StateCreator<RootStore, [], [], TranslatorSl
           live: null,
           translatorError:
             event.data.reason === 'peer_disconnected'
-              ? 'Đối tác đã rời hoặc mất kết nối.'
-              : 'Phòng đã đóng.',
+              ? errs().peerDisconnected
+              : errs().roomClosed,
         });
         break;
       default:
@@ -425,7 +429,7 @@ export const createTranslatorSlice: StateCreator<RootStore, [], [], TranslatorSl
         onEvent: handleEvent,
         onClose: () => set({ translatorStatus: 'disconnected', _direction: null }),
         onError: () =>
-          set({ translatorStatus: 'error', translatorError: 'Lỗi kết nối WebSocket tới backend.' }),
+          set({ translatorStatus: 'error', translatorError: errs().wsError }),
       });
     },
 
@@ -482,7 +486,7 @@ export const createTranslatorSlice: StateCreator<RootStore, [], [], TranslatorSl
             room: null,
           }),
         onError: () =>
-          set({ translatorStatus: 'error', translatorError: 'Lỗi kết nối WebSocket tới backend.' }),
+          set({ translatorStatus: 'error', translatorError: errs().wsError }),
       });
     },
 
@@ -549,7 +553,7 @@ export const createTranslatorSlice: StateCreator<RootStore, [], [], TranslatorSl
     endTurn: (speaker, wavBase64) => {
       const { _socket } = get();
       if (!_socket || !_socket.isOpen) {
-        set({ translatorError: 'Chưa kết nối tới backend. Bấm "Kết nối" trước.' });
+        set({ translatorError: errs().notConnected });
         return;
       }
       ensureSession();

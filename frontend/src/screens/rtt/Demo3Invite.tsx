@@ -10,14 +10,11 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AlertTriangle, Check, Laptop, Loader } from 'lucide-react-native';
 
+import { useRttT } from '@/components/hooks';
 import type { RttStackScreenProps } from '@/navigation/rttTypes';
 import { useStore } from '@/store';
 
 const TP = { accent: '#5EEAD4', text2: '#9AA0A6', red: '#ff6669', black: '#000000' };
-
-function langLabel(lang: string): string {
-  return lang === 'vi' ? 'Tiếng Việt (VI)' : 'English (EN)';
-}
 
 function Circle({ children }: { children: React.ReactNode }) {
   return (
@@ -28,6 +25,7 @@ function Circle({ children }: { children: React.ReactNode }) {
 }
 
 export function Demo3Invite({ navigation }: RttStackScreenProps<'Invite'>) {
+  const t = useRttT();
   const insets = useSafeAreaInsets();
   const incomingInvite = useStore((s) => s.incomingInvite);
   const srcLang = useStore((s) => s.srcLang);
@@ -65,19 +63,19 @@ export function Demo3Invite({ navigation }: RttStackScreenProps<'Invite'>) {
       <ScrollView
         contentContainerStyle={{ flexGrow: 1, alignItems: 'center', justifyContent: 'center', padding: 40, gap: 40 }}
       >
-        <Text className="text-2xl font-semibold text-tp-text">Lời mời kết nối</Text>
+        <Text className="text-2xl font-semibold text-tp-text">{t.demo3.title}</Text>
 
         {incomingInvite ? (
           <View className="w-[520px] max-w-full items-center gap-5 rounded-[20px] border border-tp-border bg-tp-surface p-9">
-            <Text className="text-[11px] font-semibold tracking-[1.5px] text-tp-muted">PHÍA NHẬN</Text>
+            <Text className="text-[11px] font-semibold tracking-[1.5px] text-tp-muted">{t.demo3.receiverTag}</Text>
             <Circle>
               <Laptop size={36} color={TP.accent} />
             </Circle>
             <Text className="text-center text-xl font-semibold leading-[26px] text-tp-text">
-              “{incomingInvite.fromName}” muốn kết nối
+              {t.demo3.wantsToConnect(incomingInvite.fromName)}
             </Text>
             <Text className="text-sm text-tp-text2">
-              Ngôn ngữ: {langLabel(incomingInvite.fromLang)}
+              {t.demo3.deviceLang(t.common.langLabel(incomingInvite.fromLang))}
             </Text>
             {sameLang && (
               <View
@@ -86,8 +84,7 @@ export function Demo3Invite({ navigation }: RttStackScreenProps<'Invite'>) {
               >
                 <AlertTriangle size={18} color={TP.red} />
                 <Text className="flex-1 text-[13px]" style={{ color: '#ff8a99' }}>
-                  Cùng ngôn ngữ với bạn ({srcLang.toUpperCase()}) — sẽ không có bản dịch. Bạn vẫn
-                  có thể chấp nhận để vào phòng.
+                  {t.demo3.sameLangWarn(srcLang.toUpperCase())}
                 </Text>
               </View>
             )}
@@ -96,14 +93,14 @@ export function Demo3Invite({ navigation }: RttStackScreenProps<'Invite'>) {
                 onPress={onDecline}
                 className="flex-1 items-center justify-center rounded-full border border-tp-border bg-tp-surface p-[13px]"
               >
-                <Text className="text-[15px] font-medium text-tp-text">Từ chối</Text>
+                <Text className="text-[15px] font-medium text-tp-text">{t.demo3.decline}</Text>
               </Pressable>
               <Pressable
                 onPress={onAccept}
                 className="flex-1 flex-row items-center justify-center gap-2 rounded-full bg-tp-accent p-[13px]"
               >
                 <Check size={16} color={TP.black} />
-                <Text className="text-[15px] font-semibold text-tp-bg">Chấp nhận</Text>
+                <Text className="text-[15px] font-semibold text-tp-bg">{t.demo3.accept}</Text>
               </Pressable>
             </View>
           </View>
@@ -111,13 +108,13 @@ export function Demo3Invite({ navigation }: RttStackScreenProps<'Invite'>) {
           <View className="w-[520px] max-w-full items-center gap-5 rounded-[20px] border border-tp-border bg-tp-surface p-9">
             <View className="flex-row items-center gap-2">
               <Loader size={16} color={TP.accent} />
-              <Text className="text-[15px] text-tp-text2">Đang chờ chấp nhận…</Text>
+              <Text className="text-[15px] text-tp-text2">{t.demo3.waitingAccept}</Text>
             </View>
             <Pressable
               onPress={() => navigation.goBack()}
               className="w-full items-center justify-center rounded-full border border-tp-border bg-tp-surface p-[13px]"
             >
-              <Text className="text-[15px] font-medium text-tp-text">Quay lại</Text>
+              <Text className="text-[15px] font-medium text-tp-text">{t.demo3.back}</Text>
             </Pressable>
           </View>
         )}

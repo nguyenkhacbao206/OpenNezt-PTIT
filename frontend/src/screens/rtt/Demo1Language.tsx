@@ -20,6 +20,7 @@ import { Globe, Languages, Server } from 'lucide-react-native';
 
 import type { RttStackScreenProps } from '@/navigation/rttTypes';
 import { useStore } from '@/store';
+import { rttText, uiLangFromLang } from '@/i18n/rtt';
 
 interface LangOption {
   code: string;
@@ -42,6 +43,8 @@ export function Demo1Language({ navigation }: RttStackScreenProps<'Language'>) {
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const compact = width < 600; // điện thoại: gọn padding lại cho vừa màn
+  // Chọn văn bản theo LỰA CHỌN đang bật (chưa lưu store) để chữ lật ngay khi chạm.
+  const t = rttText[uiLangFromLang(selected === 'vi' ? 'vi' : 'en')];
 
   // Cuộn xuống cuối để ô đang nhập nhảy lên trên bàn phím, dễ nhìn.
   const scrollToInput = () => {
@@ -69,7 +72,7 @@ export function Demo1Language({ navigation }: RttStackScreenProps<'Language'>) {
     setLangs(src, src === 'vi' ? 'en' : 'vi');
     // Kết nối tới backend LAN và vào lobby ngay, để danh sách thiết bị hiện ở
     // bước sau (Demo2) trong khi vẫn thấy tiến trình kết nối.
-    enterLobby((myName || '').trim() || 'Thiết bị của tôi');
+    enterLobby((myName || '').trim() || t.common.defaultDeviceName);
     navigation.navigate('Devices');
   };
 
@@ -106,22 +109,22 @@ export function Demo1Language({ navigation }: RttStackScreenProps<'Language'>) {
         >
           <View className="gap-2">
             <Text className={`${compact ? 'text-[22px]' : 'text-[28px]'} font-semibold text-tp-text`}>
-              Chọn ngôn ngữ của bạn
+              {t.demo1.title}
             </Text>
             <Text className="text-[15px] leading-[21px] text-tp-text2">
-              Ngôn ngữ này được lưu trên thiết bị và dùng làm mặc định cho các phiên họp.
+              {t.demo1.subtitle}
             </Text>
           </View>
 
           {/* Tên thiết bị — hiển thị cho người khác trong lobby */}
           <View className="gap-1.5">
-            <Text className="text-[13px] font-medium text-tp-text2">Tên thiết bị của bạn</Text>
+            <Text className="text-[13px] font-medium text-tp-text2">{t.demo1.deviceNameLabel}</Text>
             <TextInput
               value={myName}
               onChangeText={setMyName}
               autoCapitalize="words"
               autoCorrect={false}
-              placeholder="VD: MacBook của Linh"
+              placeholder={t.demo1.deviceNamePlaceholder}
               placeholderTextColor="#585E66"
               className="rounded-xl border border-tp-border bg-tp-bg px-4 py-3 text-base text-tp-text"
             />
@@ -161,10 +164,10 @@ export function Demo1Language({ navigation }: RttStackScreenProps<'Language'>) {
             onPress={onContinue}
             className="items-center justify-center rounded-full bg-tp-accent p-[15px]"
           >
-            <Text className="text-base font-semibold text-tp-bg">Tiếp tục</Text>
+            <Text className="text-base font-semibold text-tp-bg">{t.demo1.continue}</Text>
           </Pressable>
 
-          <Text className="text-center text-[13px] text-tp-muted">Có thể đổi lại trong Cài đặt.</Text>
+          <Text className="text-center text-[13px] text-tp-muted">{t.demo1.changeLater}</Text>
 
           {/* Cài đặt backend (WS URL) — cần khi chạy trên thiết bị LAN */}
           <Pressable
@@ -173,13 +176,13 @@ export function Demo1Language({ navigation }: RttStackScreenProps<'Language'>) {
           >
             <Server size={13} color="#585E66" />
             <Text className="text-center text-[12px] text-tp-muted">
-              {showAdv ? 'Ẩn cài đặt backend' : 'Cài đặt backend'}
+              {showAdv ? t.demo1.hideBackend : t.demo1.showBackend}
             </Text>
           </Pressable>
           {showAdv && (
             <View className="gap-1.5">
               <Text className="text-[11px] text-tp-muted">
-                WebSocket URL (thiết bị thật: dùng IP LAN, vd ws://192.168.1.x:8000/ws)
+                {t.demo1.wsHint}
               </Text>
               <TextInput
                 value={wsUrl}

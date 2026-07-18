@@ -21,7 +21,8 @@
       "Bash(xxd)",
       "Bash(iconv -f UTF-16LE -t UTF-8 README.md)",
       "Bash(mv -f README.utf8.md README.md)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(grep -vE '//')"
     ]
   }
 }
