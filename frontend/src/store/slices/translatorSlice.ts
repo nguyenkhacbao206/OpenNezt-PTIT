@@ -163,9 +163,27 @@ export const createTranslatorSlice: StateCreator<RootStore, [], [], TranslatorSl
         });
         break;
       }
-      case 'stt.final':
-        set({ partialResponses: get().partialResponses + 1 });
+      case 'stt.final': {
+        // Lời CHÍNH MÌNH vừa nói (bản dịch đã route sang đối tác). Lưu vào lịch
+        // sử của mình để máy tôi có bản ghi đúng những gì tôi đã nói. Backend đã
+        // chặn im lặng nên không còn câu ảo lọt vào đây.
+        const text = event.data.text.trim();
+        const next: { partialResponses: number; turns?: TranslatorTurn[] } = {
+          partialResponses: get().partialResponses + 1,
+        };
+        if (text) {
+          const mineTurn: TranslatorTurn = {
+            id: makeId(),
+            speaker: event.data.speaker,
+            srcText: text,
+            dstText: text,
+            mine: true,
+          };
+          next.turns = [...get().turns, mineTurn];
+        }
+        set(next);
         break;
+      }
       case 'nmt.partial':
         set({
           live: { speaker: event.data.speaker, srcText: event.data.srcText, dstText: event.data.dstText },
@@ -180,6 +198,7 @@ export const createTranslatorSlice: StateCreator<RootStore, [], [], TranslatorSl
           speaker: event.data.speaker,
           srcText: event.data.srcText,
           dstText: event.data.dstText,
+          mine: false,
         };
         set({
           live: null,

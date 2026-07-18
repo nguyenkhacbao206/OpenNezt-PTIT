@@ -370,21 +370,23 @@ async def _on_audio_chunk(
                 if result.is_final:
                     final_text = result.text
                     final_lang = result.lang
-                    session.remember_text(speaker, result.text)
-                    await send(ws, "stt.final", {
-                        "speaker": speaker,
-                        "text": result.text,
-                        "lang": result.lang,
-                    })
-                else:
+                    if result.text.strip():
+                        session.remember_text(speaker, result.text)
+                        await send(ws, "stt.final", {
+                            "speaker": speaker,
+                            "text": result.text,
+                            "lang": result.lang,
+                        })
+                elif result.text.strip():
                     await send(ws, "stt.partial", {"speaker": speaker, "text": result.text})
         metrics.stt_ms = sw_stt.ms
     except Exception as exc:  # noqa: BLE001 - keep the server alive on any provider failure
         await send_error(ws, "stt_failed", f"STT provider failed: {exc}")
         return
 
-    if not final_text:
-        await send_error(ws, "stt_empty", "No final transcript produced.", can_fallback=False)
+    if not final_text or not final_text.strip():
+        # Silent/guarded window (no speech) — skip quietly, no error, no garbage.
+        log.info("audio.chunk produced no speech for speaker=%s (silence/guarded)", speaker)
         return
 
     # ---- NMT -------------------------------------------------------------

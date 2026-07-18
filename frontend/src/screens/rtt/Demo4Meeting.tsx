@@ -39,7 +39,8 @@ export function Demo4Meeting({ navigation }: RttStackScreenProps<'Meeting'>) {
   // Nghe: đối tác đang nói → bản dịch TẠM (live). Đối tác nói xong → bản dịch
   // GẦN NHẤT dạng card gọn ở góc; chạm để mở Lịch sử.
   const shown = live;
-  const lastTurn = turns.length > 0 ? turns[turns.length - 1] : null;
+  // Card "bản dịch gần nhất" chỉ hiện lời ĐỐI TÁC gửi tới (bỏ qua lời mình).
+  const lastTurn = [...turns].reverse().find((t) => t.mine !== true) ?? null;
   const dotColor = status === 'connected' ? TP.accent : status === 'error' ? TP.red : TP.muted;
   const peerName = room?.peer.name ?? 'Đối tác';
   const partsLabel = useMemo(

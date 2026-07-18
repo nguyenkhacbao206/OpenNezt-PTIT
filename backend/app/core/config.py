@@ -85,6 +85,14 @@ class Settings(BaseSettings):
     # Chat model used to translate the transcript (both directions).
     groq_nmt_model: str = "llama-3.3-70b-versatile"
 
+    # --- STT hallucination guard -----------------------------------------
+    # Windows quieter than this normalized RMS (0..1), or shorter than this many
+    # ms, are treated as silence and NEVER sent to Whisper (which hallucinates on
+    # silence). Raise stt_silence_rms if quiet speech is being dropped; lower it
+    # if silence still produces phantom text.
+    stt_silence_rms: float = 0.006
+    stt_min_speech_ms: int = 300
+
     @property
     def cors_origin_list(self) -> list[str]:
         """Parse the comma-separated CORS origins into a list."""

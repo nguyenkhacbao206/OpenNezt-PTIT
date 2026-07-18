@@ -11,6 +11,7 @@ from __future__ import annotations
 import logging
 from collections.abc import AsyncIterator
 
+from ..core.audio_utils import is_silence, looks_like_hallucination
 from ..core.config import settings
 from .base import NMTProvider, STTProvider, STTResult, TTSProvider
 from .mock import MockNMTProvider, MockSTTProvider, MockTTSProvider
@@ -42,6 +43,12 @@ class CloudSTTProvider(STTProvider):
                 yield result
             return
 
+        # Guard: never send a silent/too-short window to Whisper — it hallucinates
+        # ("Thank you.", "Let's go!", ...) on silence, polluting the transcript.
+        if is_silence(audio):
+            yield STTResult(text="", lang=source_lang, is_final=True)
+            return
+
         from . import groq_client
 
         text = await groq_client.transcribe_audio(
@@ -52,6 +59,10 @@ class CloudSTTProvider(STTProvider):
             "audio/wav",
             source_lang,
         )
+        # Backstop: drop a transcript that is exactly a canned hallucination.
+        if looks_like_hallucination(text):
+            log.info("Dropped likely STT hallucination: %r", text)
+            text = ""
         yield STTResult(text=text, lang=source_lang, is_final=True)
 
 

@@ -6,9 +6,16 @@
  * reference client (backend/static/index.html · enqueueAudio/playNext).
  *
  * Backend edge-tts trả **MP3**; mock trả **WAV** (nhận diện qua header base64).
+ *
+ * Đa nền tảng:
+ *   - Native (iOS/Android): ghi file tạm (expo-file-system) rồi phát bằng
+ *     expo-audio.
+ *   - Web (Expo Web/desktop): expo-file-system KHÔNG hoạt động (không có
+ *     cacheDirectory) → phát thẳng qua phần tử <audio> với data URI.
  */
 import { createAudioPlayer } from 'expo-audio';
 import * as FileSystem from 'expo-file-system/legacy';
+import { Platform } from 'react-native';
 
 const queue: string[] = [];
 let busy = false;
@@ -29,37 +36,54 @@ async function playNext(): Promise<void> {
   }
   busy = true;
 
-  let player: ReturnType<typeof createAudioPlayer> | null = null;
-  const advance = () => {
-    try {
-      player?.remove();
-    } catch {
-      /* noop */
+  // Chuyển sang clip kế đúng MỘT lần (dù nhận được nhiều sự kiện kết thúc).
+  let done = false;
+  const advance = (player?: { remove: () => void }) => {
+    if (done) return;
+    done = true;
+    if (player) {
+      try {
+        player.remove();
+      } catch {
+        /* noop */
+      }
     }
-    player = null;
-    void playNext(); // sang clip kế
+    void playNext();
   };
 
+  const ext = base64.startsWith('UklGR') ? 'wav' : 'mp3';
+
+  // WEB: phát trực tiếp bằng data URI (không ghi file).
+  if (Platform.OS === 'web') {
+    try {
+      const mime = ext === 'wav' ? 'audio/wav' : 'audio/mpeg';
+      const audio = new Audio(`data:${mime};base64,${base64}`);
+      audio.onended = () => advance();
+      audio.onerror = () => advance();
+      // Chốt an toàn nếu không nhận được 'ended'.
+      setTimeout(() => advance(), 30000);
+      // Có thể bị chặn nếu trang chưa có tương tác người dùng → bỏ qua clip.
+      await audio.play();
+    } catch {
+      advance();
+    }
+    return;
+  }
+
+  // NATIVE: ghi file tạm rồi phát bằng expo-audio.
   try {
-    const ext = base64.startsWith('UklGR') ? 'wav' : 'mp3';
     const path = `${FileSystem.cacheDirectory}tts-${(seq += 1)}.${ext}`;
     await FileSystem.writeAsStringAsync(path, base64, {
       encoding: FileSystem.EncodingType.Base64,
     });
-    player = createAudioPlayer(path);
-    let done = false;
-    const finishOnce = () => {
-      if (done) return;
-      done = true;
-      advance();
-    };
+    const player = createAudioPlayer(path);
     player.addListener('playbackStatusUpdate', (status) => {
-      if (status.didJustFinish) finishOnce();
+      if (status.didJustFinish) advance(player);
     });
     // Chốt an toàn: nếu vì lý do gì không nhận được didJustFinish.
-    setTimeout(finishOnce, 30000);
+    setTimeout(() => advance(player), 30000);
     player.play();
   } catch {
-    advance(); // clip lỗi → bỏ qua, phát clip kế
+    advance();
   }
 }

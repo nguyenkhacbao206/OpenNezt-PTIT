@@ -18,6 +18,7 @@ export function Demo7History({ navigation }: RttStackScreenProps<'History'>) {
   const turns = useStore((s) => s.turns);
   const srcLang = useStore((s) => s.srcLang);
   const dstLang = useStore((s) => s.dstLang);
+  const peerName = useStore((s) => s.room?.peer.name ?? 'Đối tác');
   const [selected, setSelected] = useState<TranslatorTurn | null>(null);
 
   return (
@@ -49,30 +50,41 @@ export function Demo7History({ navigation }: RttStackScreenProps<'History'>) {
             Chưa có câu nào. Vào phòng họp và nhấn “Nhấn để nói”.
           </Text>
         )}
-        {turns.map((t) => (
-          <View key={t.id} className="flex-row justify-end">
-            <Pressable
-              onPress={() => setSelected(t)}
-              className="w-[640px] max-w-full gap-1.5 rounded-2xl border border-tp-accent bg-tp-surface p-4"
-            >
-              <View className="flex-row items-center justify-between">
-                <View className="flex-row items-center gap-2">
-                  <Text className="text-sm font-semibold text-tp-text">Bạn</Text>
-                  <View className="rounded-full border border-tp-border bg-tp-bg px-2 py-0.5">
-                    <Text className="text-[11px] text-tp-text2">{srcLang.toUpperCase()}</Text>
+        {turns.map((t) => {
+          // Lời mình: canh phải, viền accent, chỉ hiện lời đã nói (ngôn ngữ mình).
+          // Lời đối tác: canh trái, hiện bản dịch (ngôn ngữ mình) + câu gốc (ngôn ngữ họ).
+          const mine = t.mine === true;
+          const label = mine ? 'Bạn' : peerName;
+          const langTag = mine ? srcLang.toUpperCase() : dstLang.toUpperCase();
+          return (
+            <View key={t.id} className={`flex-row ${mine ? 'justify-end' : 'justify-start'}`}>
+              <Pressable
+                onPress={() => setSelected(t)}
+                className={`w-[640px] max-w-full gap-1.5 rounded-2xl border bg-tp-surface p-4 ${
+                  mine ? 'border-tp-accent' : 'border-tp-border'
+                }`}
+              >
+                <View className="flex-row items-center justify-between">
+                  <View className="flex-row items-center gap-2">
+                    <Text className="text-sm font-semibold text-tp-text">{label}</Text>
+                    <View className="rounded-full border border-tp-border bg-tp-bg px-2 py-0.5">
+                      <Text className="text-[11px] text-tp-text2">{langTag}</Text>
+                    </View>
                   </View>
+                  <Volume2 size={15} color={TP.text2} />
                 </View>
-                <Volume2 size={15} color={TP.text2} />
-              </View>
-              <Text className="text-[17px] leading-[23px] text-tp-text" numberOfLines={3}>
-                {t.dstText}
-              </Text>
-              <Text className="text-[13px] leading-[18px] text-tp-muted" numberOfLines={2}>
-                Gốc: {t.srcText}
-              </Text>
-            </Pressable>
-          </View>
-        ))}
+                <Text className="text-[17px] leading-[23px] text-tp-text" numberOfLines={3}>
+                  {t.dstText}
+                </Text>
+                {!mine && (
+                  <Text className="text-[13px] leading-[18px] text-tp-muted" numberOfLines={2}>
+                    Gốc: {t.srcText}
+                  </Text>
+                )}
+              </Pressable>
+            </View>
+          );
+        })}
       </ScrollView>
 
       {/* Popup chi tiết */}

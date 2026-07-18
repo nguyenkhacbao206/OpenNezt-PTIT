@@ -36,6 +36,8 @@ export interface TranslatorTurn {
   srcText: string;
   /** Bản dịch sang ngôn ngữ phía còn lại. */
   dstText: string;
+  /** true = lời CHÍNH MÌNH nói (từ stt.final); false/undefined = lời đối tác gửi tới. */
+  mine?: boolean;
 }
 
 /** Phụ đề tạm thời khi đang nhận dạng. */
