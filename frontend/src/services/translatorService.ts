@@ -23,6 +23,7 @@ const KNOWN_EVENTS: ReadonlySet<string> = new Set<ServerEvent['type']>([
   'stt.final',
   'nmt.partial',
   'nmt.result',
+  'nmt.self',
   'tts.audio',
   'metrics',
   'config.updated',

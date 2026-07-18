@@ -172,11 +172,12 @@ export const createTranslatorSlice: StateCreator<RootStore, [], [], TranslatorSl
           partialResponses: get().partialResponses + 1,
         };
         if (text) {
+          // dstText để trống → chờ bản dịch của mình về qua `nmt.self` điền vào.
           const mineTurn: TranslatorTurn = {
             id: makeId(),
             speaker: event.data.speaker,
             srcText: text,
-            dstText: text,
+            dstText: '',
             mine: true,
           };
           next.turns = [...get().turns, mineTurn];
@@ -190,6 +191,42 @@ export const createTranslatorSlice: StateCreator<RootStore, [], [], TranslatorSl
           partialResponses: get().partialResponses + 1,
         });
         break;
+      case 'nmt.self': {
+        // Bản dịch của CHÍNH MÌNH quay về → điền vào bong bóng mình mới nhất còn
+        // trống dstText (tạo bởi stt.final). Không thấy thì thêm mới.
+        const turns = get().turns;
+        let idx = -1;
+        for (let i = turns.length - 1; i >= 0; i -= 1) {
+          if (turns[i].mine === true && !turns[i].dstText) {
+            idx = i;
+            break;
+          }
+        }
+        if (idx >= 0) {
+          const updated = turns.slice();
+          updated[idx] = {
+            ...updated[idx],
+            srcText: event.data.srcText || updated[idx].srcText,
+            dstText: event.data.dstText,
+          };
+          set({ turns: updated, partialResponses: get().partialResponses + 1 });
+        } else {
+          set({
+            turns: [
+              ...turns,
+              {
+                id: makeId(),
+                speaker: event.data.speaker,
+                srcText: event.data.srcText,
+                dstText: event.data.dstText,
+                mine: true,
+              },
+            ],
+            partialResponses: get().partialResponses + 1,
+          });
+        }
+        break;
+      }
       case 'nmt.result': {
         // Mô hình phòng: nmt.result đến từ ĐỐI TÁC (server route sang máy tôi).
         // Mỗi cái là một câu dịch đã chốt → thêm thẳng vào lịch sử hội thoại.
