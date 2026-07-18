@@ -95,13 +95,17 @@ export function Demo6YourTurn({ navigation }: RttStackScreenProps<'YourTurn'>) {
   const segments = useStore((s) => s.sessionSegments);
   const srcLang = useStore((s) => s.srcLang);
   const dstLang = useStore((s) => s.dstLang);
+  const peerName = useStore((s) => s.room?.peer.name ?? 'đối tác');
 
   const cutAtRef = useRef(0);
-  const shownDst = useReveal(live?.dstText ?? '');
+  // Khi TÔI nói, bản dịch được gửi thẳng sang đối tác. Máy tôi chỉ nhận lại
+  // transcript (stt) — hiển thị chính lời mình đang nói, chạy chữ cho mượt.
+  const shownSrc = useReveal(live?.srcText ?? '');
 
-  // Bắt đầu thu ngay khi vào màn; dừng + dọn khi rời.
+  // Bắt đầu thu ngay khi vào màn; dừng + dọn khi rời. Nhãn phía nói theo ngôn
+  // ngữ nguồn (vn=Việt, sg=Anh) chỉ để tô màu.
   useEffect(() => {
-    void mic.start('vn');
+    void mic.start(srcLang === 'vi' ? 'vn' : 'sg');
     return () => {
       void mic.stop();
     };
@@ -171,11 +175,11 @@ export function Demo6YourTurn({ navigation }: RttStackScreenProps<'YourTurn'>) {
                 className="text-center text-[40px] font-semibold leading-[48px]"
                 style={{ color: TP.accent }}
               >
-                {shownDst || (mic.recording ? '🎙 Đang nghe…' : '…')}
+                {shownSrc || (mic.recording ? '🎙 Đang nghe…' : '…')}
               </Text>
-              {!!live?.srcText && (
-                <Text className="text-center text-lg text-tp-text2">{live.srcText}</Text>
-              )}
+              <Text className="text-center text-lg text-tp-text2">
+                Đang gửi bản dịch tới {peerName}…
+              </Text>
             </View>
           </View>
 

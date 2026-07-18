@@ -20,7 +20,10 @@ import { TranslatorSocket } from '@/services';
 import { playBase64Audio } from '@/services/audioPlayback';
 import type {
   ConnectionStatus,
+  Device,
+  IncomingInvite,
   Lang,
+  RoomPeer,
   ServerEvent,
   Speaker,
   TranslatorMode,
@@ -68,6 +71,20 @@ export interface TranslatorSlice {
    *  mic coalesce: chỉ gửi cửa sổ kế tiếp khi cửa sổ trước đã có kết quả. */
   partialResponses: number;
 
+  // -- Lobby / ghép phòng 1↔1 (chat nội bộ LAN) ---------------------------
+  /** Id do server cấp cho thiết bị này (sau `hello`). */
+  myClientId: string | null;
+  /** Tên hiển thị của thiết bị này trong lobby. */
+  myName: string;
+  /** Các thiết bị khác đang online cùng backend. */
+  devices: Device[];
+  /** Phòng 1↔1 hiện tại (null = đang ở lobby / chưa ghép). */
+  room: { roomId: string; peer: RoomPeer } | null;
+  /** Lời mời đang đến (bên nhận), hoặc null. */
+  incomingInvite: IncomingInvite | null;
+  /** Đang chờ thiết bị này chấp nhận (bên gửi), hoặc null. */
+  pendingInviteTo: string | null;
+
   /** Nội bộ — KHÔNG select trong component. */
   _socket: TranslatorSocket | null;
   _direction: string | null;
@@ -80,9 +97,21 @@ export interface TranslatorSlice {
   setLangs: (src: Lang, dst: Lang) => void;
   setTranslatorMode: (mode: TranslatorMode) => void;
   setTtsOn: (on: boolean) => void;
+  setMyName: (name: string) => void;
 
   connect: () => void;
   disconnect: () => void;
+
+  /** Kết nối tới backend LAN và vào lobby với tên hiển thị. */
+  enterLobby: (name: string) => void;
+  /** Gửi lời mời ghép phòng tới một thiết bị. */
+  invitePeer: (toClientId: string) => void;
+  /** Chấp nhận lời mời đến từ `fromClientId` (tạo phòng). */
+  acceptInvite: (fromClientId: string) => void;
+  /** Từ chối lời mời đến từ `fromClientId`. */
+  declineInvite: (fromClientId: string) => void;
+  /** Rời phòng hiện tại (đóng cho cả đối tác) và ngắt kết nối. */
+  leaveRoom: () => void;
 
   /** Mở một lượt nói mới (xoá live + segment cũ, đảm bảo đúng chiều dịch). */
   startTurn: (speaker: Speaker) => void;
@@ -125,10 +154,18 @@ export const createTranslatorSlice: StateCreator<RootStore, [], [], TranslatorSl
         set({ translatorMode: event.data.mode });
         break;
       case 'stt.partial': {
+        // Khi TÔI nói: chỉ stt.* + metrics quay về máy tôi (nmt/tts đã route
+        // sang đối tác). Dùng chính stt.partial để nhả cổng coalesce của mic.
         const live = get().live;
-        set({ live: { speaker: event.data.speaker, srcText: event.data.text, dstText: live?.dstText ?? '' } });
+        set({
+          live: { speaker: event.data.speaker, srcText: event.data.text, dstText: live?.dstText ?? '' },
+          partialResponses: get().partialResponses + 1,
+        });
         break;
       }
+      case 'stt.final':
+        set({ partialResponses: get().partialResponses + 1 });
+        break;
       case 'nmt.partial':
         set({
           live: { speaker: event.data.speaker, srcText: event.data.srcText, dstText: event.data.dstText },
@@ -136,49 +173,82 @@ export const createTranslatorSlice: StateCreator<RootStore, [], [], TranslatorSl
         });
         break;
       case 'nmt.result': {
+        // Mô hình phòng: nmt.result đến từ ĐỐI TÁC (server route sang máy tôi).
+        // Mỗi cái là một câu dịch đã chốt → thêm thẳng vào lịch sử hội thoại.
         const seg: TranslatorTurn = {
           id: makeId(),
           speaker: event.data.speaker,
           srcText: event.data.srcText,
           dstText: event.data.dstText,
         };
-        const segs = [...get().sessionSegments, seg];
-        if (get()._finalizePending) {
-          // Chốt lượt: gộp toàn bộ segment thành MỘT entry lịch sử.
-          const combined: TranslatorTurn = {
-            id: makeId(),
-            speaker: seg.speaker,
-            srcText: segs.map((s) => s.srcText).join(' '),
-            dstText: segs.map((s) => s.dstText).join(' '),
-          };
-          set({
-            live: null,
-            sessionSegments: [],
-            _finalizePending: false,
-            partialResponses: get().partialResponses + 1,
-            turns: [...get().turns, combined],
-          });
-        } else {
-          // Segment giữa chừng (do cắt 4 dòng): thêm vào card trái.
-          set({
-            live: null,
-            sessionSegments: segs,
-            partialResponses: get().partialResponses + 1,
-          });
-        }
+        set({
+          live: null,
+          turns: [...get().turns, seg],
+          partialResponses: get().partialResponses + 1,
+        });
         break;
       }
       case 'tts.audio':
+        // Audio bản dịch của đối tác — phát trên máy tôi (nếu bật đọc).
         if (get().ttsOn) void playBase64Audio(event.data.audio);
         break;
       case 'metrics':
-        set({ metrics: event.data });
+        set({ metrics: event.data, partialResponses: get().partialResponses + 1 });
         break;
       case 'error':
         set({
           live: null,
           partialResponses: get().partialResponses + 1,
           translatorError: `[${event.data.code}] ${event.data.message}`,
+        });
+        break;
+
+      // -- Lobby / ghép phòng 1↔1 -----------------------------------------
+      case 'welcome':
+        set({ myClientId: event.data.clientId });
+        break;
+      case 'lobby':
+        set({ devices: event.data.devices });
+        break;
+      case 'invite.incoming':
+        set({ incomingInvite: event.data });
+        break;
+      case 'invite.declined':
+        set({
+          pendingInviteTo: null,
+          translatorError:
+            event.data.reason === 'busy' ? 'Thiết bị đang bận.' : 'Lời mời bị từ chối.',
+        });
+        break;
+      case 'room.joined': {
+        const peer = event.data.peer;
+        set({
+          room: { roomId: event.data.roomId, peer },
+          dstLang: peer.lang,
+          incomingInvite: null,
+          pendingInviteTo: null,
+          devices: [],
+          turns: [],
+          live: null,
+          translatorError: null,
+        });
+        // Server đã start session (src=mình, tgt=đối tác); đồng bộ _direction để
+        // không gửi lại session.start. Bật đọc để đối tác nhận audio.
+        const s = get();
+        set({ _direction: `${s.translatorMode}:${s.srcLang}->${peer.lang}` });
+        if (s.ttsOn && s._socket?.isOpen) {
+          s._socket.send({ type: 'config.update', data: { ttsOn: true } });
+        }
+        break;
+      }
+      case 'room.closed':
+        set({
+          room: null,
+          live: null,
+          translatorError:
+            event.data.reason === 'peer_disconnected'
+              ? 'Đối tác đã rời hoặc mất kết nối.'
+              : 'Phòng đã đóng.',
         });
         break;
       default:
@@ -200,6 +270,13 @@ export const createTranslatorSlice: StateCreator<RootStore, [], [], TranslatorSl
     live: null,
     metrics: null,
     partialResponses: 0,
+
+    myClientId: null,
+    myName: 'Thiết bị của tôi',
+    devices: [],
+    room: null,
+    incomingInvite: null,
+    pendingInviteTo: null,
 
     _socket: null,
     _direction: null,
@@ -246,6 +323,7 @@ export const createTranslatorSlice: StateCreator<RootStore, [], [], TranslatorSl
       if (s._socket?.isOpen) s._socket.send({ type: 'config.update', data: { ttsOn: on } });
       persist({ wsUrl: s.wsUrl, srcLang: s.srcLang, dstLang: s.dstLang, ttsOn: on });
     },
+    setMyName: (name) => set({ myName: name }),
 
     connect: () => {
       const socket = new TranslatorSocket();
@@ -281,6 +359,88 @@ export const createTranslatorSlice: StateCreator<RootStore, [], [], TranslatorSl
         _finalizePending: false,
         live: null,
         sessionSegments: [],
+        myClientId: null,
+        devices: [],
+        room: null,
+        incomingInvite: null,
+        pendingInviteTo: null,
+      });
+    },
+
+    enterLobby: (name) => {
+      const socket = new TranslatorSocket();
+      set({
+        translatorStatus: 'connecting',
+        translatorError: null,
+        _socket: socket,
+        _direction: null,
+        myName: name,
+        myClientId: null,
+        devices: [],
+        room: null,
+        incomingInvite: null,
+        pendingInviteTo: null,
+        turns: [],
+        live: null,
+      });
+      socket.connect(get().wsUrl, {
+        onOpen: () => {
+          set({ translatorStatus: 'connected' });
+          const s = get();
+          socket.send({ type: 'hello', data: { name: s.myName, lang: s.srcLang } });
+        },
+        onEvent: handleEvent,
+        onClose: () =>
+          set({
+            translatorStatus: 'disconnected',
+            _direction: null,
+            myClientId: null,
+            devices: [],
+            room: null,
+          }),
+        onError: () =>
+          set({ translatorStatus: 'error', translatorError: 'Lỗi kết nối WebSocket tới backend.' }),
+      });
+    },
+
+    invitePeer: (toClientId) => {
+      const s = get();
+      if (!s._socket?.isOpen) return;
+      s._socket.send({ type: 'invite', data: { toClientId } });
+      set({ pendingInviteTo: toClientId, translatorError: null });
+    },
+
+    acceptInvite: (fromClientId) => {
+      const s = get();
+      if (!s._socket?.isOpen) return;
+      s._socket.send({ type: 'invite.accept', data: { fromClientId } });
+    },
+
+    declineInvite: (fromClientId) => {
+      const s = get();
+      if (s._socket?.isOpen) s._socket.send({ type: 'invite.decline', data: { fromClientId } });
+      set({ incomingInvite: null });
+    },
+
+    leaveRoom: () => {
+      const s = get();
+      if (s._socket?.isOpen) {
+        s._socket.send({ type: 'room.leave', data: {} });
+        s._socket.send({ type: 'session.end', data: {} });
+        s._socket.close();
+      }
+      set({
+        translatorStatus: 'disconnected',
+        _socket: null,
+        _direction: null,
+        _finalizePending: false,
+        live: null,
+        sessionSegments: [],
+        myClientId: null,
+        devices: [],
+        room: null,
+        incomingInvite: null,
+        pendingInviteTo: null,
       });
     },
 

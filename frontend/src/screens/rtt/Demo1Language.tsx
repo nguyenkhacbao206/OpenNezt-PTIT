@@ -31,12 +31,18 @@ export function Demo1Language({ navigation }: RttStackScreenProps<'Language'>) {
   const setLangs = useStore((s) => s.setLangs);
   const wsUrl = useStore((s) => s.wsUrl);
   const setWsUrl = useStore((s) => s.setWsUrl);
+  const myName = useStore((s) => s.myName);
+  const setMyName = useStore((s) => s.setMyName);
+  const enterLobby = useStore((s) => s.enterLobby);
 
   const onContinue = () => {
     // Ngôn ngữ của mình = nguồn; đối tác nhận ngôn ngữ còn lại. Backend hỗ trợ
     // vi/en → gộp các ngôn ngữ khác về "en" cho demo.
     const src = selected === 'vi' ? 'vi' : 'en';
     setLangs(src, src === 'vi' ? 'en' : 'vi');
+    // Kết nối tới backend LAN và vào lobby ngay, để danh sách thiết bị hiện ở
+    // bước sau (Demo2) trong khi vẫn thấy tiến trình kết nối.
+    enterLobby((myName || '').trim() || 'Thiết bị của tôi');
     navigation.navigate('Devices');
   };
 
@@ -62,6 +68,20 @@ export function Demo1Language({ navigation }: RttStackScreenProps<'Language'>) {
             <Text className="text-[15px] leading-[21px] text-tp-text2">
               Ngôn ngữ này được lưu trên thiết bị và dùng làm mặc định cho các phiên họp.
             </Text>
+          </View>
+
+          {/* Tên thiết bị — hiển thị cho người khác trong lobby */}
+          <View className="gap-1.5">
+            <Text className="text-[13px] font-medium text-tp-text2">Tên thiết bị của bạn</Text>
+            <TextInput
+              value={myName}
+              onChangeText={setMyName}
+              autoCapitalize="words"
+              autoCorrect={false}
+              placeholder="VD: MacBook của Linh"
+              placeholderTextColor="#585E66"
+              className="rounded-xl border border-tp-border bg-tp-bg px-4 py-3 text-base text-tp-text"
+            />
           </View>
 
           <View className="gap-2.5">

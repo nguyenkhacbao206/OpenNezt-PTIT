@@ -28,6 +28,10 @@ class SessionState:
     glossary_id: str | None = "biz-default"
     started: bool = False
 
+    # Lobby/room identity (None for the solo `/app` console — no `hello` sent).
+    # Set by the handler on `hello`; used to route translation results to a peer.
+    client_id: str | None = None
+
     # Providers for the current mode (rebuilt when mode changes).
     providers: ProviderBundle | None = field(default=None, repr=False)
 

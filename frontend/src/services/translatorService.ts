@@ -28,6 +28,12 @@ const KNOWN_EVENTS: ReadonlySet<string> = new Set<ServerEvent['type']>([
   'config.updated',
   'session.ended',
   'error',
+  'welcome',
+  'lobby',
+  'invite.incoming',
+  'invite.declined',
+  'room.joined',
+  'room.closed',
 ]);
 
 /** Thu hẹp payload thô từ WebSocket về ServerEvent (bỏ qua nếu không hợp lệ). */

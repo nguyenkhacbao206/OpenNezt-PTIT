@@ -44,6 +44,29 @@ export interface PartialLine {
   text: string;
 }
 
+/** Một thiết bị khác trong lobby (cùng backend LAN). */
+export interface Device {
+  clientId: string;
+  name: string;
+  lang: Lang;
+  /** Đang trong một phòng khác → không mời được. */
+  busy: boolean;
+}
+
+/** Đối tác trong phòng 1↔1 hiện tại. */
+export interface RoomPeer {
+  clientId: string;
+  name: string;
+  lang: Lang;
+}
+
+/** Lời mời đến từ một thiết bị khác. */
+export interface IncomingInvite {
+  fromClientId: string;
+  fromName: string;
+  fromLang: Lang;
+}
+
 // --------------------------------------------------------------------------
 // Client -> Server
 // --------------------------------------------------------------------------
@@ -86,6 +109,33 @@ export interface SessionEndMessage {
   data: Record<string, never>;
 }
 
+// -- Lobby / ghép phòng 1↔1 -------------------------------------------------
+export interface HelloMessage {
+  type: 'hello';
+  /** Vào lobby với tên hiển thị + ngôn ngữ của mình. */
+  data: { name: string; lang: Lang };
+}
+
+export interface InviteMessage {
+  type: 'invite';
+  data: { toClientId: string };
+}
+
+export interface InviteAcceptMessage {
+  type: 'invite.accept';
+  data: { fromClientId: string };
+}
+
+export interface InviteDeclineMessage {
+  type: 'invite.decline';
+  data: { fromClientId: string };
+}
+
+export interface RoomLeaveMessage {
+  type: 'room.leave';
+  data: Record<string, never>;
+}
+
 export type ClientMessage =
   | SessionStartMessage
   | AudioChunkMessage
@@ -93,7 +143,12 @@ export type ClientMessage =
   | TextPartialMessage
   | TextFinalMessage
   | ConfigUpdateMessage
-  | SessionEndMessage;
+  | SessionEndMessage
+  | HelloMessage
+  | InviteMessage
+  | InviteAcceptMessage
+  | InviteDeclineMessage
+  | RoomLeaveMessage;
 
 // --------------------------------------------------------------------------
 // Server -> Client
@@ -155,6 +210,37 @@ export interface ErrorEvent {
   data: { code: string; message: string; canFallback: boolean };
 }
 
+// -- Lobby / ghép phòng 1↔1 -------------------------------------------------
+export interface WelcomeEvent {
+  type: 'welcome';
+  data: { clientId: string };
+}
+
+export interface LobbyEvent {
+  type: 'lobby';
+  data: { devices: Device[] };
+}
+
+export interface InviteIncomingEvent {
+  type: 'invite.incoming';
+  data: { fromClientId: string; fromName: string; fromLang: Lang };
+}
+
+export interface InviteDeclinedEvent {
+  type: 'invite.declined';
+  data: { fromClientId: string; reason: string };
+}
+
+export interface RoomJoinedEvent {
+  type: 'room.joined';
+  data: { roomId: string; peer: RoomPeer };
+}
+
+export interface RoomClosedEvent {
+  type: 'room.closed';
+  data: { reason: string };
+}
+
 export type ServerEvent =
   | SessionStartedEvent
   | SttPartialEvent
@@ -165,4 +251,10 @@ export type ServerEvent =
   | MetricsEvent
   | ConfigUpdatedEvent
   | SessionEndedEvent
-  | ErrorEvent;
+  | ErrorEvent
+  | WelcomeEvent
+  | LobbyEvent
+  | InviteIncomingEvent
+  | InviteDeclinedEvent
+  | RoomJoinedEvent
+  | RoomClosedEvent;

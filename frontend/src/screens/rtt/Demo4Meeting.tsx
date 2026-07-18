@@ -26,29 +26,29 @@ export function Demo4Meeting({ navigation }: RttStackScreenProps<'Meeting'>) {
   const turns = useStore((s) => s.turns);
   const srcLang = useStore((s) => s.srcLang);
   const dstLang = useStore((s) => s.dstLang);
+  const room = useStore((s) => s.room);
   const ttsOn = useStore((s) => s.ttsOn);
   const setTtsOn = useStore((s) => s.setTtsOn);
-  const connect = useStore((s) => s.connect);
-  const disconnect = useStore((s) => s.disconnect);
+  const leaveRoom = useStore((s) => s.leaveRoom);
 
-  // Kết nối một lần khi vào phòng (nếu chưa kết nối).
+  // Đối tác rời/mất kết nối (room bị đóng nhưng mình vẫn online) → về lobby.
   useEffect(() => {
-    if (status === 'disconnected' || status === 'error') connect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (!room && status === 'connected') navigation.navigate('Devices');
+  }, [room, status, navigation]);
 
-  // Đang nói → hiện bản dịch tạm (live). Nói xong → hiện bản dịch GẦN NHẤT dạng
-  // CARD GỌN (giới hạn dòng, không che kín màn), bấm để xem đầy đủ ở Lịch sử.
+  // Nghe: đối tác đang nói → bản dịch TẠM (live). Đối tác nói xong → bản dịch
+  // GẦN NHẤT dạng card gọn ở góc; chạm để mở Lịch sử.
   const shown = live;
   const lastTurn = turns.length > 0 ? turns[turns.length - 1] : null;
   const dotColor = status === 'connected' ? TP.accent : status === 'error' ? TP.red : TP.muted;
+  const peerName = room?.peer.name ?? 'Đối tác';
   const partsLabel = useMemo(
-    () => `Bạn (${srcLang.toUpperCase()}) ⇄ Đối tác (${dstLang.toUpperCase()})`,
-    [srcLang, dstLang],
+    () => `Bạn (${srcLang.toUpperCase()}) ⇄ ${peerName} (${dstLang.toUpperCase()})`,
+    [srcLang, dstLang, peerName],
   );
 
   const endMeeting = () => {
-    disconnect();
+    leaveRoom();
     navigation.navigate('EndSession');
   };
 
@@ -162,14 +162,15 @@ export function Demo4Meeting({ navigation }: RttStackScreenProps<'Meeting'>) {
             <View className="items-center gap-4">
               <Text className="text-center text-lg text-tp-muted" style={{ maxWidth: 720 }}>
                 {status === 'connected'
-                  ? 'Nhấn “Nhấn để nói” để bắt đầu — bản dịch sẽ hiện ở đây.'
-                  : status === 'error'
-                    ? 'Không kết nối được backend. Kiểm tra WS URL / mạng rồi thử lại.'
-                    : 'Đang kết nối tới backend…'}
+                  ? `Đã ghép với ${peerName}. Khi ${peerName} nói, bản dịch + giọng đọc hiện ở đây; nhấn “Nhấn để nói” để tới lượt bạn.`
+                  : 'Mất kết nối phòng. Quay lại danh sách thiết bị để ghép lại.'}
               </Text>
-              {status === 'error' && (
-                <Pressable onPress={connect} className="rounded-full bg-tp-accent px-6 py-3">
-                  <Text className="text-base font-semibold text-tp-bg">Thử lại</Text>
+              {status !== 'connected' && (
+                <Pressable
+                  onPress={() => navigation.navigate('Devices')}
+                  className="rounded-full bg-tp-accent px-6 py-3"
+                >
+                  <Text className="text-base font-semibold text-tp-bg">Về danh sách thiết bị</Text>
                 </Pressable>
               )}
             </View>

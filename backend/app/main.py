@@ -19,6 +19,7 @@ from .core.glossary import list_glossaries
 from .core.session import SessionState
 from .providers.factory import VALID_MODES
 from .ws.handler import dispatch
+from .ws.rooms import manager
 
 logging.basicConfig(
     level=logging.INFO,
@@ -75,11 +76,13 @@ async def ws_endpoint(ws: WebSocket) -> None:
     try:
         while True:
             message = await ws.receive_json()
-            await dispatch(ws, session, message)
+            await dispatch(ws, session, message, manager)
     except WebSocketDisconnect:
         log.info("WebSocket disconnected by client.")
     except Exception as exc:  # noqa: BLE001 - never let the loop crash silently
         log.exception("Unexpected WebSocket error: %s", exc)
     finally:
+        # Leave the lobby/room first (notifies peer), then wipe buffers.
+        await manager.unregister(session.client_id)
         session.cleanup()  # zero-retention guarantee on any exit path
         log.info("WebSocket closed, session wiped.")
