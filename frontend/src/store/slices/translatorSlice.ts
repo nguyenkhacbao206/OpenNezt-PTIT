@@ -541,21 +541,26 @@ export const createTranslatorSlice: StateCreator<RootStore, [], [], TranslatorSl
         turns: [],
         live: null,
       });
+      const socket = new TranslatorSocket();
+      set({ translatorStatus: 'connecting', translatorError: null, _socket: socket, _direction: null });
       socket.connect(get().wsUrl, {
         onOpen: () => {
-          set({ translatorStatus: 'connected' });
+          set({ translatorStatus: 'connected', _reconnectAttempts: 0, translatorError: null });
           const s = get();
           socket.send({ type: 'hello', data: { name: s.myName, lang: s.srcLang } });
         },
         onEvent: handleEvent,
-        onClose: () =>
+        onClose: () => {
           set({
             translatorStatus: 'disconnected',
             _direction: null,
             myClientId: null,
             devices: [],
             room: null,
-          }),
+          });
+          // Rớt/không mở được trong khi vẫn muốn ở lobby → thử lại.
+          if (get()._lobbyName !== null) scheduleReconnect();
+        },
         onError: () =>
           set({ translatorStatus: 'error', translatorError: errs().wsError }),
       });

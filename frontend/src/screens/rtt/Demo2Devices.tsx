@@ -8,10 +8,12 @@
 import { useEffect, useState } from 'react';
 import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { AlertTriangle, Languages, Laptop, Loader, UserPlus, Users } from 'lucide-react-native';
+import { AlertTriangle, Languages, Laptop, Link2, Loader, UserPlus, Users, Wifi } from 'lucide-react-native';
 
 import { useResponsive, useRttT } from '@/components/hooks';
 import type { RttStackScreenProps } from '@/navigation/rttTypes';
+import { isDesktop, onDevices } from '@/services/desktopBridge';
+import type { DesktopDevice } from '@/services/desktopBridge';
 import { useStore } from '@/store';
 import type { Device } from '@/types/translator';
 
