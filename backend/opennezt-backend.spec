@@ -4,7 +4,7 @@ from PyInstaller.utils.hooks import collect_all
 
 datas = []
 binaries = []
-hiddenimports = []
+hiddenimports = ['appdirs']
 hiddenimports += collect_submodules('uvicorn')
 hiddenimports += collect_submodules('app')
 tmp_ret = collect_all('faster_whisper')
