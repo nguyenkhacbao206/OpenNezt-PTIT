@@ -2,8 +2,8 @@
  * Màn NGHE/NÓI hợp nhất (thay Demo4 Meeting + Demo6 YourTurn).
  *
  * Immersive: hero chữ lớn GIỮA màn hiện đoạn voice + bản dịch. Push-to-talk bằng
- * nút "Nhấn giữ để nói" hoặc giữ phím Space (web). Giữ phím Alt (web) mở panel
- * "Lịch sử dịch" dạng bong bóng chat (lời mình phải, đối tác trái). Chỉ push-to-
+ * nút "Nhấn giữ để nói" hoặc giữ phím Space (web). Bấm phím Alt (web) bật/tắt
+ * panel "Lịch sử dịch" dạng bong bóng chat (lời mình phải, đối tác trái). Chỉ push-to-
  * talk, không có chế độ rảnh tay.
  *
  *   - Đang nghe: hero = bản dịch sang ngôn ngữ CỦA BẠN + câu gốc; top "Đang nghe".
@@ -182,8 +182,8 @@ export function Demo4Meeting({ navigation }: RttStackScreenProps<'Meeting'>) {
     if (mic.recording) void mic.stop();
   }, [mic]);
 
-  // Phím tắt web: Space giữ để nói, Alt giữ để xem lịch sử. Chỉ áp dụng trên web
-  // và gỡ listener khi rời màn. Dùng ref để đăng ký listener MỘT lần.
+  // Phím tắt web: Space giữ để nói, Alt bấm để bật/tắt lịch sử. Chỉ áp dụng trên
+  // web và gỡ listener khi rời màn. Dùng ref để đăng ký listener MỘT lần.
   const startRef = useRef(startTalk);
   const stopRef = useRef(stopTalk);
   startRef.current = startTalk;
@@ -200,15 +200,14 @@ export function Demo4Meeting({ navigation }: RttStackScreenProps<'Meeting'>) {
         }
       } else if (e.key === 'Alt') {
         e.preventDefault();
-        setHistoryOpen(true);
+        // Bấm (không giữ) để bật/tắt. `e.repeat` chặn auto-repeat khi giữ phím.
+        if (!e.repeat) setHistoryOpen((v) => !v);
       }
     };
     const onUp = (e: KeyboardEvent) => {
       if (e.code === 'Space') {
         spaceHeld.current = false;
         stopRef.current();
-      } else if (e.key === 'Alt') {
-        setHistoryOpen(false);
       }
     };
     window.addEventListener('keydown', onDown);
@@ -420,7 +419,7 @@ export function Demo4Meeting({ navigation }: RttStackScreenProps<'Meeting'>) {
           </Text>
         ) : Platform.OS === 'web' ? (
           <Text className="text-[13px] text-tp-muted">
-            Phím tắt: Space giữ để nói · Alt giữ để xem lịch sử
+            Phím tắt: Space giữ để nói · Alt bấm để bật/tắt lịch sử
           </Text>
         ) : (
           <Text className="text-[13px] text-tp-muted">Giữ nút để nói, thả ra để gửi bản dịch.</Text>
@@ -444,7 +443,7 @@ export function Demo4Meeting({ navigation }: RttStackScreenProps<'Meeting'>) {
               className="rounded-full border border-tp-border bg-tp-surface px-4 py-2"
             >
               <Text className="text-sm text-tp-text2">
-                {Platform.OS === 'web' ? 'Thả Alt để đóng' : 'Đóng'}
+                {Platform.OS === 'web' ? 'Bấm Alt để đóng' : 'Đóng'}
               </Text>
             </Pressable>
           </View>
