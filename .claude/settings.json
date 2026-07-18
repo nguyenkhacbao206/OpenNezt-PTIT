@@ -22,7 +22,8 @@
       "Bash(iconv -f UTF-16LE -t UTF-8 README.md)",
       "Bash(mv -f README.utf8.md README.md)",
       "Bash(npm run *)",
-      "Bash(grep -vE '//')"
+      "Bash(grep -vE '//')",
+      "Bash(python -m py_compile app/ws/handler.py app/core/metrics.py)"
     ]
   }
 }
