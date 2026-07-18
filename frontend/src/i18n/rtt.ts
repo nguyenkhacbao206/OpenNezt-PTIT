@@ -85,7 +85,9 @@ export interface RttDict {
     sameLangBanner: (name: string, langCode: string) => string;
     statusSpeaking: string;
     statusSpoke: string;
+    statusProcessing: string;
     statusListening: string;
+    processing: string;
     listeningToYou: string;
     ready: (name: string) => string;
     roomLost: string;
@@ -206,7 +208,9 @@ export const rttText: Record<UiLang, RttDict> = {
         `Bạn và ${name} đang dùng cùng ngôn ngữ (${langCode}). Sẽ không có bản dịch — hãy để một người đổi sang ngôn ngữ khác.`,
       statusSpeaking: 'ĐANG NÓI',
       statusSpoke: 'ĐÃ NÓI',
+      statusProcessing: 'ĐANG XỬ LÝ',
       statusListening: 'ĐANG NGHE',
+      processing: 'Đang nhận diện giọng nói…',
       listeningToYou: 'Đang nghe bạn nói…',
       ready: (name) => `Đã ghép với ${name}. Giữ nút bên dưới để nói, hoặc chờ ${name} nói.`,
       roomLost: 'Mất kết nối phòng. Quay lại danh sách thiết bị để ghép lại.',
@@ -324,7 +328,9 @@ export const rttText: Record<UiLang, RttDict> = {
         `You and ${name} are using the same language (${langCode}). There will be no translation — have one person switch to another language.`,
       statusSpeaking: 'SPEAKING',
       statusSpoke: 'SPOKE',
+      statusProcessing: 'PROCESSING',
       statusListening: 'LISTENING',
+      processing: 'Transcribing your speech…',
       listeningToYou: 'Listening to you…',
       ready: (name) => `Paired with ${name}. Hold the button below to speak, or wait for ${name} to speak.`,
       roomLost: 'Room connection lost. Go back to the device list to pair again.',
