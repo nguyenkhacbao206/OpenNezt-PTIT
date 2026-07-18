@@ -22,9 +22,14 @@ import { useStore } from '@/store';
 const TP = { accent: '#5EEAD4', text2: '#9AA0A6', muted: '#585E66', red: '#ff6669', black: '#000000' };
 const WAVE = [8, 16, 11, 20, 9, 15, 7];
 
+// Chữ dẫn trước tiếng: gõ hết chữ trong ~90% độ dài audio để chữ luôn nhỉnh hơn
+// giọng vài nhịp (voice "đuổi theo" text). Giảm số này nếu muốn chữ đi trước nhiều hơn.
+const REVEAL_LEAD = 0.9;
+
 /**
  * Chạy chữ dần theo từng từ ("đánh máy"), tránh giật cả cụm.
- * - `syncMs`: độ dài audio (ms) — nếu có, pace nhịp để chạy trọn audio.
+ * - `syncMs`: độ dài audio (ms) — nếu có, pace nhịp để chạy trọn audio (chữ dẫn
+ *   trước tiếng theo REVEAL_LEAD).
  * - `syncKey`: đổi key ⇒ lượt mới, reset về đầu và gõ lại từ đầu.
  * - Fallback: khi `syncKey` mới mà chưa có `syncMs`, hoãn bắt đầu gõ tối đa
  *   ~400ms chờ audio; hết 400ms vẫn chưa có thì gõ nhịp mặc định.
@@ -51,10 +56,10 @@ function useReveal(
     }
     if (iRef.current > words.length) iRef.current = 0; // text ngắn lại → lượt mới
 
-    // Nhịp: có syncMs thì trải đều theo độ dài audio, kẹp 40..400ms.
+    // Nhịp: có syncMs thì trải đều theo ~90% độ dài audio (chữ dẫn trước), kẹp 40..400ms.
     const cadence =
       syncMs && words.length > 0
-        ? Math.min(400, Math.max(40, syncMs / words.length))
+        ? Math.min(400, Math.max(40, (syncMs * REVEAL_LEAD) / words.length))
         : baseCadence;
 
     // Hoãn bắt đầu tối đa 400ms nếu đang chờ audio (có syncKey nhưng chưa có
