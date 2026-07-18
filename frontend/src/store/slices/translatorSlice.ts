@@ -176,7 +176,7 @@ export const createTranslatorSlice: StateCreator<RootStore, [], [], TranslatorSl
         // sử của mình để máy tôi có bản ghi đúng những gì tôi đã nói. Backend đã
         // chặn im lặng nên không còn câu ảo lọt vào đây.
         const text = event.data.text.trim();
-        const next: { partialResponses: number; turns?: TranslatorTurn[] } = {
+        const next: { partialResponses: number; turns?: TranslatorTurn[]; live?: LiveLine | null } = {
           partialResponses: get().partialResponses + 1,
         };
         if (text) {
@@ -189,6 +189,13 @@ export const createTranslatorSlice: StateCreator<RootStore, [], [], TranslatorSl
             mine: true,
           };
           next.turns = [...get().turns, mineTurn];
+          // Cập nhật hero người nói bằng CHÍNH câu vừa chốt. Nếu không, khi một cụm
+          // được chốt mà không kèm stt.partial nào (VAD cắt cụm ngắn), `live` sẽ kẹt
+          // ở câu trước → người nói vẫn thấy câu 1 dù đối tác đã nhận câu 2.
+          next.live = { speaker: event.data.speaker, srcText: text, dstText: get().live?.dstText ?? '' };
+        } else {
+          // Cụm im lặng/rỗng → xoá bong bóng cũ để không hiện lại câu trước.
+          next.live = null;
         }
         set({ ...next, audioCue: null });
         break;
