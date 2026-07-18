@@ -415,25 +415,34 @@ async def _on_audio_chunk(
         log.info("audio.chunk produced no speech for speaker=%s (silence/guarded)", speaker)
         return
 
+    # ---- Dịch + TTS NGUYÊN cụm STT (streaming voice, đọc cuốn chiếu) ------
+    # KHÔNG ngắt câu theo dấu câu: mỗi cụm VAD (một audio.chunk) được dịch và đọc
+    # ngay khi tới, nên số thập phân như "2.5" không bị tách ở dấu chấm. VAD phía
+    # client đã căn cụm theo nhịp ngắt hơi (SILENCE_MS) nên giọng vẫn liền mạch.
+    source_text = final_text.strip()
+
     # ---- NMT -------------------------------------------------------------
     try:
         with Stopwatch() as sw_nmt:
             dst_text = await session.providers.nmt.translate(
-                final_text, session.source_lang, session.target_lang
+                source_text, session.source_lang, session.target_lang
             )
         dst_text = apply_glossary(dst_text, session.glossary_id)
         metrics.nmt_ms = sw_nmt.ms
-        # Translation goes to the listener (peer) in a room; self on the console.
-        await _emit_translation(ws, session, manager, speaker, final_text, dst_text)
+        # Translation goes to the listener (peer) in a room; self on console.
+        await _emit_translation(ws, session, manager, speaker, source_text, dst_text)
     except Exception as exc:  # noqa: BLE001
         await send_error(ws, "nmt_failed", f"NMT provider failed: {exc}")
+        metrics.finish()
+        await send(ws, "metrics", metrics.as_event())
         return
 
-    # ---- TTS (optional) --------------------------------------------------
+    # ---- TTS (optional) — audio từng cụm, phát cuốn chiếu ----------------
     if session.tts_on:
         try:
-            audio_b64 = await session.providers.tts.synthesize(dst_text, session.target_lang)
-            # Audio plays on the listener's device (peer); self on the console.
+            audio_b64 = await session.providers.tts.synthesize(
+                dst_text, session.target_lang
+            )
             await _emit(ws, session, manager, "tts.audio", {
                 "speaker": speaker, "audio": audio_b64,
             }, to_peer=True)

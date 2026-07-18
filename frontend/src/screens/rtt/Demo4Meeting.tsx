@@ -2,8 +2,8 @@
  * Màn NGHE/NÓI hợp nhất (thay Demo4 Meeting + Demo6 YourTurn).
  *
  * Immersive: hero chữ lớn GIỮA màn hiện đoạn voice + bản dịch. Push-to-talk bằng
- * nút "Nhấn giữ để nói" hoặc giữ phím Space (web). Giữ phím Alt (web) mở panel
- * "Lịch sử dịch" dạng bong bóng chat (lời mình phải, đối tác trái). Chỉ push-to-
+ * nút "Nhấn giữ để nói" hoặc giữ phím Space (web). Bấm phím Alt (web) bật/tắt
+ * panel "Lịch sử dịch" dạng bong bóng chat (lời mình phải, đối tác trái). Chỉ push-to-
  * talk, không có chế độ rảnh tay.
  *
  *   - Đang nghe: hero = bản dịch sang ngôn ngữ CỦA BẠN + câu gốc; top "Đang nghe".
@@ -12,9 +12,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { History, Lock, Mic, PhoneOff, Volume2 } from 'lucide-react-native';
+import { AlertTriangle, History, Lock, Mic, PhoneOff, Volume2 } from 'lucide-react-native';
 
-import { useMeetingMic, useResponsive } from '@/components/hooks';
+import { useMeetingMic, useResponsive, useRttT } from '@/components/hooks';
 import type { RttStackScreenProps } from '@/navigation/rttTypes';
 import type { Speaker, TranslatorTurn } from '@/types/translator';
 import { useStore } from '@/store';
@@ -22,32 +22,80 @@ import { useStore } from '@/store';
 const TP = { accent: '#5EEAD4', text2: '#9AA0A6', muted: '#585E66', red: '#ff6669', black: '#000000' };
 const WAVE = [8, 16, 11, 20, 9, 15, 7];
 
-/** Chạy chữ dần theo từng từ để bản dịch hiện ra kiểu "đánh máy", tránh giật cả cụm. */
-function useReveal(text: string, cadence = 55): string {
+// Chữ dẫn trước tiếng: gõ hết chữ trong ~90% độ dài audio để chữ luôn nhỉnh hơn
+// giọng vài nhịp (voice "đuổi theo" text). Giảm số này nếu muốn chữ đi trước nhiều hơn.
+const REVEAL_LEAD = 0.9;
+
+/**
+ * Chạy chữ dần theo từng từ ("đánh máy"), tránh giật cả cụm.
+ * - `syncMs`: độ dài audio (ms) — nếu có, pace nhịp để chạy trọn audio (chữ dẫn
+ *   trước tiếng theo REVEAL_LEAD).
+ * - `syncKey`: đổi key ⇒ lượt mới, reset về đầu và gõ lại từ đầu.
+ * - Fallback: khi `syncKey` mới mà chưa có `syncMs`, hoãn bắt đầu gõ tối đa
+ *   ~400ms chờ audio; hết 400ms vẫn chưa có thì gõ nhịp mặc định.
+ */
+function useReveal(
+  text: string,
+  opts?: { syncMs?: number; syncKey?: string; cadence?: number },
+): string {
+  const { syncMs, syncKey, cadence: baseCadence = 55 } = opts ?? {};
   const [shown, setShown] = useState('');
   const wordsRef = useRef<string[]>([]);
   const iRef = useRef(0);
+  const keyRef = useRef<string | undefined>(undefined);
+  const shownRef = useRef('');
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const words = (text || '').split(/\s+/).filter(Boolean);
+    const full = words.join(' ');
     wordsRef.current = words;
+
+    // Lượt mới (syncKey đổi) → reset về đầu để gõ lại khớp audio.
+    const newTurn = syncKey !== keyRef.current;
+    if (newTurn) {
+      keyRef.current = syncKey;
+      iRef.current = 0;
+    }
+    // Khi đang thu âm, syncKey không đổi giữa các câu → con trỏ iRef còn giữ vị trí
+    // câu cũ khiến câu mới bị "kẹt". Nếu nội dung mới KHÔNG nối tiếp phần đang hiện
+    // (đổi sang câu khác, không phải partial mọc dài thêm) thì gõ lại từ đầu.
+    if (!newTurn && shownRef.current && !full.startsWith(shownRef.current)) {
+      iRef.current = 0;
+    }
     if (iRef.current > words.length) iRef.current = 0; // text ngắn lại → lượt mới
+
+    // Nhịp: có syncMs thì trải đều theo ~90% độ dài audio (chữ dẫn trước), kẹp 40..400ms.
+    const cadence =
+      syncMs && words.length > 0
+        ? Math.min(400, Math.max(40, (syncMs * REVEAL_LEAD) / words.length))
+        : baseCadence;
+
+    // Hoãn bắt đầu tối đa 400ms nếu đang chờ audio (có syncKey nhưng chưa có
+    // syncMs và chưa gõ chữ nào). Sau 400ms hoặc khi có syncMs → gõ ngay.
+    const waitingAudio = syncKey !== undefined && !syncMs && iRef.current === 0;
+    const startDelay = waitingAudio ? 400 : 0;
+
     const tick = () => {
       if (timer.current) clearTimeout(timer.current);
       if (iRef.current >= wordsRef.current.length) {
-        setShown(wordsRef.current.join(' '));
+        const done = wordsRef.current.join(' ');
+        setShown(done);
+        shownRef.current = done;
         return;
       }
       iRef.current += 1;
-      setShown(wordsRef.current.slice(0, iRef.current).join(' '));
+      const partial = wordsRef.current.slice(0, iRef.current).join(' ');
+      setShown(partial);
+      shownRef.current = partial;
       timer.current = setTimeout(tick, cadence);
     };
-    tick();
+
+    timer.current = setTimeout(tick, startDelay);
     return () => {
       if (timer.current) clearTimeout(timer.current);
     };
-  }, [text, cadence]);
+  }, [text, syncMs, syncKey, baseCadence]);
 
   return shown;
 }
@@ -66,8 +114,9 @@ function HistoryBubble({
   dstLang: string;
   compact: boolean;
 }) {
+  const t = useRttT();
   const mine = turn.mine === true;
-  const label = mine ? 'Bạn' : peerName;
+  const label = mine ? t.common.you : peerName;
   const langTag = (mine ? srcLang : dstLang).toUpperCase();
   return (
     <View className={`w-full flex-row ${mine ? 'justify-end' : 'justify-start'}`}>
@@ -87,11 +136,15 @@ function HistoryBubble({
         </Text>
         {mine
           ? !!turn.dstText && (
-              <Text className="text-[12px] leading-[17px] text-tp-muted">Dịch: {turn.dstText}</Text>
+              <Text className="text-[12px] leading-[17px] text-tp-muted">
+                {t.common.translation}: {turn.dstText}
+              </Text>
             )
           : !!turn.srcText &&
             turn.srcText !== turn.dstText && (
-              <Text className="text-[12px] leading-[17px] text-tp-muted">Gốc: {turn.srcText}</Text>
+              <Text className="text-[12px] leading-[17px] text-tp-muted">
+                {t.common.original}: {turn.srcText}
+              </Text>
             )}
       </View>
     </View>
@@ -100,6 +153,7 @@ function HistoryBubble({
 
 export function Demo4Meeting({ navigation }: RttStackScreenProps<'Meeting'>) {
   const { compact } = useResponsive();
+  const t = useRttT();
   const insets = useSafeAreaInsets();
   const mic = useMeetingMic();
   const status = useStore((s) => s.translatorStatus);
@@ -109,6 +163,7 @@ export function Demo4Meeting({ navigation }: RttStackScreenProps<'Meeting'>) {
   const dstLang = useStore((s) => s.dstLang);
   const room = useStore((s) => s.room);
   const ttsOn = useStore((s) => s.ttsOn);
+  const audioCue = useStore((s) => s.audioCue);
   const leaveRoom = useStore((s) => s.leaveRoom);
 
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -116,7 +171,9 @@ export function Demo4Meeting({ navigation }: RttStackScreenProps<'Meeting'>) {
 
   const speaker: Speaker = srcLang === 'vi' ? 'vn' : 'sg';
   const speaking = mic.recording;
-  const peerName = room?.peer.name ?? 'Đối tác';
+  const peerName = room?.peer.name ?? t.common.defaultPeerName;
+  // Hai bên cùng một ngôn ngữ → không có gì để dịch (nguồn = đích). Cảnh báo.
+  const sameLang = srcLang === dstLang;
 
   // Đối tác rời/mất kết nối → về lobby.
   useEffect(() => {
@@ -131,8 +188,8 @@ export function Demo4Meeting({ navigation }: RttStackScreenProps<'Meeting'>) {
     if (mic.recording) void mic.stop();
   }, [mic]);
 
-  // Phím tắt web: Space giữ để nói, Alt giữ để xem lịch sử. Chỉ áp dụng trên web
-  // và gỡ listener khi rời màn. Dùng ref để đăng ký listener MỘT lần.
+  // Phím tắt web: Space giữ để nói, Alt bấm để bật/tắt lịch sử. Chỉ áp dụng trên
+  // web và gỡ listener khi rời màn. Dùng ref để đăng ký listener MỘT lần.
   const startRef = useRef(startTalk);
   const stopRef = useRef(stopTalk);
   startRef.current = startTalk;
@@ -149,15 +206,14 @@ export function Demo4Meeting({ navigation }: RttStackScreenProps<'Meeting'>) {
         }
       } else if (e.key === 'Alt') {
         e.preventDefault();
-        setHistoryOpen(true);
+        // Bấm (không giữ) để bật/tắt. `e.repeat` chặn auto-repeat khi giữ phím.
+        if (!e.repeat) setHistoryOpen((v) => !v);
       }
     };
     const onUp = (e: KeyboardEvent) => {
       if (e.code === 'Space') {
         spaceHeld.current = false;
         stopRef.current();
-      } else if (e.key === 'Alt') {
-        setHistoryOpen(false);
       }
     };
     window.addEventListener('keydown', onDown);
@@ -173,16 +229,42 @@ export function Demo4Meeting({ navigation }: RttStackScreenProps<'Meeting'>) {
     if (historyOpen) historyScroll.current?.scrollToEnd({ animated: false });
   }, [historyOpen, turns.length]);
 
-  // HERO: đang nói → lời mình; đang nghe → bản dịch (ngôn ngữ mình) của đối tác,
-  // giữ lại lượt gần nhất khi im lặng.
+  // HERO có 3 trạng thái:
+  //   • ĐANG NÓI (đang giữ mic)      → hiện lời MÌNH (live.srcText).
+  //   • ĐÃ NÓI  (vừa thả, đối tác     → giữ CÂU VỪA NÓI của mình trên màn hình,
+  //             chưa đáp)               không nhảy sang khung nghe rỗng/cũ.
+  //   • ĐANG NGHE                     → bản dịch (ngôn ngữ mình) của đối tác.
+  const lastTurn = turns.length > 0 ? turns[turns.length - 1] : null;
+  const lastMine = useMemo(
+    () => [...turns].reverse().find((t) => t.mine === true) ?? null,
+    [turns],
+  );
   const lastPeer = useMemo(
     () => [...turns].reverse().find((t) => t.mine !== true) ?? null,
     [turns],
   );
+  // Cụm đang được ĐỌC (audio đang phát) — hero bám theo để chữ khớp tai; audio
+  // phát cuốn chiếu (hàng đợi) nên trễ hơn lúc chữ về.
+  const playingTurn = audioCue ? turns.find((t) => t.id === audioCue.turnId) ?? null : null;
+  // Vừa nói xong: không giữ mic, không có audio đối tác đang phát, và lượt gần
+  // nhất là của MÌNH (đối tác chưa gửi bản dịch nào mới).
+  const justSpoke = !speaking && !playingTurn && lastTurn?.mine === true;
   // Dùng `||` (không phải `??`) để chuỗi rỗng cũng rơi xuống fallback.
-  const heroBig = speaking ? live?.srcText || '' : live?.dstText || lastPeer?.dstText || '';
-  const heroSrc = speaking ? '' : live?.srcText || lastPeer?.srcText || '';
-  const typed = useReveal(heroBig);
+  const heroBig = speaking
+    ? live?.srcText || ''
+    : justSpoke
+      ? lastMine?.srcText || ''
+      : playingTurn?.dstText || lastPeer?.dstText || '';
+  // ĐANG NGHE hiện câu gốc của đối tác dưới bản dịch; ĐANG/ĐÃ NÓI thì không.
+  const heroSrc = speaking || justSpoke ? '' : playingTurn?.srcText || lastPeer?.srcText || '';
+  // Hero khớp audio khi ĐANG NGHE; ĐÃ NÓI dùng id lượt của mình để gõ chữ đúng câu.
+  const heroTurnId = speaking
+    ? undefined
+    : justSpoke
+      ? lastMine?.id
+      : playingTurn?.id ?? lastPeer?.id;
+  const cue = audioCue && audioCue.turnId === heroTurnId ? audioCue : null;
+  const typed = useReveal(heroBig, { syncMs: cue?.durationMs, syncKey: heroTurnId });
   const typing = typed.length < heroBig.length;
 
   const endMeeting = () => {
@@ -208,7 +290,11 @@ export function Demo4Meeting({ navigation }: RttStackScreenProps<'Meeting'>) {
             </Text>
           </View>
           <Text className="text-[15px] font-medium text-tp-text" numberOfLines={1}>
-            {speaking ? `Đang gửi tới ${peerName}` : `Đang nghe ${peerName}`}
+            {speaking
+              ? t.demo4.sendingTo(peerName)
+              : justSpoke
+                ? t.demo4.youJustSpoke
+                : t.demo4.listeningTo(peerName)}
           </Text>
         </View>
         <View className="flex-row items-center gap-3">
@@ -221,7 +307,7 @@ export function Demo4Meeting({ navigation }: RttStackScreenProps<'Meeting'>) {
             className="flex-row items-center gap-1.5 rounded-full border border-tp-border bg-tp-surface px-3 py-2"
           >
             <History size={15} color={TP.text2} />
-            {!compact && <Text className="text-[13px] text-tp-text2">Lịch sử</Text>}
+            {!compact && <Text className="text-[13px] text-tp-text2">{t.demo4.history}</Text>}
           </Pressable>
           <Pressable
             onPress={endMeeting}
@@ -230,19 +316,32 @@ export function Demo4Meeting({ navigation }: RttStackScreenProps<'Meeting'>) {
           >
             <PhoneOff size={15} color={TP.red} />
             <Text className="text-sm font-medium" style={{ color: TP.red }}>
-              Kết thúc
+              {t.demo4.end}
             </Text>
           </Pressable>
         </View>
       </View>
 
+      {/* Cảnh báo: cả hai chọn cùng ngôn ngữ → không có bản dịch thực sự. */}
+      {sameLang && (
+        <View
+          className={`flex-row items-center gap-2.5 border-b ${compact ? 'px-4 py-3' : 'px-8 py-3.5'}`}
+          style={{ borderColor: '#5a2a2e', backgroundColor: '#2a1518' }}
+        >
+          <AlertTriangle size={18} color={TP.red} />
+          <Text className="flex-1 text-[13px]" style={{ color: '#ff8a99' }}>
+            {t.demo4.sameLangBanner(peerName, srcLang.toUpperCase())}
+          </Text>
+        </View>
+      )}
+
       {/* HERO — voice + bản dịch giữa màn (kẹp số dòng để không tràn) */}
       <View className="flex-1 items-center justify-center px-6">
         <Text
           className="text-[13px] font-semibold tracking-[2px]"
-          style={{ color: speaking ? TP.accent : TP.text2 }}
+          style={{ color: speaking || justSpoke ? TP.accent : TP.text2 }}
         >
-          {speaking ? 'ĐANG NÓI' : 'ĐANG NGHE'}
+          {speaking ? t.demo4.statusSpeaking : justSpoke ? t.demo4.statusSpoke : t.demo4.statusListening}
         </Text>
         <View
           style={{ maxHeight: compact ? 220 : 380, overflow: 'hidden', maxWidth: 1000 }}
@@ -254,34 +353,40 @@ export function Demo4Meeting({ navigation }: RttStackScreenProps<'Meeting'>) {
               className={`text-center font-semibold ${
                 compact ? 'text-[26px] leading-[34px]' : 'text-[44px] leading-[54px]'
               }`}
-              style={{ color: speaking ? TP.accent : '#EDEFF2' }}
+              style={{ color: speaking || justSpoke ? TP.accent : '#EDEFF2' }}
             >
               {typed || '…'}
               {typing && <Text style={{ color: TP.accent }}>▍</Text>}
             </Text>
+          ) : speaking ? (
+            <Text className="text-center text-lg text-tp-muted" style={{ maxWidth: 720 }}>
+              {t.demo4.listeningToYou}
+            </Text>
           ) : (
             <Text className="text-center text-lg text-tp-muted" style={{ maxWidth: 720 }}>
-              {status === 'connected'
-                ? `Đã ghép với ${peerName}. Giữ nút bên dưới để nói, hoặc chờ ${peerName} nói.`
-                : 'Mất kết nối phòng. Quay lại danh sách thiết bị để ghép lại.'}
+              {status === 'connected' ? t.demo4.ready(peerName) : t.demo4.roomLost}
             </Text>
           )}
         </View>
         {speaking ? (
           <Text className="mt-5 text-center text-base text-tp-text2" numberOfLines={2} style={{ maxWidth: 800 }}>
-            Đang gửi bản dịch tới {peerName}…
+            {t.demo4.sendingTranslation(peerName)}
+          </Text>
+        ) : justSpoke ? (
+          <Text className="mt-5 text-center text-base text-tp-text2" numberOfLines={2} style={{ maxWidth: 800 }}>
+            {t.demo4.sentWaiting(peerName)}
           </Text>
         ) : (
           !!heroSrc && (
             <Text className="mt-5 text-center text-base text-tp-text2" numberOfLines={2} style={{ maxWidth: 800 }}>
-              Gốc: {heroSrc}
+              {t.common.original}: {heroSrc}
             </Text>
           )
         )}
       </View>
 
       {/* Dải đọc to (TTS) khi đang nghe */}
-      {!speaking && ttsOn && (
+      {!speaking && !justSpoke && ttsOn && (
         <View className="flex-row items-center justify-center gap-3 border-t border-tp-border bg-tp-surface px-8 py-3">
           <Volume2 size={16} color={TP.accent} />
           <View className="h-[18px] flex-row items-end gap-[3px]">
@@ -289,7 +394,7 @@ export function Demo4Meeting({ navigation }: RttStackScreenProps<'Meeting'>) {
               <View key={i} className="w-[3px] rounded-sm bg-tp-accent" style={{ height: h }} />
             ))}
           </View>
-          <Text className="text-[13px] text-tp-text2">Đang đọc to bản dịch…</Text>
+          <Text className="text-[13px] text-tp-text2">{t.demo4.readingAloud}</Text>
         </View>
       )}
 
@@ -312,7 +417,7 @@ export function Demo4Meeting({ navigation }: RttStackScreenProps<'Meeting'>) {
             className="text-lg font-bold"
             style={{ color: speaking ? '#ffffff' : TP.black }}
           >
-            {speaking ? 'Đang nói… (thả để gửi)' : 'Nhấn giữ để nói'}
+            {speaking ? t.demo4.talkActive : t.demo4.talkIdle}
           </Text>
         </Pressable>
         {mic.error ? (
@@ -321,10 +426,10 @@ export function Demo4Meeting({ navigation }: RttStackScreenProps<'Meeting'>) {
           </Text>
         ) : Platform.OS === 'web' ? (
           <Text className="text-[13px] text-tp-muted">
-            Phím tắt: Space giữ để nói · Alt giữ để xem lịch sử
+            {t.demo4.hintWeb}
           </Text>
         ) : (
-          <Text className="text-[13px] text-tp-muted">Giữ nút để nói, thả ra để gửi bản dịch.</Text>
+          <Text className="text-[13px] text-tp-muted">{t.demo4.hintNative}</Text>
         )}
       </View>
 
@@ -338,14 +443,14 @@ export function Demo4Meeting({ navigation }: RttStackScreenProps<'Meeting'>) {
           >
             <View className="flex-row items-center gap-2.5">
               <History size={18} color={TP.accent} />
-              <Text className="text-lg font-semibold text-tp-text">Lịch sử dịch</Text>
+              <Text className="text-lg font-semibold text-tp-text">{t.common.historyTitle}</Text>
             </View>
             <Pressable
               onPress={() => setHistoryOpen(false)}
               className="rounded-full border border-tp-border bg-tp-surface px-4 py-2"
             >
               <Text className="text-sm text-tp-text2">
-                {Platform.OS === 'web' ? 'Thả Alt để đóng' : 'Đóng'}
+                {Platform.OS === 'web' ? t.demo4.closeWeb : t.demo4.close}
               </Text>
             </Pressable>
           </View>
@@ -361,7 +466,7 @@ export function Demo4Meeting({ navigation }: RttStackScreenProps<'Meeting'>) {
           >
             {turns.length === 0 ? (
               <Text className="py-10 text-center text-base text-tp-muted">
-                Chưa có câu nào trong phiên.
+                {t.demo4.emptyHistory}
               </Text>
             ) : (
               turns.map((t) => (

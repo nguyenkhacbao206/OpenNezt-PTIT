@@ -6,21 +6,25 @@
  * phòng → sang Meeting.
  */
 import { useEffect, useState } from 'react';
+<<<<<<< HEAD
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Languages, Laptop, Link2, Loader, UserPlus, Users, Wifi } from 'lucide-react-native';
 
 import { useResponsive } from '@/components/hooks';
 import { isDesktop, onDevices, type DesktopDevice } from '@/services/desktopBridge';
+=======
+import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { AlertTriangle, Languages, Laptop, Loader, UserPlus, Users } from 'lucide-react-native';
+
+import { useResponsive, useRttT } from '@/components/hooks';
+>>>>>>> 2bfd2511cbf030c9be441362fcc9722c01c1ac33
 import type { RttStackScreenProps } from '@/navigation/rttTypes';
 import { useStore } from '@/store';
-import type { Lang } from '@/types/translator';
+import type { Device } from '@/types/translator';
 
 const TP = { accent: '#5EEAD4', text2: '#9AA0A6', muted: '#585E66', red: '#ff6669', black: '#000000' };
-
-function langLabel(lang: Lang): string {
-  return lang === 'vi' ? 'Tiếng Việt (VI)' : 'English (EN)';
-}
 
 function Pill({ children }: { children: React.ReactNode }) {
   return (
@@ -32,6 +36,7 @@ function Pill({ children }: { children: React.ReactNode }) {
 
 export function Demo2Devices({ navigation }: RttStackScreenProps<'Devices'>) {
   const { compact } = useResponsive();
+  const t = useRttT();
   const insets = useSafeAreaInsets();
   const devices = useStore((s) => s.devices);
   const myName = useStore((s) => s.myName);
@@ -59,6 +64,15 @@ export function Demo2Devices({ navigation }: RttStackScreenProps<'Devices'>) {
   const connectToLan = (dev: DesktopDevice) => {
     setWsUrl(dev.ws);
     enterLobby((myName || '').trim() || 'Thiết bị của tôi');
+  };
+
+  // Thiết bị đang chờ xác nhận mời khi cùng ngôn ngữ (mở popup cảnh báo), hoặc null.
+  const [confirmDevice, setConfirmDevice] = useState<Device | null>(null);
+
+  // Mời thiết bị: cùng ngôn ngữ với mình → mở popup cảnh báo trước; khác thì mời luôn.
+  const requestInvite = (dev: Device) => {
+    if (dev.lang === srcLang) setConfirmDevice(dev);
+    else invitePeer(dev.clientId);
   };
 
   // Nhận lời mời đến → sang màn Lời mời (bên nhận).
@@ -89,7 +103,7 @@ export function Demo2Devices({ navigation }: RttStackScreenProps<'Devices'>) {
           <Pill>
             <Users size={15} color={TP.accent} />
             <Text className="text-[13px] font-medium text-tp-text">
-              {devices.length} thiết bị khác
+              {t.demo2.otherDevices(devices.length)}
             </Text>
           </Pill>
         </View>
@@ -109,7 +123,7 @@ export function Demo2Devices({ navigation }: RttStackScreenProps<'Devices'>) {
             <View className="gap-[3px]">
               <Text className="text-lg font-semibold text-tp-text">{myName}</Text>
               <Text className="text-[13px] text-tp-text2">
-                Thiết bị của bạn · {langLabel(srcLang)}
+                {t.demo2.yourDevice(t.common.langLabel(srcLang))}
               </Text>
             </View>
           </View>
@@ -181,11 +195,11 @@ export function Demo2Devices({ navigation }: RttStackScreenProps<'Devices'>) {
 
         {/* Available head */}
         <View className="flex-row items-center justify-between">
-          <Text className="text-xl font-semibold text-tp-text">Thiết bị khả dụng</Text>
+          <Text className="text-xl font-semibold text-tp-text">{t.demo2.availableHead}</Text>
           <View className="flex-row items-center gap-[7px]">
             <Loader size={14} color={TP.muted} />
             <Text className="text-[13px] text-tp-muted">
-              {status === 'connected' ? 'Đang tìm thiết bị…' : 'Chưa kết nối'}
+              {status === 'connected' ? t.demo2.searching : t.demo2.notConnected}
             </Text>
           </View>
         </View>
@@ -194,46 +208,56 @@ export function Demo2Devices({ navigation }: RttStackScreenProps<'Devices'>) {
         {devices.length === 0 ? (
           <View className="items-center gap-2 rounded-[14px] border border-dashed border-tp-border bg-tp-surface p-8">
             <Text className="text-center text-[15px] text-tp-text2">
-              Chưa thấy thiết bị nào khác.
+              {t.demo2.emptyTitle}
             </Text>
             <Text className="text-center text-[13px] text-tp-muted">
-              Mở app trên máy thứ hai và trỏ cùng WS URL để nó xuất hiện ở đây.
+              {t.demo2.emptyHint}
             </Text>
           </View>
         ) : (
           <View className="gap-3">
             {devices.map((dev) => {
               const waiting = pendingInviteTo === dev.clientId;
+              // Cùng ngôn ngữ với mình → ghép cặp sẽ không có bản dịch. Cảnh báo.
+              const sameLang = dev.lang === srcLang;
               return (
                 <View
                   key={dev.clientId}
                   className="flex-row items-center justify-between rounded-[14px] border border-tp-border bg-tp-surface p-[18px]"
                 >
-                  <View className="flex-row items-center gap-3.5">
+                  <View className="flex-1 flex-row items-center gap-3.5">
                     <Laptop size={24} color={dev.busy ? TP.muted : TP.text2} />
-                    <View className="gap-[3px]">
+                    <View className="flex-1 gap-[3px]">
                       <Text className="text-base font-semibold text-tp-text">{dev.name}</Text>
-                      <Text className="text-xs text-tp-muted">Ngôn ngữ: {langLabel(dev.lang)}</Text>
+                      <Text className="text-xs text-tp-muted">{t.demo2.deviceLang(t.common.langLabel(dev.lang))}</Text>
+                      {sameLang && !dev.busy && (
+                        <View className="mt-0.5 flex-row items-center gap-1.5">
+                          <AlertTriangle size={12} color={TP.red} />
+                          <Text className="text-[11px]" style={{ color: '#ff8a99' }}>
+                            {t.demo2.sameLangWarn}
+                          </Text>
+                        </View>
+                      )}
                     </View>
                   </View>
                   {dev.busy ? (
                     <View className="rounded-full border border-tp-border bg-tp-surface px-5 py-2.5">
-                      <Text className="text-sm text-tp-muted">Đang bận</Text>
+                      <Text className="text-sm text-tp-muted">{t.demo2.busy}</Text>
                     </View>
                   ) : waiting ? (
                     <View className="flex-row items-center gap-2 rounded-full border border-tp-border bg-tp-surface px-5 py-2.5">
                       <Loader size={14} color={TP.text2} />
-                      <Text className="text-sm text-tp-text2">Đang chờ…</Text>
+                      <Text className="text-sm text-tp-text2">{t.demo2.waiting}</Text>
                     </View>
                   ) : (
                     <Pressable
-                      onPress={() => invitePeer(dev.clientId)}
+                      onPress={() => requestInvite(dev)}
                       disabled={status !== 'connected' || pendingInviteTo !== null}
                       className="flex-row items-center gap-2 rounded-full bg-tp-accent px-5 py-2.5"
                       style={{ opacity: status !== 'connected' || pendingInviteTo !== null ? 0.5 : 1 }}
                     >
                       <UserPlus size={15} color={TP.black} />
-                      <Text className="text-sm font-semibold text-tp-bg">Mời</Text>
+                      <Text className="text-sm font-semibold text-tp-bg">{t.demo2.invite}</Text>
                     </Pressable>
                   )}
                 </View>
@@ -242,6 +266,53 @@ export function Demo2Devices({ navigation }: RttStackScreenProps<'Devices'>) {
           </View>
         )}
       </ScrollView>
+
+      {/* Popup cảnh báo khi mời thiết bị cùng ngôn ngữ — vẫn cho tiếp tục mời. */}
+      <Modal
+        transparent
+        visible={confirmDevice !== null}
+        animationType="fade"
+        statusBarTranslucent
+        onRequestClose={() => setConfirmDevice(null)}
+      >
+        <Pressable
+          className="flex-1 items-center justify-center bg-black/60 px-6"
+          onPress={() => setConfirmDevice(null)}
+        >
+          <Pressable
+            onPress={(e) => e.stopPropagation()}
+            className="w-full max-w-md gap-4 rounded-2xl border border-tp-border bg-tp-surface p-6"
+          >
+            <View className="flex-row items-center gap-2.5">
+              <AlertTriangle size={22} color={TP.red} />
+              <Text className="text-lg font-semibold text-tp-text">{t.demo2.sameLangTitle}</Text>
+            </View>
+            <Text className="text-[14px] leading-[20px] text-tp-text2">
+              {t.demo2.sameLangBody(
+                confirmDevice?.name ?? '',
+                confirmDevice ? t.common.langLabel(confirmDevice.lang) : '',
+              )}
+            </Text>
+            <View className="flex-row gap-3">
+              <Pressable
+                onPress={() => setConfirmDevice(null)}
+                className="flex-1 items-center justify-center rounded-full border border-tp-border bg-tp-surface p-[13px]"
+              >
+                <Text className="text-[15px] font-medium text-tp-text">{t.demo2.cancel}</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  if (confirmDevice) invitePeer(confirmDevice.clientId);
+                  setConfirmDevice(null);
+                }}
+                className="flex-1 items-center justify-center rounded-full bg-tp-accent p-[13px]"
+              >
+                <Text className="text-[15px] font-semibold text-tp-bg">{t.demo2.inviteAnyway}</Text>
+              </Pressable>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }

@@ -10,8 +10,9 @@ that talk over a **single WebSocket** (`ws://<host>:8000/ws`) using a
 
 - `backend/` — FastAPI + WebSocket STT → NMT → TTS pipeline (Python). Cloud mode
   runs on **Groq** (Whisper STT + Llama NMT).
-- `frontend/` — **Expo / React Native (mobile)** app. The 8-screen **RTT** flow
-  (`src/screens/rtt/Demo1..Demo8`) is the live translator UI.
+- `frontend/` — **Expo / React Native (mobile)** app. The **RTT** flow
+  (`src/screens/rtt/Demo1..Demo8`, minus Demo6 — push-to-talk lives in the
+  Meeting screen, not its own file) is the live translator UI.
 
 **Primary product = LAN 1:1 pairing ("chat nội bộ").** Two devices point at the
 *same* backend on the LAN, discover each other in a lobby, pair into a 1:1 room,
@@ -39,6 +40,9 @@ python tools/check_groq_key.py         # verify a Groq key works (STT+NMT via on
 python tools/test_stream_client.py --wav file.wav --src en --tgt vi   # streaming WS test
 python tools/talk_translate.py --mode cloud --src vi --tgt en         # mic → server → transcript+translation
 python tools/record_stt.py             # mic → real Faster-Whisper STT → Markdown (no server)
+python tools/prepare_nllb.py           # build CTranslate2 int8 NLLB dir for offline NMT (offline_nmt_model_dir)
+python tools/prepare_phowhisper.py     # build CT2 PhoWhisper VI model for STT_ENGINE=phowhisper
+python tools/download_sherpa_models.py # fetch sherpa-onnx models for STT_ENGINE=sherpa
 ```
 There is no pytest suite: `tests/test_client.py` is a manual end-to-end WS client.
 Run one-off backend checks with an in-process `fastapi.testclient.TestClient`
@@ -62,7 +66,8 @@ Pairing-specific frontend facts (protocol-spanning, not in `frontend/claude.md`)
 `store/slices/translatorSlice.ts` owns one `TranslatorSocket` plus the lobby/room
 state (`devices`, `room`, `incomingInvite`, `myClientId`) and drives the flow —
 Demo1 `enterLobby`→`hello`, Demo2 lobby+`invite`, Demo3 `accept`, Demo4 Meeting
-(listener view), Demo6 push-to-talk (`useMeetingMic`, sends `audio.partial`/`chunk`).
++ Demo5 listener view; push-to-talk (`useMeetingMic`, sends `audio.partial`/`chunk`)
+lives in the Meeting screen (there is no Demo6 file), Demo7 History, Demo8 end session.
 Because translation routes to the peer, the **speaker records its own words from
 `stt.final`** (`turn.mine=true`); the **listener records the peer's from
 `nmt.result`** (`mine=false`). `services/audioPlayback.ts` is platform-split: web
@@ -77,9 +82,18 @@ abstract contract in `app/providers/base.py`. Concrete trios implement it:
 - `mock.py` — works instantly, no models/keys. Default mode.
 - `cloud.py` — **Groq only** (Whisper STT + Llama chat NMT). Falls back to the
   matching mock provider when the key is missing. (Gemini has been removed.)
-- `offline.py` — local models. STT is wired (Faster-Whisper via
-  `whisper_engine.py`, or sherpa-onnx via `sherpa.py`/`sherpa_engine.py`,
-  selected by `STT_ENGINE`); offline NMT/TTS are still `NotImplementedError` stubs.
+- `offline.py` — local models, **all three stages now implemented** (the
+  module docstring calling NMT/TTS stubs is stale). `factory.py` picks the
+  concrete offline STT/NMT by env engine, not by class:
+  - **STT** by `STT_ENGINE`: `whisper` (default) → `OfflineSTTProvider`
+    (Faster-Whisper via `whisper_engine.py`), `sherpa` → `SherpaSTTProvider`
+    (`sherpa.py`/`sherpa_engine.py`), `phowhisper` → `PhoWhisperSTTProvider`
+    (`phowhisper.py`: PhoWhisper for VI, Whisper for EN).
+  - **NMT** by `NMT_ENGINE`: `nllb` (default) → `OfflineNMTProvider`
+    (CTranslate2 int8 + NLLB-200 via `ct2_nmt.py`), `seallm` → `LocalNMTProvider`
+    (`local_nmt.py`, OpenAI-compatible local chat — Ollama/vLLM).
+  - **TTS** is Piper (`piper_engine.py`), but reached via `build_tts()` /
+    `TTS_ENGINE=piper` (see below), not the offline trio.
 
 The active trio is chosen by session `mode` (`mock`/`cloud`/`offline`) in
 `app/providers/factory.py` — **the only file that knows concrete provider

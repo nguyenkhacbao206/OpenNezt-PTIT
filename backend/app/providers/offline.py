@@ -24,8 +24,9 @@ class OfflineSTTProvider(STTProvider):
 
     name = "offline-stt"
 
-    def __init__(self, model_size: str = "small") -> None:
+    def __init__(self, model_size: str | None = None) -> None:
         # The heavy model is loaded lazily on first transcribe and cached by
+<<<<<<< HEAD
         # get_engine, so constructing the provider is cheap. A bundled local CT2
         # model dir (settings.offline_stt_model_dir) wins so nothing downloads at
         # runtime; otherwise the size name is auto-downloaded.
@@ -39,6 +40,25 @@ class OfflineSTTProvider(STTProvider):
             compute_type=settings.stt_compute_type,
         )
         log.info("OfflineSTTProvider constructed (model=%s, loads on first use).", model)
+=======
+        # get_engine, so constructing the provider is cheap. Size/device/precision
+        # come from settings so a GPU box can run large-v3 + float16 for accuracy.
+        from ..core.config import settings
+        from .whisper_engine import get_engine
+
+        self._engine = get_engine(
+            model_size=model_size or settings.stt_model_size,
+            device=settings.stt_device,
+            compute_type=settings.stt_compute_type,
+        )
+        log.info(
+            "OfflineSTTProvider constructed size=%s device=%s compute=%s "
+            "(model loads on first use).",
+            model_size or settings.stt_model_size,
+            settings.stt_device,
+            settings.stt_compute_type,
+        )
+>>>>>>> 2bfd2511cbf030c9be441362fcc9722c01c1ac33
 
     async def transcribe(
         self, audio: bytes, source_lang: str
@@ -80,7 +100,15 @@ class OfflineNMTProvider(NMTProvider):
         self._threads = settings.offline_nmt_intra_threads
         self._beam_final = settings.offline_nmt_beam_final
         self._beam_partial = settings.offline_nmt_beam_partial
-        log.info("OfflineNMTProvider constructed (model loads on first use).")
+        self._device = settings.offline_nmt_device
+        self._compute_type = settings.offline_nmt_compute_type
+        log.info(
+            "OfflineNMTProvider constructed device=%s compute=%s beam=%d "
+            "(model loads on first use).",
+            self._device,
+            self._compute_type,
+            self._beam_final,
+        )
 
     def _require_dir(self) -> str:
         if not self._dir:
@@ -91,25 +119,31 @@ class OfflineNMTProvider(NMTProvider):
         return self._dir
 
     async def translate(self, text: str, source_lang: str, target_lang: str) -> str:
-        """Authoritative translation: per-sentence, beam search."""
+        """Authoritative translation of the whole segment (beam search).
+
+        No sentence-splitting: the client streams short VAD segments (dịch từng
+        cụm, đuổi theo giọng), and splitting on "." would break decimals like
+        "2.5" ("two point five"). Translating the segment as one unit keeps
+        numbers intact.
+        """
         import asyncio
 
-        from .ct2_nmt import split_sentences, translate_one
+        from .ct2_nmt import translate_one
 
         model_dir = self._require_dir()
-        sentences = split_sentences(text)
-        if not sentences:
+        if not text or not text.strip():
             return ""
-
-        def _run() -> str:
-            return " ".join(
-                translate_one(
-                    model_dir, self._threads, s, source_lang, target_lang, self._beam_final
-                )
-                for s in sentences
-            )
-
-        return await asyncio.to_thread(_run)
+        return await asyncio.to_thread(
+            translate_one,
+            model_dir,
+            self._threads,
+            text,
+            source_lang,
+            target_lang,
+            self._beam_final,
+            self._device,
+            self._compute_type,
+        )
 
     async def translate_partial(
         self, text: str, source_lang: str, target_lang: str
