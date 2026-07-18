@@ -1,0 +1,48 @@
+# Ollama Modelfile — SeaLLMs-v3-7B-Chat for offline NMT (NMT_ENGINE=seallm).
+#
+# SeaLLMs-v3 is built on Qwen2, so it uses the ChatML prompt format
+# (<|im_start|>/<|im_end|>). This file feeds a local GGUF quant through that
+# template and registers it as the model name `seallm-v3` that LocalNMTProvider
+# calls (LOCAL_NMT_MODEL).
+#
+# SETUP
+#   1) Download a GGUF quant of SeaLLMs-v3-7B-Chat (q4_K_M ≈ 4.5 GB is a good
+#      speed/VRAM balance for an 8–12 GB GPU). Community GGUFs live on HF, e.g.
+#      search "SeaLLMs-v3-7B-Chat GGUF". Put the .gguf file next to THIS file.
+#   2) Point `FROM` below at the exact filename you downloaded.
+#   3) From this folder:  ollama create seallm-v3 -f Modelfile
+#   4) Smoke test:        ollama run seallm-v3 "Dịch sang tiếng Anh: xin chào"
+#   5) In backend/.env:   NMT_ENGINE=seallm   (LOCAL_NMT_* already default to this)
+#
+# NOTE: LocalNMTProvider sends its own strict "return only the translation"
+# system message via the OpenAI /v1/chat/completions API, so this file does NOT
+# hard-code a SYSTEM prompt — the API's system message fills the {{ .System }}
+# slot at request time.
+
+FROM ./SeaLLMs-v3-7B-Chat.Q4_K_M.gguf
+
+# ChatML template (Qwen2 family). Ollama fills .System from the API's system
+# message and .Prompt from the user's text on each /v1/chat/completions call.
+TEMPLATE """{{ if .System }}<|im_start|>system
+{{ .System }}<|im_end|>
+{{ end }}{{ if .Prompt }}<|im_start|>user
+{{ .Prompt }}<|im_end|>
+{{ end }}<|im_start|>assistant
+{{ .Response }}<|im_end|>
+"""
+
+# Stop at the turn boundaries so the reply is just the translation.
+PARAMETER stop "<|im_start|>"
+PARAMETER stop "<|im_end|>"
+
+# Deterministic output — translation, not creative generation. Matches the
+# temperature=0 the client already requests.
+PARAMETER temperature 0
+PARAMETER top_p 1
+
+# Context is small (one utterance) — keep it tight for lower latency/VRAM.
+PARAMETER num_ctx 4096
+
+# Optional: cap generated tokens to bound worst-case latency on the streaming
+# partial path. Uncomment if partials lag; may truncate very long sentences.
+# PARAMETER num_predict 256
