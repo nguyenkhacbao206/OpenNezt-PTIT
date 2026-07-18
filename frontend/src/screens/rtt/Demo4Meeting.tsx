@@ -4,7 +4,7 @@
  * Màn chính của phiên. Kết nối backend khi vào; hiển thị bản dịch gần nhất (hoặc
  * bản dịch tạm đang chạy). PTT → sang màn "Đến lượt bạn nói" để thu + dịch live.
  */
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { ChevronDown, History, Mic, PhoneOff, Volume2, VolumeX } from 'lucide-react-native';
 
@@ -19,6 +19,36 @@ const STATUS_LABEL: Record<string, string> = {
   connected: 'Đang họp',
   error: 'Lỗi kết nối',
 };
+
+/** Chạy chữ dần theo từng từ để bản dịch hiện ra kiểu "đánh máy", tránh giật cả cụm. */
+function useReveal(text: string, cadence = 55): string {
+  const [shown, setShown] = useState('');
+  const wordsRef = useRef<string[]>([]);
+  const iRef = useRef(0);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    const words = (text || '').split(/\s+/).filter(Boolean);
+    wordsRef.current = words;
+    if (iRef.current > words.length) iRef.current = 0; // text ngắn lại → lượt/bản dịch mới
+    const tick = () => {
+      if (timer.current) clearTimeout(timer.current);
+      if (iRef.current >= wordsRef.current.length) {
+        setShown(wordsRef.current.join(' '));
+        return;
+      }
+      iRef.current += 1;
+      setShown(wordsRef.current.slice(0, iRef.current).join(' '));
+      timer.current = setTimeout(tick, cadence);
+    };
+    tick();
+    return () => {
+      if (timer.current) clearTimeout(timer.current);
+    };
+  }, [text, cadence]);
+
+  return shown;
+}
 
 export function Demo4Meeting({ navigation }: RttStackScreenProps<'Meeting'>) {
   const status = useStore((s) => s.translatorStatus);
@@ -39,6 +69,9 @@ export function Demo4Meeting({ navigation }: RttStackScreenProps<'Meeting'>) {
   // Nghe: đối tác đang nói → bản dịch TẠM (live). Đối tác nói xong → bản dịch
   // GẦN NHẤT dạng card gọn ở góc; chạm để mở Lịch sử.
   const shown = live;
+  // Bản dịch chạy chữ dần (typewriter) cho mượt.
+  const typed = useReveal(shown?.dstText ?? '');
+  const typing = !!shown && typed.length < (shown.dstText?.length ?? 0);
   // Card "bản dịch gần nhất" chỉ hiện lời ĐỐI TÁC gửi tới (bỏ qua lời mình).
   const lastTurn = [...turns].reverse().find((t) => t.mine !== true) ?? null;
   const dotColor = status === 'connected' ? TP.accent : status === 'error' ? TP.red : TP.muted;
@@ -146,7 +179,8 @@ export function Demo4Meeting({ navigation }: RttStackScreenProps<'Meeting'>) {
                 className="items-center"
               >
                 <Text className="text-center text-[46px] font-semibold leading-[55px] text-tp-text">
-                  {shown.dstText || '…'}
+                  {typed || (shown.dstText ? '' : '…')}
+                  {typing && <Text style={{ color: TP.accent }}>▍</Text>}
                 </Text>
               </View>
               {!!shown.srcText && (
