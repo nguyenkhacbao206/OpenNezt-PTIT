@@ -24,13 +24,25 @@ class OfflineSTTProvider(STTProvider):
 
     name = "offline-stt"
 
-    def __init__(self, model_size: str = "small") -> None:
+    def __init__(self, model_size: str | None = None) -> None:
         # The heavy model is loaded lazily on first transcribe and cached by
-        # get_engine, so constructing the provider is cheap.
+        # get_engine, so constructing the provider is cheap. Size/device/precision
+        # come from settings so a GPU box can run large-v3 + float16 for accuracy.
+        from ..core.config import settings
         from .whisper_engine import get_engine
 
-        self._engine = get_engine(model_size=model_size)
-        log.info("OfflineSTTProvider constructed (model loads on first use).")
+        self._engine = get_engine(
+            model_size=model_size or settings.stt_model_size,
+            device=settings.stt_device,
+            compute_type=settings.stt_compute_type,
+        )
+        log.info(
+            "OfflineSTTProvider constructed size=%s device=%s compute=%s "
+            "(model loads on first use).",
+            model_size or settings.stt_model_size,
+            settings.stt_device,
+            settings.stt_compute_type,
+        )
 
     async def transcribe(
         self, audio: bytes, source_lang: str
@@ -72,7 +84,15 @@ class OfflineNMTProvider(NMTProvider):
         self._threads = settings.offline_nmt_intra_threads
         self._beam_final = settings.offline_nmt_beam_final
         self._beam_partial = settings.offline_nmt_beam_partial
-        log.info("OfflineNMTProvider constructed (model loads on first use).")
+        self._device = settings.offline_nmt_device
+        self._compute_type = settings.offline_nmt_compute_type
+        log.info(
+            "OfflineNMTProvider constructed device=%s compute=%s beam=%d "
+            "(model loads on first use).",
+            self._device,
+            self._compute_type,
+            self._beam_final,
+        )
 
     def _require_dir(self) -> str:
         if not self._dir:
@@ -96,7 +116,14 @@ class OfflineNMTProvider(NMTProvider):
         def _run() -> str:
             return " ".join(
                 translate_one(
-                    model_dir, self._threads, s, source_lang, target_lang, self._beam_final
+                    model_dir,
+                    self._threads,
+                    s,
+                    source_lang,
+                    target_lang,
+                    self._beam_final,
+                    self._device,
+                    self._compute_type,
                 )
                 for s in sentences
             )

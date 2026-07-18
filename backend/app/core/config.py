@@ -48,6 +48,10 @@ class Settings(BaseSettings):
     # available (much faster, needed for real-time PhoWhisper-large).
     stt_device: str = "cpu"
     stt_compute_type: str = "int8"
+    # Multilingual Faster-Whisper model size for stt_engine == "whisper":
+    # "tiny"/"base" (fastest) .. "small" (default) .. "medium"/"large-v3"
+    # (best, GPU recommended). On a GPU bump this up; on CPU drop it for speed.
+    stt_model_size: str = "small"
 
     # --- PhoWhisper STT (used when stt_engine == "phowhisper") -----------
     # CTranslate2 model dir for the Vietnamese PhoWhisper model, built by
@@ -121,11 +125,16 @@ class Settings(BaseSettings):
     # by tools/prepare_nllb.py. Unset -> offline NMT raises a clear error.
     offline_nmt_model_dir: str | None = None
     # Beam size for the authoritative translation (audio.chunk / text.final).
+    # Higher = more accurate, slower. On GPU 5 is cheap; on CPU keep it low.
     offline_nmt_beam_final: int = 4
     # Beam size for streaming partials (audio.partial / text.partial); 1 = greedy.
     offline_nmt_beam_partial: int = 1
     # CTranslate2 intra-op threads; 0 = let CTranslate2 choose.
     offline_nmt_intra_threads: int = 0
+    # CTranslate2 device/precision for NLLB. "cpu" + "int8" is the safe default;
+    # set "cuda" + "float16" on a GPU box (much faster, best accuracy).
+    offline_nmt_device: str = "cpu"
+    offline_nmt_compute_type: str = "int8"
 
     # --- STT hallucination guard -----------------------------------------
     # Windows quieter than this normalized RMS (0..1), or shorter than this many

@@ -28,17 +28,24 @@ def split_sentences(text: str) -> list[str]:
     return [p for p in parts if p]
 
 
-# Module-level cache: one (translator, tokenizer) per (model_dir, intra_threads).
-_CACHE: dict[tuple[str, int], tuple[object, object]] = {}
+# Module-level cache: one (translator, tokenizer) per
+# (model_dir, intra_threads, device, compute_type).
+_CACHE: dict[tuple[str, int, str, str], tuple[object, object]] = {}
 
 
-def get_translator(model_dir: str, intra_threads: int) -> tuple[object, object]:
+def get_translator(
+    model_dir: str,
+    intra_threads: int,
+    device: str = "cpu",
+    compute_type: str = "int8",
+) -> tuple[object, object]:
     """Load (once) and return the CTranslate2 translator + NLLB tokenizer.
 
-    Raises on a missing/invalid model dir; the caller converts that into a
-    handler-visible error.
+    `device`/`compute_type` pick CPU int8 (default) or GPU float16 (set
+    "cuda"/"float16" for speed + best accuracy). Raises on a missing/invalid
+    model dir; the caller converts that into a handler-visible error.
     """
-    key = (model_dir, intra_threads)
+    key = (model_dir, intra_threads, device, compute_type)
     cached = _CACHE.get(key)
     if cached is not None:
         return cached
@@ -47,7 +54,10 @@ def get_translator(model_dir: str, intra_threads: int) -> tuple[object, object]:
     from transformers import AutoTokenizer
 
     translator = ctranslate2.Translator(
-        model_dir, device="cpu", compute_type="int8", intra_threads=intra_threads or 0
+        model_dir,
+        device=device,
+        compute_type=compute_type,
+        intra_threads=intra_threads or 0,
     )
     tokenizer = AutoTokenizer.from_pretrained(model_dir, local_files_only=True)
     _CACHE[key] = (translator, tokenizer)
@@ -55,12 +65,19 @@ def get_translator(model_dir: str, intra_threads: int) -> tuple[object, object]:
 
 
 def translate_one(
-    model_dir: str, intra_threads: int, text: str, src: str, tgt: str, beam: int
+    model_dir: str,
+    intra_threads: int,
+    text: str,
+    src: str,
+    tgt: str,
+    beam: int,
+    device: str = "cpu",
+    compute_type: str = "int8",
 ) -> str:
-    """Translate a single string src->tgt via CTranslate2 (blocking CPU work)."""
+    """Translate a single string src->tgt via CTranslate2 (blocking work)."""
     if not text or not text.strip():
         return ""
-    translator, tokenizer = get_translator(model_dir, intra_threads)
+    translator, tokenizer = get_translator(model_dir, intra_threads, device, compute_type)
 
     tokenizer.src_lang = to_flores(src)
     src_tokens = tokenizer.convert_ids_to_tokens(tokenizer.encode(text))
