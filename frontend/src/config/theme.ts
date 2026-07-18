@@ -1,39 +1,54 @@
 /**
- * Cấu hình Dark / Light theme.
+ * Design System — single source of truth for colors, spacing, typography and
+ * radii. NativeWind classes cover most styling, but this object is used where
+ * we need raw values (navigation theme, StatusBar, imperative styles).
  *
- * Chiến lược: Tailwind `darkMode: 'class'` — bật/tắt dark mode bằng cách
- * thêm/bớt class `dark` trên thẻ <html>. File này quản lý việc đọc/ghi
- * lựa chọn của user vào localStorage và áp dụng lên DOM.
+ * Keep the color palette in sync with `tailwind.config.js`.
  */
 
-export type ThemeMode = 'light' | 'dark';
+export const colors = {
+  primary: '#2563eb',
+  primaryLight: '#60a5fa',
+  primaryDark: '#1d4ed8',
+  secondary: '#7c3aed',
+  success: '#16a34a',
+  danger: '#dc2626',
+  warning: '#f59e0b',
+  muted: '#6b7280',
+  background: '#f9fafb',
+  surface: '#ffffff',
+  text: '#111827',
+  textInverse: '#ffffff',
+  border: '#e5e7eb',
+} as const;
 
-const THEME_STORAGE_KEY = 'app-theme';
+export const spacing = {
+  xs: 4,
+  sm: 8,
+  md: 16,
+  lg: 24,
+  xl: 32,
+  xxl: 48,
+} as const;
 
-/** Đọc theme đã lưu, fallback theo cấu hình hệ điều hành. */
-export function getStoredTheme(): ThemeMode {
-  const stored = localStorage.getItem(THEME_STORAGE_KEY);
-  if (stored === 'light' || stored === 'dark') {
-    return stored;
-  }
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  return prefersDark ? 'dark' : 'light';
-}
+export const fontSize = {
+  xs: 12,
+  sm: 14,
+  md: 16,
+  lg: 18,
+  xl: 24,
+  xxl: 32,
+} as const;
 
-/** Áp dụng theme lên DOM và lưu lại lựa chọn. */
-export function applyTheme(mode: ThemeMode): void {
-  const root = document.documentElement;
-  if (mode === 'dark') {
-    root.classList.add('dark');
-  } else {
-    root.classList.remove('dark');
-  }
-  localStorage.setItem(THEME_STORAGE_KEY, mode);
-}
+export const radius = {
+  sm: 6,
+  md: 12,
+  lg: 20,
+  full: 9999,
+} as const;
 
-/** Khởi tạo theme lúc app boot (gọi 1 lần trong main.tsx). */
-export function initTheme(): ThemeMode {
-  const mode = getStoredTheme();
-  applyTheme(mode);
-  return mode;
-}
+export type Colors = typeof colors;
+export type Spacing = typeof spacing;
+
+export const theme = { colors, spacing, fontSize, radius } as const;
+export type Theme = typeof theme;

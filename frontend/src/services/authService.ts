@@ -1,41 +1,41 @@
 /**
- * authService — các API liên quan tới xác thực.
- *
- * Tầng service CHỈ chịu trách nhiệm gọi API và trả về dữ liệu đã gõ kiểu.
- * KHÔNG chứa logic UI, KHÔNG đụng vào store. Việc lưu token / cập nhật
- * state do tầng store/hook đảm nhiệm.
+ * Authentication API. Every function returns the already-unwrapped `data`
+ * payload and lets the normalised `ApiError` bubble up to the caller/store.
  */
-import { httpClient } from '@/config/axios';
-import type {
-  AuthResult,
-  AuthTokens,
-  LoginPayload,
-  RegisterPayload,
-} from '@/types';
+
+import { api } from '@/config/axios';
+import type { ApiResponse, AuthTokens } from '@/types/common';
+import type { LoginPayload, RegisterPayload, User } from '@/types/user';
+
+interface AuthResult {
+  user: User;
+  tokens: AuthTokens;
+}
 
 export const authService = {
-  /** Đăng nhập bằng email + mật khẩu. */
   async login(payload: LoginPayload): Promise<AuthResult> {
-    const { data } = await httpClient.post<AuthResult>('/auth/login', payload);
-    return data;
+    const { data } = await api.post<ApiResponse<AuthResult>>('/auth/login', payload);
+    return data.data;
   },
 
-  /** Đăng ký tài khoản mới. */
   async register(payload: RegisterPayload): Promise<AuthResult> {
-    const { data } = await httpClient.post<AuthResult>('/auth/register', payload);
-    return data;
+    const { data } = await api.post<ApiResponse<AuthResult>>('/auth/register', payload);
+    return data.data;
   },
 
-  /** Làm mới access token. */
+  async me(): Promise<User> {
+    const { data } = await api.get<ApiResponse<User>>('/auth/me');
+    return data.data;
+  },
+
   async refresh(refreshToken: string): Promise<AuthTokens> {
-    const { data } = await httpClient.post<AuthTokens>('/auth/refresh', {
+    const { data } = await api.post<ApiResponse<AuthTokens>>('/auth/refresh', {
       refreshToken,
     });
-    return data;
+    return data.data;
   },
 
-  /** Đăng xuất (thu hồi phiên phía server). */
   async logout(): Promise<void> {
-    await httpClient.post('/auth/logout');
+    await api.post<ApiResponse<null>>('/auth/logout');
   },
 };

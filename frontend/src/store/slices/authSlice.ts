@@ -1,53 +1,67 @@
 /**
- * authSlice — quản lý trạng thái xác thực.
- *
- * Dùng Zustand theo "slice pattern": mỗi slice là một StateCreator được
- * gộp lại trong store/index.ts. Nhờ đó store lớn vẫn tách module rõ ràng.
+ * Auth slice — holds the authenticated user + status and exposes the async
+ * actions (login / register / logout / bootstrap). Tokens are persisted to
+ * AsyncStorage (the single source of truth the axios interceptor reads from);
+ * this slice only mirrors the *session* status in memory.
  */
+
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { StateCreator } from 'zustand';
-import { authService } from '@/services';
-import { tokenStorage } from '@/config/axios';
-import type { LoginPayload, RequestStatus, User } from '@/types';
-import type { AppStore } from '../index';
+
+import { STORAGE_KEYS } from '@/config/axios';
+import { authService } from '@/services/authService';
+import type { RequestStatus, AuthTokens } from '@/types/common';
+import type { LoginPayload, RegisterPayload, User } from '@/types/user';
+import type { RootStore } from '../index';
 
 export interface AuthSlice {
-  currentUser: User | null;
-  isAuthenticated: boolean;
-  authStatus: RequestStatus;
-  authError: string | null;
+  user: User | null;
+  status: RequestStatus;
+  error: string | null;
+  /** True once bootstrap has finished — gate the navigator on this. */
+  hydrated: boolean;
 
   login: (payload: LoginPayload) => Promise<void>;
+  register: (payload: RegisterPayload) => Promise<void>;
   logout: () => Promise<void>;
-  setCurrentUser: (user: User | null) => void;
+  /** Restore the session on app launch from a persisted token. */
+  bootstrap: () => Promise<void>;
 }
 
-/**
- * StateCreator nhận đầy đủ AppStore để có thể gọi chéo sang slice khác
- * nếu cần (ví dụ reset userSlice khi logout).
- */
-export const createAuthSlice: StateCreator<AppStore, [], [], AuthSlice> = (
-  set,
-) => ({
-  currentUser: null,
-  isAuthenticated: Boolean(tokenStorage.getAccessToken()),
-  authStatus: 'idle',
-  authError: null,
+async function persistTokens(tokens: AuthTokens): Promise<void> {
+  await AsyncStorage.multiSet([
+    [STORAGE_KEYS.ACCESS_TOKEN, tokens.accessToken],
+    [STORAGE_KEYS.REFRESH_TOKEN, tokens.refreshToken],
+  ]);
+}
+
+export const createAuthSlice: StateCreator<RootStore, [], [], AuthSlice> = (set) => ({
+  user: null,
+  status: 'idle',
+  error: null,
+  hydrated: false,
 
   login: async (payload) => {
-    set({ authStatus: 'loading', authError: null });
+    set({ status: 'loading', error: null });
     try {
       const { user, tokens } = await authService.login(payload);
-      tokenStorage.setTokens(tokens);
-      set({
-        currentUser: user,
-        isAuthenticated: true,
-        authStatus: 'success',
-      });
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Đăng nhập thất bại';
-      set({ authStatus: 'error', authError: message, isAuthenticated: false });
-      throw error;
+      await persistTokens(tokens);
+      set({ user, status: 'success' });
+    } catch (err) {
+      set({ status: 'error', error: toMessage(err) });
+      throw err;
+    }
+  },
+
+  register: async (payload) => {
+    set({ status: 'loading', error: null });
+    try {
+      const { user, tokens } = await authService.register(payload);
+      await persistTokens(tokens);
+      set({ user, status: 'success' });
+    } catch (err) {
+      set({ status: 'error', error: toMessage(err) });
+      throw err;
     }
   },
 
@@ -55,16 +69,34 @@ export const createAuthSlice: StateCreator<AppStore, [], [], AuthSlice> = (
     try {
       await authService.logout();
     } finally {
-      tokenStorage.clear();
-      set({
-        currentUser: null,
-        isAuthenticated: false,
-        authStatus: 'idle',
-        authError: null,
-      });
+      // Always clear local session even if the network call fails.
+      await AsyncStorage.multiRemove([
+        STORAGE_KEYS.ACCESS_TOKEN,
+        STORAGE_KEYS.REFRESH_TOKEN,
+      ]);
+      set({ user: null, status: 'idle', error: null });
     }
   },
 
-  setCurrentUser: (user) =>
-    set({ currentUser: user, isAuthenticated: user !== null }),
+  bootstrap: async () => {
+    try {
+      const token = await AsyncStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
+      if (!token) {
+        set({ hydrated: true });
+        return;
+      }
+      const user = await authService.me();
+      set({ user, hydrated: true });
+    } catch {
+      // Token invalid/expired — start unauthenticated.
+      set({ user: null, hydrated: true });
+    }
+  },
 });
+
+function toMessage(err: unknown): string {
+  if (typeof err === 'object' && err !== null && 'message' in err) {
+    return String((err as { message: unknown }).message);
+  }
+  return 'Something went wrong. Please try again.';
+}

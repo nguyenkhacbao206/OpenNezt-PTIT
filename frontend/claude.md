@@ -1,184 +1,223 @@
-# claude.md — Quy tắc phát triển & Kiến trúc dự án Frontend
+# claude.md — Development Rules & Architecture Guide
 
-> **Mục đích:** Đây là "hiến pháp" của dự án. Mọi con người hoặc AI (Claude, Copilot…)
-> khi viết/sửa code trong `frontend/` **BẮT BUỘC** tuân theo tài liệu này để giữ
-> cấu trúc sạch, nhất quán và không phá vỡ kiến trúc phân tầng.
->
-> Nếu một yêu cầu mâu thuẫn với tài liệu này, hãy **dừng lại và hỏi lại**, đừng tự ý phá vỡ quy ước.
-
----
-
-## 1. Tech Stack (không tự ý đổi)
-
-| Hạng mục         | Công nghệ                         |
-| ---------------- | --------------------------------- |
-| Framework        | ReactJS 18 (function components)  |
-| Ngôn ngữ         | TypeScript (strict mode)          |
-| Build tool       | Vite                              |
-| CSS              | Tailwind CSS (`darkMode: 'class'`)|
-| State management | Zustand (slice pattern)           |
-| Routing          | React Router DOM v6+              |
-| HTTP client      | Axios (instance + interceptors)   |
-
-❌ **Không** thêm thư viện mới (Redux, MUI, styled-components, axios thay thế…) nếu chưa được yêu cầu rõ ràng.
+> **READ THIS FIRST.** This file is the contract for anyone (AI or human) adding
+> code to `frontend/`. Follow it exactly so the structure stays clean and
+> predictable. When a request conflicts with these rules, ask before breaking
+> them.
 
 ---
 
-## 2. Nguyên tắc TypeScript (BẮT BUỘC)
+## 0. Tech stack (do not swap without approval)
 
-1. **Cấm tuyệt đối `any`.** Nếu chưa biết kiểu, dùng `unknown` rồi thu hẹp (narrow) bằng type guard.
-2. Mọi kiểu dữ liệu domain (User, Auth, response API…) đặt trong `src/types/` và export qua barrel `@/types`.
-3. Hàm public/service phải khai báo **kiểu trả về tường minh** (không dựa vào suy luận ngầm).
-4. Ưu tiên `interface` cho object/shape, `type` cho union/alias.
-5. Đã bật `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes` — cẩn thận khi truy cập mảng và optional field.
-   - Với optional prop có điều kiện, dùng spread: `{...(x ? { prop: x } : {})}` thay vì truyền `undefined`.
-6. Import kiểu bằng `import type { ... }` để tách rõ type khỏi giá trị runtime.
+- **Expo + React Native 0.76** (New Architecture enabled)
+- **TypeScript strict** — `strict: true`, `noImplicitAny`, no `any`
+- **NativeWind v4** (Tailwind classes via `className`)
+- **React Navigation** — native-stack + bottom-tabs
+- **Zustand** — global state, "slices" pattern
+- **Axios** — the single shared instance in `src/config/axios.ts`
+- **AsyncStorage** — token persistence only
 
 ---
 
-## 3. Kiến trúc phân tầng & Luồng dữ liệu
+## 1. Golden rules
 
-Luồng dữ liệu một chiều, **không được đi tắt**:
+1. **Never use `any`.** Use precise types, generics, `unknown` + narrowing, or
+   add a type to `src/types/`. `any` fails review.
+2. **One source of truth per concern.** Tokens live in AsyncStorage; the shared
+   Axios instance is the only HTTP client; the design system lives in
+   `config/theme.ts` + `tailwind.config.js`.
+3. **Respect the layer boundaries** (see §3). Screens never call `axios`
+   directly; services never import from `store/` or `screens/`.
+4. **Every screen prop is typed** via the navigation param lists — no untyped
+   `navigation`/`route`.
+5. **Style with NativeWind `className`.** Reach for `StyleSheet`/inline styles
+   only for dynamic values Tailwind can't express (e.g. computed sizes).
+6. **Prefer named exports.** Screens/components use named exports; a folder's
+   `index.ts` re-exports them. (`App.tsx` is the one default export.)
+7. **Keep aliases in sync.** Any change to path aliases must land in **both**
+   `tsconfig.json` and `babel.config.js`.
+
+---
+
+## 2. Naming conventions
+
+| Kind                         | Convention           | Example                         |
+| ---------------------------- | -------------------- | ------------------------------- |
+| Component / Screen file      | `PascalCase.tsx`     | `Button.tsx`, `HomeScreen.tsx`  |
+| Hook file & function         | `useCamelCase.ts`    | `useAuth.ts` → `useAuth()`      |
+| Service file                 | `camelCaseService.ts`| `authService.ts`                |
+| Store slice                  | `camelCaseSlice.ts`  | `authSlice.ts`                  |
+| Types file                   | `camelCase.ts`       | `user.ts`, `common.ts`          |
+| Type / Interface             | `PascalCase`         | `User`, `ApiResponse<T>`        |
+| Constant                     | `UPPER_SNAKE_CASE`   | `STORAGE_KEYS`                  |
+| Variable / function          | `camelCase`          | `loadUsers`, `isFormValid`      |
+| Folder                       | `PascalCase` (screens/feature) · `lowercase` (infra) | `Profile/` · `services/` |
+| Barrel file                  | `index.ts`           | re-export only                  |
+
+- Screens end with the `Screen` suffix (`ProfileScreen`), live in a
+  `PascalCase` folder, and are re-exported from that folder's `index.ts`.
+- Boolean values/props read as predicates: `isLoading`, `hasError`, `canSubmit`.
+- Async actions are verbs: `login`, `fetchProfile`, `refreshToken`.
+
+---
+
+## 3. Folder responsibilities (who owns what)
+
+Import direction only flows **downward**. A layer may import from layers below
+it, never above.
 
 ```
-UI (pages / components)
-      │  gọi action
-      ▼
-store (Zustand slices)  ──► services (gọi API)  ──► config/axios (HTTP + token)
-      │                                                     │
-      └────────────── nhận dữ liệu đã gõ kiểu ◄─────────────┘
+screens ─▶ components ─▶ (hooks, utils)
+   │            │
+   ▼            ▼
+ store  ◀──── services ─▶ config ─▶ types
 ```
 
-**Quy tắc vàng:**
+### `src/config/` — infrastructure
+- `axios.ts` — the ONE Axios instance + interceptors (attaches bearer token
+  from AsyncStorage, normalises errors to `ApiError`, clears token on 401).
+  Also owns `STORAGE_KEYS`.
+- `env.ts` — typed, validated env access. **Only file allowed to read
+  `process.env`.**
+- `theme.ts` — design tokens (colors, spacing, fontSize, radius). Mirror color
+  changes into `tailwind.config.js`.
+- **Never** import from `store/`, `services/`, `screens/`, or `components/`.
 
-- `pages` & `components` **KHÔNG** gọi `axios`/`httpClient` trực tiếp → phải qua `services` (thường thông qua `store`).
-- `services` **KHÔNG** biết gì về UI hay store → chỉ nhận payload, gọi API, trả dữ liệu đã gõ kiểu.
-- `store` là nơi điều phối: gọi `services`, cập nhật state, xử lý loading/error.
-- Chỉ `config/axios.ts` được phép đọc/ghi token (`tokenStorage`). Không `localStorage.getItem('access_token')` ở nơi khác.
+### `src/types/` — shared types
+- `common.ts` — API contracts (`ApiResponse`, `Paginated`, `ApiError`,
+  `AuthTokens`, `RequestStatus`).
+- `user.ts` — user domain + payload types.
+- Pure types only. Zero runtime code, zero imports from other layers.
+
+### `src/services/` — API layer
+- One file per resource (`authService.ts`, `userService.ts`).
+- Uses the shared `api` from `config/axios`. Returns the **unwrapped** `data`
+  payload and lets the normalised `ApiError` propagate.
+- **Never** touches React, the store, navigation, or AsyncStorage directly
+  (token handling belongs to the interceptor / auth slice).
+
+### `src/store/` — global state (Zustand)
+- `slices/*.ts` — a `StateCreator<RootStore, [], [], XSlice>` per domain.
+  Async actions live here and call services; they own loading/error status.
+- `index.ts` — merges slices into `RootStore` and exports `useStore`.
+- Components select the **minimal** state they need (see §5). Persist only what
+  must survive a restart (tokens → AsyncStorage).
+
+### `src/navigation/` — routing
+- `types.ts` — `*ParamList` + per-screen prop helpers. **Add a route here
+  first**, then wire it up. Update the global `ReactNavigation.RootParamList`
+  augmentation.
+- `AuthStack.tsx` (unauthenticated) · `MainTab.tsx` (authenticated) ·
+  `AppNavigator.tsx` (root switch based on auth state + `hydrated` splash).
+
+### `src/components/` — reusable UI & logic
+- `ui/` — atomic, presentational, **stateless-ish** widgets (`Button`, `Input`,
+  `CustomModal`, `Card`). No API calls, no store access, no navigation.
+- `layout/` — structural wrappers (`SafeAreaWrapper`, `Container`, `HeaderBar`).
+- `hooks/` — reusable logic (`useAuth`, `useKeyboard`, `useAppState`). May read
+  the store; must not render UI.
+- `utils/` — pure functions only (`formatDate`, `validate`, `pixelRatio`). No
+  React, no side effects.
+
+### `src/screens/` — feature screens
+- Compose components + hooks + services + store into a screen. This is the ONLY
+  layer that orchestrates the full flow. One folder per feature, `index.ts`
+  re-exports.
 
 ---
 
-## 4. Trách nhiệm từng thư mục
+## 4. The canonical data flow
 
-| Thư mục               | Trách nhiệm                                                                 | ĐƯỢC làm                                            | KHÔNG được làm                                    |
-| --------------------- | -------------------------------------------------------------------------- | --------------------------------------------------- | ------------------------------------------------- |
-| `config/`             | Cấu hình hệ thống: axios, env, theme                                       | Interceptor, đọc biến môi trường, quản lý token     | Chứa logic nghiệp vụ, gọi API domain              |
-| `types/`              | Định nghĩa interface/type dùng chung                                        | Interface, type alias, enum-like union              | Chứa logic, giá trị runtime                       |
-| `services/`           | Tầng gọi API theo domain                                                    | `httpClient.get/post…`, trả dữ liệu gõ kiểu         | Đụng vào store, UI, `useState`                    |
-| `store/` + `slices/`  | State toàn cục (Zustand)                                                    | Gọi service, set state, xử lý loading/error         | Render JSX, thao tác DOM                          |
-| `routes/`             | Cấu hình routing, bảo vệ route                                             | Khai báo route, `ProtectedRoute`, lazy import       | Chứa UI phức tạp của page                         |
-| `pages/`              | Trang lớn (mỗi trang một thư mục)                                          | Ghép component, gọi store/hook, layout của trang    | Gọi `httpClient` trực tiếp, chứa UI nguyên tử tái dùng |
-| `components/ui/`      | Component nguyên tử tái dùng                                               | Button, Input, Modal, Table… thuần trình bày        | Gọi API, phụ thuộc business logic cụ thể          |
-| `components/layout/`  | Khung bố cục hệ thống                                                       | Navbar, Sidebar, Footer, MainLayout                 | Logic domain                                      |
-| `components/hooks/`   | Custom hooks dùng chung                                                     | `useAuth`, `useTheme`, `useDebounce`                | JSX render lớn                                    |
-| `components/utils/`   | Hàm tiện ích thuần (pure)                                                   | format, validate, `cn`                              | Side-effect, gọi API, dùng React hook             |
-| `assets/`             | Ảnh, font, CSS toàn cục                                                     | Static asset, `global.css`                          | Logic                                             |
-
----
-
-## 5. Quy ước đặt tên (Naming Conventions)
-
-| Đối tượng                     | Quy ước            | Ví dụ                                  |
-| ----------------------------- | ------------------ | -------------------------------------- |
-| Thư mục page                  | PascalCase         | `Dashboard/`, `Login/`                 |
-| Component + file component     | PascalCase         | `Button.tsx`, `MainLayout.tsx`         |
-| Hook + file hook              | camelCase, `use…`  | `useAuth.ts`                           |
-| Service + file service        | camelCase, `…Service` | `authService.ts`                    |
-| Slice                         | camelCase, `…Slice`   | `authSlice.ts`                      |
-| Util / file util              | camelCase          | `formatDate.ts`                        |
-| Type / Interface              | PascalCase         | `interface User`, `type UserRole`      |
-| Hằng số                       | UPPER_SNAKE_CASE   | `ROUTE_PATHS`, `ACCESS_TOKEN_KEY`      |
-| Biến / hàm                    | camelCase          | `fetchUsers`, `isValidEmail`           |
-
-- Mỗi thư mục có `index.ts` làm **barrel export** để import gọn.
-- Component page export cả **named** (`DashboardPage`) và **default** (phục vụ `lazy`).
-
----
-
-## 6. Import & Path Alias
-
-Dùng alias thay vì đường dẫn tương đối sâu:
-
-```ts
-// ✅ Đúng
-import { Button } from '@/components/ui';
-import type { User } from '@/types';
-import { httpClient } from '@/config/axios';
-
-// ❌ Sai
-import { Button } from '../../../components/ui/Button';
+```
+User action ─▶ Screen ─▶ Service (Axios)
+                          └─ interceptor attaches token from AsyncStorage
+        ┌───────────────────┘
+        ▼
+   Store slice action (sets loading → success/error, stores data)
+        │
+        ▼
+   Screen re-renders from selected state
 ```
 
-Alias đã cấu hình đồng bộ ở `tsconfig.json` và `vite.config.ts`:
-`@/*`, `@components/*`, `@pages/*`, `@store/*`, `@routes/*`, `@services/*`, `@config/*`, `@types/*`, `@assets/*`.
+- Server data that many screens share → **store**.
+- Data local to one screen → **`useState` in that screen** (see `HomeScreen`).
+- Never call a service from `ui/` or `utils/`.
 
 ---
 
-## 7. Cách thêm mới (Checklist)
+## 5. TypeScript & React rules
 
-### ➕ Thêm một Page
-1. Tạo thư mục `src/pages/<TênPage>/index.tsx`, export named + default.
-2. Khai báo route trong `publicRoutes.ts` hoặc `privateRoutes.ts` (dùng `lazy`).
-3. Thêm path vào `routes/paths.ts` (`ROUTE_PATHS`).
-4. Nếu cần dữ liệu: gọi qua **store action** → **service**, KHÔNG gọi axios trực tiếp.
-
-### ➕ Thêm một API domain mới
-1. Định nghĩa type request/response trong `src/types/`.
-2. Tạo `src/services/<domain>Service.ts` dùng `httpClient`.
-3. Nếu cần state toàn cục → tạo slice trong `src/store/slices/` và gộp vào `store/index.ts`.
-
-### ➕ Thêm một State slice (Zustand)
-1. Tạo `src/store/slices/<name>Slice.ts` với `StateCreator<AppStore, [], [], XxxSlice>`.
-2. Export interface slice + hàm `createXxxSlice`.
-3. Gộp vào `store/index.ts`: `...createXxxSlice(...args)` và thêm type vào `AppStore`.
-
-### ➕ Thêm biến môi trường
-1. Thêm vào `.env` và `.env.example` với tiền tố `VITE_`.
-2. Khai báo kiểu trong `src/vite-env.d.ts` (`ImportMetaEnv`).
-3. Đọc & validate qua `src/config/env.ts` — KHÔNG dùng `import.meta.env` rải rác.
+- **No `any`.** Prefer `unknown` + a type guard (`isApiError`) over casts.
+- Type component props with an exported `interface XProps`. Extend the native
+  props (`TouchableOpacityProps`, `TextInputProps`) when wrapping a primitive.
+- Screen components: `type Props = XStackScreenProps<'RouteName'>` — never
+  hand-roll `navigation`/`route` types.
+- With Zustand v5, selecting an **object** requires `useShallow` (see
+  `useAuth.ts`) to avoid infinite re-renders. Selecting a single value is fine.
+- Fire-and-forget promises are marked with `void` (`void loadUsers()`), or
+  awaited — never left dangling.
+- Handle every async state: **loading / error / empty / success**.
 
 ---
 
-## 8. Store (Zustand) — quy tắc dùng
+## 6. Styling rules (NativeWind)
 
-```ts
-// ✅ Luôn dùng selector để tránh re-render thừa
-const users = useAppStore((s) => s.users);
-const fetchUsers = useAppStore((s) => s.fetchUsers);
+- Use `className` with Tailwind utilities. Compose conditional classes with an
+  array `.join(' ')` (see `Button.tsx`), not string concatenation soup.
+- Use theme colors via Tailwind tokens (`bg-primary`, `text-danger`) — these are
+  defined in `tailwind.config.js`, mirroring `config/theme.ts`.
+- Raw `theme.colors.*` values are for non-className surfaces only (navigation
+  theme, `StatusBar`, `ActivityIndicator`, imperative styles).
+- Keep spacing on the Tailwind scale; avoid magic pixel numbers.
 
-// ❌ Không lấy cả store
-const store = useAppStore();
+---
+
+## 7. Adding things — quick recipes
+
+**New API resource**
+1. Add domain types to `src/types/<name>.ts`.
+2. Create `src/services/<name>Service.ts` using the shared `api`.
+3. If globally shared, add a slice in `store/slices/` and merge it in
+   `store/index.ts`.
+
+**New screen**
+1. Add the route to the correct `*ParamList` in `navigation/types.ts`.
+2. Create `src/screens/<Feature>/<Feature>Screen.tsx` + `index.ts`.
+3. Register it in `AuthStack.tsx` or `MainTab.tsx`.
+4. Type props with the matching `*ScreenProps<'Route'>` helper.
+
+**New reusable component**
+1. Put atomic widgets in `ui/`, wrappers in `layout/`.
+2. Export an `interface XProps`; re-export from the folder `index.ts`.
+
+**New env variable**
+1. Add `EXPO_PUBLIC_<NAME>` to `.env`.
+2. Read + validate it in `config/env.ts`. Never read `process.env` elsewhere.
+
+---
+
+## 8. Do NOT
+
+- ❌ Use `any` or silence the compiler with `// @ts-ignore`.
+- ❌ Create a second Axios instance or call `fetch`/`axios` from a screen.
+- ❌ Read/write AsyncStorage tokens outside `config/axios.ts` + `authSlice.ts`.
+- ❌ Import `store/` or `screens/` from `services/`, `config/`, or `types/`.
+- ❌ Hardcode the API URL, colors, or spacing — use `env` / theme tokens.
+- ❌ Put business logic in `ui/` or side effects in `utils/`.
+- ❌ Navigate with string literals not present in a `*ParamList`.
+- ❌ Add a dependency without updating `package.json` and this file if it
+  changes a convention.
+
+---
+
+## 9. Before you finish
+
+Run and make sure both pass:
+
+```bash
+npm run typecheck   # tsc --noEmit, zero errors
+npm run lint
 ```
 
-- Mỗi slice tự quản `status` (`idle|loading|success|error`) và `error` riêng.
-- Action bất đồng bộ: set `loading` → try gọi service → set `success`/`error`.
-
----
-
-## 9. Styling (Tailwind)
-
-- Ưu tiên **utility class** ngay trong JSX. Hạn chế CSS rời.
-- Gộp class có điều kiện bằng helper `cn()` trong `components/utils`.
-- Hỗ trợ dark mode: luôn kèm biến thể `dark:` khi đặt màu nền/chữ.
-- Màu thương hiệu dùng token trong `tailwind.config.js` (`primary`, `secondary`, `danger`), không hard-code mã hex trong component.
-
----
-
-## 10. Xử lý lỗi & Bảo mật
-
-- Lỗi API đã được chuẩn hoá thành `NormalizedError` tại `config/axios.ts` — UI chỉ cần đọc `error.message`.
-- 401 được tự động refresh token 1 lần; thất bại thì xoá token và về `/login`.
-- Không log token/thông tin nhạy cảm ra console ở môi trường production.
-- Không commit `.env` thật (đã ignore); chỉ commit `.env.example`.
-
----
-
-## 11. Definition of Done (trước khi kết thúc một task)
-
-- [ ] `npm run type-check` không lỗi (không có `any`, không unused).
-- [ ] `npm run lint` sạch.
-- [ ] Không gọi `httpClient`/`axios` trực tiếp trong `pages`/`components`.
-- [ ] Token chỉ được truy cập qua `tokenStorage`.
-- [ ] Type mới đặt đúng chỗ trong `src/types/` và export qua barrel.
-- [ ] Đặt tên đúng quy ước ở mục 5, import dùng alias ở mục 6.
-- [ ] Component tái dùng đặt trong `components/ui`, không nhét vào `pages`.
+Keep this file updated when a convention changes — it is the shared memory of
+the project.

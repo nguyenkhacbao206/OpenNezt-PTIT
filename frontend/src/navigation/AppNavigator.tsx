@@ -1,0 +1,45 @@
+/**
+ * Root navigator.
+ *
+ * Auth is currently DISABLED for the backend demo build: the app boots straight
+ * into the Main flow (see the Translator demo tab). The Auth stack and the
+ * `isAuthenticated` gate are kept in the codebase — re-enable them by restoring
+ * the commented conditional below when auth is needed again.
+ */
+
+import {
+  DefaultTheme,
+  NavigationContainer,
+  type Theme as NavTheme,
+} from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+
+import { RttStack } from './RttStack';
+import type { RootStackParamList } from './types';
+
+const RootStack = createNativeStackNavigator<RootStackParamList>();
+
+const navigationTheme: NavTheme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    primary: '#5EEAD4',
+    background: '#000000',
+    card: '#141414',
+    text: '#FFFFFF',
+    border: '#262626',
+  },
+};
+
+export function AppNavigator() {
+  // Auth gate disabled for the demo — always enter the Main flow.
+  // To restore auth, bring back `bootstrap()`, the `hydrated` splash and the
+  // `isAuthenticated ? <Main/> : <Auth/>` conditional (see git history).
+  return (
+    <NavigationContainer theme={navigationTheme}>
+      <RootStack.Navigator screenOptions={{ headerShown: false }}>
+        <RootStack.Screen name="Main" component={RttStack} />
+      </RootStack.Navigator>
+    </NavigationContainer>
+  );
+}

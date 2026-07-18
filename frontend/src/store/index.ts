@@ -1,27 +1,24 @@
 /**
- * Store trung tâm — gộp tất cả slice thành một Zustand store duy nhất.
+ * Global store — Zustand with the "slices" pattern.
  *
- * Cách dùng trong component:
- *   const user = useAppStore((s) => s.currentUser);
- *   const login = useAppStore((s) => s.login);
+ * Each slice owns a cohesive part of the state (auth, settings, …) and is
+ * merged into one `RootStore`. Consumers select the minimal state they need to
+ * avoid unnecessary re-renders, e.g.:
  *
- * Luôn dùng selector (truyền hàm) để chỉ re-render khi phần state quan
- * tâm thay đổi — tránh lấy toàn bộ store.
+ *   const user = useStore((s) => s.user);
+ *   const login = useStore((s) => s.login);
  */
+
 import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
+
 import { createAuthSlice, type AuthSlice } from './slices/authSlice';
-import { createUserSlice, type UserSlice } from './slices/userSlice';
+import { createSettingSlice, type SettingSlice } from './slices/settingSlice';
+import { createTranslatorSlice, type TranslatorSlice } from './slices/translatorSlice';
 
-/** Kiểu store tổng — hợp nhất mọi slice. */
-export type AppStore = AuthSlice & UserSlice;
+export type RootStore = AuthSlice & SettingSlice & TranslatorSlice;
 
-export const useAppStore = create<AppStore>()(
-  devtools(
-    (...args) => ({
-      ...createAuthSlice(...args),
-      ...createUserSlice(...args),
-    }),
-    { name: 'AppStore' },
-  ),
-);
+export const useStore = create<RootStore>()((...args) => ({
+  ...createAuthSlice(...args),
+  ...createSettingSlice(...args),
+  ...createTranslatorSlice(...args),
+}));

@@ -1,26 +1,27 @@
 /**
- * Tiện ích kiểm tra/xác thực dữ liệu đầu vào.
+ * Lightweight, dependency-free validators for forms.
+ * Each returns an error string, or `null` when the value is valid.
  */
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-/** Kiểm tra email hợp lệ. */
-export function isValidEmail(email: string): boolean {
-  return EMAIL_REGEX.test(email.trim());
-}
-
-/**
- * Kiểm tra độ mạnh mật khẩu: tối thiểu 8 ký tự, có chữ và số.
- * Trả về null nếu hợp lệ, hoặc thông báo lỗi nếu không.
- */
-export function validatePassword(password: string): string | null {
-  if (password.length < 8) return 'Mật khẩu tối thiểu 8 ký tự';
-  if (!/[a-zA-Z]/.test(password)) return 'Mật khẩu phải có chữ cái';
-  if (!/[0-9]/.test(password)) return 'Mật khẩu phải có chữ số';
+export function validateEmail(value: string): string | null {
+  if (!value.trim()) return 'Email is required.';
+  if (!EMAIL_RE.test(value)) return 'Enter a valid email address.';
   return null;
 }
 
-/** Kiểm tra chuỗi rỗng/toàn khoảng trắng. */
-export function isBlank(value: string | null | undefined): boolean {
-  return value === null || value === undefined || value.trim() === '';
+export function validatePassword(value: string, min = 6): string | null {
+  if (!value) return 'Password is required.';
+  if (value.length < min) return `Password must be at least ${min} characters.`;
+  return null;
+}
+
+export function validateRequired(value: string, field = 'This field'): string | null {
+  return value.trim() ? null : `${field} is required.`;
+}
+
+/** Returns true when every validator result is null. */
+export function isFormValid(errors: Record<string, string | null>): boolean {
+  return Object.values(errors).every((e) => e === null);
 }
