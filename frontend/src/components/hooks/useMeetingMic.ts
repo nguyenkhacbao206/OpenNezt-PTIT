@@ -1,15 +1,13 @@
 /**
- * useMeetingMic — thu âm push-to-talk streaming, ĐA NỀN TẢNG.
+ * useMeetingMic — thu âm push-to-talk cắt CỤM (VAD), ĐA NỀN TẢNG.
  *
- *   - Web/Desktop (Expo Web, Electron): dùng Web Audio API (WebMicRecorder) →
- *     WAV 16k thật, cửa sổ tích luỹ đọc bất kỳ lúc nào (không khoảng hở).
- *   - iOS: expo-audio LINEARPCM → WAV 16k; cộng dồn PCM qua từng đoạn (stop/read
- *     /restart mỗi nhịp).
- *   - Android: expo-audio (định dạng nén) — Groq nhận được nhiều format; WAV chuẩn
- *     thì nên dùng web/iOS.
+ *   - Web/Desktop (Expo Web, Electron): Web Audio API + VAD năng lượng
+ *     (WebMicRecorder) → cắt cụm ở chỗ ngắt hơi, mỗi cụm gửi `audio.chunk`.
+ *   - iOS/Android: expo-audio; cắt cưỡng bức theo giờ (~NATIVE_SEG_MS) qua stop/
+ *     read/restart rồi gộp PCM.
  *
- * Chung một logic: mỗi ~2.5s gửi cửa sổ audio tích luỹ dạng `audio.partial` (có
- * coalesce theo `partialResponses`); dừng → `audio.chunk`.
+ * Mỗi cụm là một `audio.chunk` (backend STT+NMT+TTS → audio phát cuốn chiếu trên
+ * máy người nghe). KHÔNG còn gửi `audio.partial` (dịch dự đoán) trong luồng này.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';
@@ -28,15 +26,14 @@ import { WebMicRecorder } from '@/services/webAudioCapture';
 import { useStore } from '@/store';
 import type { Speaker } from '@/types/translator';
 
-const SEGMENT_MS = 2500;
-const COALESCE_TIMEOUT = 8000;
+const NATIVE_SEG_MS = 4000;
 const IS_WEB = Platform.OS === 'web';
 
 export interface MeetingMic {
   recording: boolean;
   error: string | null;
   start: (speaker: Speaker) => Promise<void>;
-  /** Chốt segment hiện tại (audio.chunk → một turn) rồi thu tiếp segment mới. */
+  /** Chốt cụm hiện tại (audio.chunk → một lượt) rồi thu tiếp cụm mới. */
   cut: () => Promise<void>;
   stop: () => Promise<void>;
 }
@@ -44,10 +41,8 @@ export interface MeetingMic {
 export function useMeetingMic(): MeetingMic {
   const recorder = useAudioRecorder(WAV_16K); // dùng cho native
   const startTurn = useStore((s) => s.startTurn);
-  const sendPartialAudio = useStore((s) => s.sendPartialAudio);
   const commitSegment = useStore((s) => s.commitSegment);
   const endTurn = useStore((s) => s.endTurn);
-  const partialResponses = useStore((s) => s.partialResponses);
 
   const [recording, setRecording] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -55,18 +50,14 @@ export function useMeetingMic(): MeetingMic {
   const liveRef = useRef(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const speakerRef = useRef<Speaker>('vn');
-  const awaitingRef = useRef(false);
-  const lastAtRef = useRef(0);
+  // Gọi cut() bản mới nhất từ VAD callback / timer mà không đăng ký lại.
+  const cutRef = useRef<() => Promise<void>>(async () => {});
 
-  // Web recorder (Web Audio API).
+  // Web recorder (Web Audio API + VAD).
   const webRef = useRef<WebMicRecorder | null>(null);
   // Native: PCM tích luỹ + xâu chuỗi thao tác recorder.
   const pcmChunksRef = useRef<Uint8Array[]>([]);
   const opChainRef = useRef<Promise<void>>(Promise.resolve());
-
-  useEffect(() => {
-    awaitingRef.current = false;
-  }, [partialResponses]);
 
   const runExclusive = useCallback((fn: () => Promise<void>): Promise<void> => {
     opChainRef.current = opChainRef.current.then(fn, fn);
@@ -104,23 +95,22 @@ export function useMeetingMic(): MeetingMic {
     [recorder, runExclusive],
   );
 
-  /** Cửa sổ audio tích luỹ hiện tại (WAV base64) — theo nền tảng. */
-  const buildWindow = useCallback(async (): Promise<string | null> => {
-    if (IS_WEB) return webRef.current?.windowWav() ?? null;
-    await flushNative(true);
-    if (pcmChunksRef.current.length === 0) return null;
-    return bytesToBase64(pcmToWav(concatPcm(pcmChunksRef.current)));
-  }, [flushNative]);
-
-  const onTick = useCallback(async () => {
+  const cut = useCallback(async (): Promise<void> => {
     if (!liveRef.current) return;
-    if (awaitingRef.current && Date.now() - lastAtRef.current < COALESCE_TIMEOUT) return;
-    const wav = await buildWindow();
-    if (!wav) return;
-    awaitingRef.current = true;
-    lastAtRef.current = Date.now();
-    sendPartialAudio(speakerRef.current, wav);
-  }, [buildWindow, sendPartialAudio]);
+    let wav: string | null = null;
+    if (IS_WEB) {
+      wav = webRef.current?.windowWav() ?? null;
+      webRef.current?.reset();
+    } else {
+      await flushNative(true); // đọc đoạn cuối + thu tiếp cụm mới
+      if (pcmChunksRef.current.length > 0) {
+        wav = bytesToBase64(pcmToWav(concatPcm(pcmChunksRef.current)));
+      }
+      pcmChunksRef.current = [];
+    }
+    if (wav) commitSegment(speakerRef.current, wav);
+  }, [flushNative, commitSegment]);
+  cutRef.current = cut;
 
   const start = useCallback(
     async (speaker: Speaker): Promise<void> => {
@@ -128,7 +118,8 @@ export function useMeetingMic(): MeetingMic {
       try {
         if (IS_WEB) {
           webRef.current = new WebMicRecorder();
-          await webRef.current.start(); // getUserMedia tự xin quyền
+          // VAD phát hiện biên cụm → chốt cụm (audio.chunk).
+          await webRef.current.start(() => void cutRef.current());
         } else {
           const perm = await AudioModule.requestRecordingPermissionsAsync();
           if (!perm.granted) {
@@ -140,36 +131,21 @@ export function useMeetingMic(): MeetingMic {
           await recorder.prepareToRecordAsync();
           recorder.record();
         }
-        awaitingRef.current = false;
         speakerRef.current = speaker;
         startTurn(speaker);
         liveRef.current = true;
         setRecording(true);
-        timerRef.current = setInterval(() => void onTick(), SEGMENT_MS);
+        // Native không có VAD → cắt cưỡng bức theo giờ.
+        if (!IS_WEB) {
+          timerRef.current = setInterval(() => void cutRef.current(), NATIVE_SEG_MS);
+        }
       } catch (err: any) {
         liveRef.current = false;
         setError('Không truy cập được micro: ' + (err?.message ?? String(err)));
       }
     },
-    [recorder, startTurn, onTick],
+    [recorder, startTurn],
   );
-
-  const cut = useCallback(async (): Promise<void> => {
-    if (!liveRef.current) return;
-    let wav: string | null = null;
-    if (IS_WEB) {
-      wav = webRef.current?.windowWav() ?? null;
-      webRef.current?.reset();
-    } else {
-      await flushNative(true); // đọc đoạn cuối + thu tiếp segment mới
-      if (pcmChunksRef.current.length > 0) {
-        wav = bytesToBase64(pcmToWav(concatPcm(pcmChunksRef.current)));
-      }
-      pcmChunksRef.current = [];
-    }
-    awaitingRef.current = false;
-    if (wav) commitSegment(speakerRef.current, wav);
-  }, [flushNative, commitSegment]);
 
   const stop = useCallback(async (): Promise<void> => {
     if (!liveRef.current) return;
