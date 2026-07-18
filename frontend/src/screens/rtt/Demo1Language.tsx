@@ -4,7 +4,7 @@
  * Lần đầu mở app: người dùng chọn ngôn ngữ mặc định (lưu trên thiết bị). Chỉ UI,
  * chưa gắn logic — `onContinue` điều hướng sang bước kế.
  */
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -18,6 +18,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Globe, Languages, Server } from 'lucide-react-native';
 
+import { getSelf, isDesktop, setDesktopName } from '@/services/desktopBridge';
 import type { RttStackScreenProps } from '@/navigation/rttTypes';
 import { useStore } from '@/store';
 
@@ -61,6 +62,25 @@ export function Demo1Language({ navigation }: RttStackScreenProps<'Language'>) {
   const myName = useStore((s) => s.myName);
   const setMyName = useStore((s) => s.setMyName);
   const enterLobby = useStore((s) => s.enterLobby);
+
+  // --- Discovery LAN (chỉ khi chạy trong vỏ Electron desktop) ---
+  // Danh sách thiết bị cùng mạng + invite được chuyển sang màn Devices (Demo2).
+  // Ở đây chỉ prefill tên máy + WS URL (IP LAN) từ thông tin máy mình.
+  const desktop = isDesktop();
+
+  useEffect(() => {
+    if (!desktop) return;
+    void getSelf().then((self) => {
+      if (!self) return;
+      if (!myName || myName === 'Thiết bị của tôi') setMyName(self.name);
+      // Mặc định localhost không cho máy khác biết địa chỉ thật → tự thay bằng IP
+      // LAN của máy này (backend bind 0.0.0.0 nên vẫn tự nối được), để hai máy
+      // nhìn thấy cùng một dải mạng và máy kia có thể trỏ tới.
+      const wsNow = useStore.getState().wsUrl;
+      if (self.ws && /(localhost|127\.0\.0\.1)/.test(wsNow)) setWsUrl(self.ws);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [desktop]);
 
   const onContinue = () => {
     // Ngôn ngữ của mình = nguồn; đối tác nhận ngôn ngữ còn lại. Backend hỗ trợ
@@ -118,7 +138,10 @@ export function Demo1Language({ navigation }: RttStackScreenProps<'Language'>) {
             <Text className="text-[13px] font-medium text-tp-text2">Tên thiết bị của bạn</Text>
             <TextInput
               value={myName}
-              onChangeText={setMyName}
+              onChangeText={(t) => {
+                setMyName(t);
+                if (desktop) void setDesktopName(t);
+              }}
               autoCapitalize="words"
               autoCorrect={false}
               placeholder="VD: MacBook của Linh"

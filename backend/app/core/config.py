@@ -48,6 +48,10 @@ class Settings(BaseSettings):
     # available (much faster, needed for real-time PhoWhisper-large).
     stt_device: str = "cpu"
     stt_compute_type: str = "int8"
+    # Local Faster-Whisper model DIR (CT2). Set this to ship a bundled model so
+    # nothing downloads at runtime (offline). Unset -> falls back to the size
+    # name "small" (auto-downloaded on first use).
+    offline_stt_model_dir: str | None = None
 
     # --- PhoWhisper STT (used when stt_engine == "phowhisper") -----------
     # CTranslate2 model dir for the Vietnamese PhoWhisper model, built by
