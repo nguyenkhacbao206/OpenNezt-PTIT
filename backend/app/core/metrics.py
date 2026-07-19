@@ -41,6 +41,7 @@ class TurnMetrics:
 
     stt_ms: float = 0.0
     nmt_ms: float = 0.0
+    tts_ms: float = 0.0
     e2e_ms: float = 0.0
     _t0: float = field(default_factory=time.perf_counter, repr=False)
 
@@ -53,5 +54,21 @@ class TurnMetrics:
         return {
             "sttMs": round(self.stt_ms, 2),
             "nmtMs": round(self.nmt_ms, 2),
+            "ttsMs": round(self.tts_ms, 2),
             "e2eMs": round(self.e2e_ms, 2),
         }
+
+    def summary(self, speaker: str = "?", mode: str = "") -> str:
+        """One-line latency breakdown for the SERVER LOG (times in ms).
+
+        `e2e` is server-side processing time (from audio.chunk received to the turn
+        being done); it does NOT include network to/from the client. Use it while
+        testing to see where a turn's time goes — STT vs NMT vs TTS. Kept ASCII-only
+        so it prints on Windows cp1252 consoles.
+        """
+        m = f" mode={mode}" if mode else ""
+        return (
+            f"latency speaker={speaker}{m} "
+            f"stt={self.stt_ms:.0f}ms nmt={self.nmt_ms:.0f}ms "
+            f"tts={self.tts_ms:.0f}ms e2e={self.e2e_ms:.0f}ms (server-side)"
+        )

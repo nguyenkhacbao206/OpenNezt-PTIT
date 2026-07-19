@@ -361,6 +361,7 @@ async def _on_text_final(
         await send_error(ws, "nmt_failed", f"NMT provider failed: {exc}")
         return
     metrics.finish()
+    log.info(metrics.summary(speaker, session.mode))
     await send(ws, "metrics", metrics.as_event())
 
 
@@ -440,9 +441,11 @@ async def _on_audio_chunk(
     # ---- TTS (optional) — audio từng cụm, phát cuốn chiếu ----------------
     if session.tts_on:
         try:
-            audio_b64 = await session.providers.tts.synthesize(
-                dst_text, session.target_lang
-            )
+            with Stopwatch() as sw_tts:
+                audio_b64 = await session.providers.tts.synthesize(
+                    dst_text, session.target_lang
+                )
+            metrics.tts_ms = sw_tts.ms
             await _emit(ws, session, manager, "tts.audio", {
                 "speaker": speaker, "audio": audio_b64,
             }, to_peer=True)
@@ -451,4 +454,5 @@ async def _on_audio_chunk(
 
     # ---- Metrics ---------------------------------------------------------
     metrics.finish()
+    log.info(metrics.summary(speaker, session.mode))
     await send(ws, "metrics", metrics.as_event())

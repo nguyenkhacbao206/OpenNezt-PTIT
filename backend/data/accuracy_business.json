@@ -1,0 +1,27 @@
+[
+  { "src": "We need to finalize the budget before the deadline.", "ref": "Chúng ta cần chốt ngân sách trước hạn chót.", "srcLang": "en", "tgtLang": "vi" },
+  { "src": "Revenue grew fifteen percent this quarter.", "ref": "Doanh thu tăng mười lăm phần trăm trong quý này.", "srcLang": "en", "tgtLang": "vi" },
+  { "src": "Let's align all stakeholders on the new timeline.", "ref": "Hãy thống nhất với tất cả các bên liên quan về lịch trình mới.", "srcLang": "en", "tgtLang": "vi" },
+  { "src": "We hit an important milestone last week.", "ref": "Chúng ta đã đạt một cột mốc quan trọng vào tuần trước.", "srcLang": "en", "tgtLang": "vi" },
+  { "src": "Could you send the signed contract by Friday?", "ref": "Anh có thể gửi hợp đồng đã ký trước thứ Sáu không?", "srcLang": "en", "tgtLang": "vi" },
+  { "src": "The payment terms are net thirty days.", "ref": "Điều khoản thanh toán là ba mươi ngày kể từ ngày xuất hóa đơn.", "srcLang": "en", "tgtLang": "vi" },
+  { "src": "Our delivery schedule slipped by two weeks.", "ref": "Lịch giao hàng của chúng tôi bị chậm hai tuần.", "srcLang": "en", "tgtLang": "vi" },
+  { "src": "Let's confirm the quantity and the unit price.", "ref": "Hãy xác nhận số lượng và đơn giá.", "srcLang": "en", "tgtLang": "vi" },
+  { "src": "I'll share the meeting minutes this afternoon.", "ref": "Tôi sẽ gửi biên bản cuộc họp vào chiều nay.", "srcLang": "en", "tgtLang": "vi" },
+  { "src": "We should review the risks before signing.", "ref": "Chúng ta nên rà soát các rủi ro trước khi ký.", "srcLang": "en", "tgtLang": "vi" },
+  { "src": "The proposal needs approval from the board.", "ref": "Đề xuất cần được hội đồng quản trị phê duyệt.", "srcLang": "en", "tgtLang": "vi" },
+  { "src": "Can we schedule a follow-up call next week?", "ref": "Chúng ta có thể sắp xếp một cuộc gọi tiếp theo vào tuần sau không?", "srcLang": "en", "tgtLang": "vi" },
+
+  { "src": "Bên mình muốn chốt số lượng và điều khoản thanh toán trong quý này.", "ref": "We'd like to finalize the quantity and payment terms this quarter.", "srcLang": "vi", "tgtLang": "en" },
+  { "src": "Chúng ta cần ký phụ lục hợp đồng trước khi bàn giao.", "ref": "We need to sign the contract addendum before handover.", "srcLang": "vi", "tgtLang": "en" },
+  { "src": "Giá này đã bao gồm phí vận chuyển chưa?", "ref": "Does this price already include the shipping fee?", "srcLang": "vi", "tgtLang": "en" },
+  { "src": "Tôi sẽ gửi báo giá cập nhật vào ngày mai.", "ref": "I'll send the updated quotation tomorrow.", "srcLang": "vi", "tgtLang": "en" },
+  { "src": "Chúng tôi đề xuất giảm giá năm phần trăm cho đơn hàng lớn.", "ref": "We propose a five percent discount for large orders.", "srcLang": "vi", "tgtLang": "en" },
+  { "src": "Tiến độ dự án đang chậm hơn kế hoạch.", "ref": "The project is running behind schedule.", "srcLang": "vi", "tgtLang": "en" },
+  { "src": "Anh vui lòng xác nhận lại thời gian giao hàng.", "ref": "Please confirm the delivery time again.", "srcLang": "vi", "tgtLang": "en" },
+  { "src": "Hai bên cần thống nhất về điều khoản bảo hành.", "ref": "Both sides need to agree on the warranty terms.", "srcLang": "vi", "tgtLang": "en" },
+  { "src": "Ngân sách năm nay bị cắt giảm đáng kể.", "ref": "This year's budget has been cut significantly.", "srcLang": "vi", "tgtLang": "en" },
+  { "src": "Chúng ta sẽ họp lại vào sáng thứ Hai để chốt hợp đồng.", "ref": "We'll meet again on Monday morning to finalize the contract.", "srcLang": "vi", "tgtLang": "en" },
+  { "src": "Đội kỹ thuật cần thêm hai tuần để hoàn thiện.", "ref": "The technical team needs two more weeks to finish.", "srcLang": "vi", "tgtLang": "en" },
+  { "src": "Cảm ơn anh đã dành thời gian cho buổi họp hôm nay.", "ref": "Thank you for taking the time for today's meeting.", "srcLang": "vi", "tgtLang": "en" }
+]
