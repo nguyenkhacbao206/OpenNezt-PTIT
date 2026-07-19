@@ -42,20 +42,42 @@ npm run dev            # DESKTOP_DEV=1 → backend spawn bằng `python -m uvico
 Mở app trên 2 máy cùng WiFi → mỗi máy tự thấy máy kia trong danh sách (qua
 `window.desktop.onDevices`).
 
-## Đóng gói PROD (.exe)
+## Đóng gói PROD (.zip)
 
-1. **Đóng gói backend** thành exe (PyInstaller) và đặt vào `desktop/resources/backend/`:
-   ```bash
-   cd ../backend
-   pyinstaller --onefile --name opennezt-backend run_server.py   # (script gọi uvicorn)
-   # copy dist/opennezt-backend.exe  ->  ../desktop/resources/backend/
-   # kèm cả thư mục models/ (NLLB, Whisper, Piper) cạnh exe hoặc trỏ path qua env
-   ```
-2. **Export UI**: `npm run build:web`
-3. **Build app**: `npm run dist` → ra installer trong `desktop/dist/`.
+Quy trình thực tế đang dùng — 4 bước. Chi tiết đầy đủ + lý do ở
+`../HUONG_DAN_DEPLOY.md` (mục "Đóng gói app Desktop"). Tóm tắt:
 
-> Lưu ý model offline nặng (~1.5–3GB). Cân nhắc đặt models/ làm extraResources
-> hoặc cho tải lần đầu.
+**1. Build backend exe** (PyInstaller, **spec file**, **system Python 3.10** — KHÔNG
+phải venv, KHÔNG `--onefile`):
+```powershell
+Set-Location ..\backend
+$py = "C:\Users\admin\AppData\Local\Microsoft\WindowsApps\python.exe"
+& $py -m PyInstaller --noconfirm --clean opennezt-backend.spec
+```
+→ ra `backend/dist/opennezt-backend/` (gồm `opennezt-backend.exe` **+ thư mục
+`_internal/`** — bản onedir, phải copy CẢ HAI).
+
+**2. Copy exe + `_internal` vào `resources/backend/`** (GIỮ nguyên `resources/backend/models/`):
+```powershell
+$src="..\backend\dist\opennezt-backend"; $dst=".\resources\backend"
+Copy-Item "$src\opennezt-backend.exe" "$dst\" -Force
+robocopy "$src\_internal" "$dst\_internal" /MIR
+```
+
+**3. Export UI**: `npm run build:web`  → `desktop/web-dist/`
+
+**4. Bump version trong `package.json`** rồi **build app**: `npm run dist`
+→ ra `desktop/dist/OpenNezt-<version>-win.zip`.
+
+> **Target là `zip`, KHÔNG phải nsis.** Payload (app + model ~5GB) vượt giới hạn
+> ~4GB của NSIS one-click → installer sinh ra bị hỏng (chỉ ~30MB). `zip` xử lý được.
+> Xem `package.json` → `build.win.target = "zip"`.
+>
+> Model offline nằm trong `resources/backend/models/` (khai báo `extraResources`),
+> gồm nllb-200, phowhisper-large-ct2, whisper-small (EN), tts. Backend chạy STT
+> **phowhisper** theo mặc định frozen trong `backend/run_server.py`.
+>
+> **Phân phối:** giải nén zip rồi chạy `OpenNezt.exe` (portable, không cần cài).
 
 ## Việc còn lại (wire UI)
 
