@@ -107,6 +107,12 @@ export interface TranslatorSlice {
   hydrateSettings: () => Promise<void>;
   setWsUrl: (url: string) => void;
   setLangs: (src: Lang, dst: Lang) => void;
+  /**
+   * Đổi ngôn ngữ CỦA MÌNH khi đang ở lobby (chọn nhầm ở màn đầu). Cập nhật
+   * srcLang/dstLang, lưu lại, và gửi lại `hello` để backend rebroadcast lobby —
+   * các máy khác tự thấy ngôn ngữ mới, không cần reload. Bỏ qua khi đã vào phòng.
+   */
+  changeLang: (src: Lang) => void;
   setTranslatorMode: (mode: TranslatorMode) => void;
   setTtsOn: (on: boolean) => void;
   setMyName: (name: string) => void;
@@ -461,6 +467,18 @@ export const createTranslatorSlice: StateCreator<RootStore, [], [], TranslatorSl
       set({ srcLang: src, dstLang: dst, _direction: null });
       const s = get();
       persist({ wsUrl: s.wsUrl, srcLang: src, dstLang: dst, ttsOn: s.ttsOn });
+    },
+    changeLang: (src) => {
+      // Đang trong phòng thì không cho đổi (cần re-start cả hai phiên — ngoài luồng lobby).
+      if (get().room) return;
+      const dst: Lang = src === 'vi' ? 'en' : 'vi';
+      set({ srcLang: src, dstLang: dst, _direction: null });
+      const s = get();
+      persist({ wsUrl: s.wsUrl, srcLang: src, dstLang: dst, ttsOn: s.ttsOn });
+      // Gửi lại hello để backend cập nhật registry + rebroadcast lobby cho máy khác.
+      if (s._socket?.isOpen) {
+        s._socket.send({ type: 'hello', data: { name: s.myName, lang: src } });
+      }
     },
     setTranslatorMode: (mode) => {
       set({ translatorMode: mode, _direction: null });

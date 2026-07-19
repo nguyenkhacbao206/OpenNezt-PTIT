@@ -64,6 +64,27 @@ class ConnectionManager:
         log.info("Client unregistered id=%s", client_id)
         await self.broadcast_lobby()
 
+    def update_identity(
+        self, client_id: str | None, name: str | None, lang: str | None
+    ) -> bool:
+        """Update a registered client's display name and/or language in place.
+
+        Used when a device re-sends `hello` to CHANGE its pick (e.g. it chose the
+        wrong language). Returns True if the client existed and was updated. A
+        no-op (returns False) for an unknown/unregistered client. Does NOT touch
+        a client already in a room — changing language mid-room would need both
+        sessions re-started, which the lobby flow never does.
+        """
+        c = self._clients.get(client_id) if client_id else None
+        if c is None or c.room_id is not None:
+            return False
+        if name:
+            c.name = name
+        if lang:
+            c.lang = lang
+        log.info("Client %s identity updated name=%s lang=%s", client_id, c.name, c.lang)
+        return True
+
     def client(self, client_id: str | None) -> Client | None:
         return self._clients.get(client_id) if client_id else None
 
