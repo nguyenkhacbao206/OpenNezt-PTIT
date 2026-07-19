@@ -288,19 +288,26 @@ async def _on_audio_partial(
     try:
         # Transcribe the window; take its final hypothesis as the text-so-far.
         window_text: str | None = None
-        async for result in session.providers.stt.transcribe(audio, session.source_lang):
-            if result.is_final:
-                window_text = result.text
+        with Stopwatch() as sw_stt_p:
+            async for result in session.providers.stt.transcribe(audio, session.source_lang):
+                if result.is_final:
+                    window_text = result.text
         if not window_text or not window_text.strip():
             return
 
         # STT of what I said → back to me; translation preview → to my peer.
         await send(ws, "stt.partial", {"speaker": speaker, "text": window_text})
 
-        dst_text = await session.providers.nmt.translate_partial(
-            window_text, session.source_lang, session.target_lang
-        )
+        with Stopwatch() as sw_p:
+            dst_text = await session.providers.nmt.translate_partial(
+                window_text, session.source_lang, session.target_lang
+            )
         dst_text = apply_glossary(dst_text, session.glossary_id)
+        # [LATENCY] partial path: "first text on screen as you speak".
+        log.info(
+            "[LATENCY][partial] speaker=%s audioBytes=%d partialSttMs=%.0f partialNmtMs=%.0f -> nmt.partial emitted",
+            speaker, len(audio), sw_stt_p.ms, sw_p.ms,
+        )
         await _emit(ws, session, manager, "nmt.partial", {
             "speaker": speaker,
             "srcText": window_text,
@@ -378,6 +385,8 @@ async def _on_audio_chunk(
 
     speaker = data.get("speaker", "unknown")
     metrics = TurnMetrics()  # starts the end-to-end clock
+    # [LATENCY] t0 = moment the FINAL segment arrives (~when you stop speaking).
+    log.info("[LATENCY][turn] speaker=%s audio.chunk received -> starting STT/NMT/TTS", speaker)
 
     # Decode audio (base64 -> bytes). Content is unused by the mock providers.
     try:
@@ -406,6 +415,7 @@ async def _on_audio_chunk(
                 elif result.text.strip():
                     await send(ws, "stt.partial", {"speaker": speaker, "text": result.text})
         metrics.stt_ms = sw_stt.ms
+        log.info("[LATENCY][turn] speaker=%s STT done sttMs=%.0f", speaker, sw_stt.ms)
     except Exception as exc:  # noqa: BLE001 - keep the server alive on any provider failure
         await send_error(ws, "stt_failed", f"STT provider failed: {exc}")
         return
@@ -429,6 +439,7 @@ async def _on_audio_chunk(
             )
         dst_text = apply_glossary(dst_text, session.glossary_id)
         metrics.nmt_ms = sw_nmt.ms
+        log.info("[LATENCY][turn] speaker=%s NMT done nmtMs=%.0f", speaker, sw_nmt.ms)
         # Translation goes to the listener (peer) in a room; self on console.
         await _emit_translation(ws, session, manager, speaker, source_text, dst_text)
     except Exception as exc:  # noqa: BLE001
@@ -440,9 +451,11 @@ async def _on_audio_chunk(
     # ---- TTS (optional) — audio từng cụm, phát cuốn chiếu ----------------
     if session.tts_on:
         try:
-            audio_b64 = await session.providers.tts.synthesize(
-                dst_text, session.target_lang
-            )
+            with Stopwatch() as sw_tts:
+                audio_b64 = await session.providers.tts.synthesize(
+                    dst_text, session.target_lang
+                )
+            log.info("[LATENCY][turn] speaker=%s TTS done ttsMs=%.0f", speaker, sw_tts.ms)
             await _emit(ws, session, manager, "tts.audio", {
                 "speaker": speaker, "audio": audio_b64,
             }, to_peer=True)
@@ -451,4 +464,10 @@ async def _on_audio_chunk(
 
     # ---- Metrics ---------------------------------------------------------
     metrics.finish()
+    # [LATENCY] e2eMs = you stop speaking -> peer's translation+audio emitted.
+    log.info(
+        "[LATENCY][turn] speaker=%s DONE e2eMs=%.0f (sttMs=%.0f nmtMs=%.0f tts=%s) -> peer hears it",
+        speaker, metrics.e2e_ms, metrics.stt_ms, metrics.nmt_ms,
+        "on" if session.tts_on else "off",
+    )
     await send(ws, "metrics", metrics.as_event())
