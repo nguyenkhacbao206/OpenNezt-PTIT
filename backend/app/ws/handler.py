@@ -151,6 +151,11 @@ async def _on_hello(
     session.source_lang = lang
     if session.client_id is None:
         session.client_id = manager.register(ws, session, name, lang)
+    else:
+        # Re-`hello` on an existing connection = the device is CHANGING its pick
+        # (e.g. it selected the wrong language). Update the registry so the new
+        # language propagates to every other device via the lobby rebroadcast.
+        manager.update_identity(session.client_id, name, lang)
     await send(ws, "welcome", {"clientId": session.client_id})
     await manager.broadcast_lobby()
 

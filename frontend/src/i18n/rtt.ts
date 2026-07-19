@@ -50,6 +50,7 @@ export interface RttDict {
   demo2: {
     otherDevices: (n: number) => string;
     yourDevice: (label: string) => string;
+    changeLangHint: string;
     availableHead: string;
     searching: string;
     notConnected: string;
@@ -170,6 +171,7 @@ export const rttText: Record<UiLang, RttDict> = {
     demo2: {
       otherDevices: (n) => `${n} thiết bị khác`,
       yourDevice: (label) => `Thiết bị của bạn · ${label}`,
+      changeLangHint: 'Chọn nhầm? Bấm VI/EN để đổi ngôn ngữ của bạn — máy khác sẽ tự cập nhật.',
       availableHead: 'Thiết bị khả dụng',
       searching: 'Đang tìm thiết bị…',
       notConnected: 'Chưa kết nối',
@@ -290,6 +292,7 @@ export const rttText: Record<UiLang, RttDict> = {
     demo2: {
       otherDevices: (n) => `${n} other devices`,
       yourDevice: (label) => `Your device · ${label}`,
+      changeLangHint: 'Picked the wrong one? Tap VI/EN to change your language — other devices update automatically.',
       availableHead: 'Available devices',
       searching: 'Searching for devices…',
       notConnected: 'Not connected',

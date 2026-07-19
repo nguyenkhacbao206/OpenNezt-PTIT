@@ -43,6 +43,7 @@ export function Demo2Devices({ navigation }: RttStackScreenProps<'Devices'>) {
   const wsUrl = useStore((s) => s.wsUrl);
   const setWsUrl = useStore((s) => s.setWsUrl);
   const enterLobby = useStore((s) => s.enterLobby);
+  const changeLang = useStore((s) => s.changeLang);
 
   // --- Discovery LAN (chỉ trong vỏ Electron desktop) ---
   const desktop = isDesktop();
@@ -120,8 +121,30 @@ export function Demo2Devices({ navigation }: RttStackScreenProps<'Devices'>) {
             </View>
           </View>
           <View className="flex-row items-center gap-2.5">
-            <View className="rounded-full border border-tp-accent bg-tp-surface px-2.5 py-1">
-              <Text className="text-xs font-semibold text-tp-accent">{srcLang.toUpperCase()}</Text>
+            {/* Đổi ngôn ngữ của mình (khi lỡ chọn nhầm ở màn đầu). Bấm mã ngôn ngữ
+                để chuyển; máy khác trong lobby tự cập nhật, không cần reload. */}
+            <View className="flex-row items-center gap-1.5">
+              {(['vi', 'en'] as const).map((code) => {
+                const active = srcLang === code;
+                const disabled = active || status !== 'connected' || pendingInviteTo !== null;
+                return (
+                  <Pressable
+                    key={code}
+                    onPress={() => changeLang(code)}
+                    disabled={disabled}
+                    className={`rounded-full border px-2.5 py-1 ${active ? 'border-tp-accent bg-tp-accent' : 'border-tp-border bg-tp-surface'
+                      }`}
+                    style={{ opacity: !active && (status !== 'connected' || pendingInviteTo !== null) ? 0.4 : 1 }}
+                  >
+                    <Text
+                      className="text-xs font-semibold"
+                      style={{ color: active ? TP.black : TP.text2 }}
+                    >
+                      {code.toUpperCase()}
+                    </Text>
+                  </Pressable>
+                );
+              })}
             </View>
             <View
               className="h-[9px] w-[9px] rounded-full"
@@ -129,6 +152,7 @@ export function Demo2Devices({ navigation }: RttStackScreenProps<'Devices'>) {
             />
           </View>
         </View>
+        <Text className="-mt-2 px-1 text-[11px] text-tp-muted">{t.demo2.changeLangHint}</Text>
 
         {!!translatorError && (
           <View className="rounded-xl border px-4 py-3" style={{ borderColor: '#5a2a2e', backgroundColor: '#2a1518' }}>
