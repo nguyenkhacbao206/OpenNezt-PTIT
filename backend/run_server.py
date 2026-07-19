@@ -9,7 +9,8 @@ Layout khi đóng gói:
         opennezt-backend.exe
         models/
             nllb-200-distilled-600M-ct2-int8/   (NMT)
-            whisper-small/                       (STT, CT2 faster-whisper)
+            phowhisper-large-ct2/                (STT VI, PhoWhisper CT2)
+            whisper-small/                       (STT EN, CT2 faster-whisper)
             tts/vi , tts/en                      (Piper voices)
 """
 from __future__ import annotations
@@ -36,10 +37,16 @@ def _apply_offline_defaults() -> None:
     models = os.path.join(_base_dir(), "models")
     defaults = {
         "DEFAULT_MODE": "offline",
-        "STT_ENGINE": "whisper",
+        # PhoWhisper (VinAI) for VI + standard Whisper for EN.
+        "STT_ENGINE": "phowhisper",
         "TTS_ENGINE": "piper",
         "OFFLINE_NMT_MODEL_DIR": os.path.join(models, "nllb-200-distilled-600M-ct2-int8"),
         "OFFLINE_STT_MODEL_DIR": os.path.join(models, "whisper-small"),
+        # PhoWhisper VI model (CT2) shipped next to the exe.
+        "PHOWHISPER_MODEL_DIR": os.path.join(models, "phowhisper-large-ct2"),
+        # EN half of phowhisper: reuse the local whisper-small CT2 dir (offline,
+        # no HuggingFace download at runtime).
+        "WHISPER_EN_MODEL": os.path.join(models, "whisper-small"),
         "PIPER_MODELS_DIR": os.path.join(models, "tts"),
     }
     for key, value in defaults.items():

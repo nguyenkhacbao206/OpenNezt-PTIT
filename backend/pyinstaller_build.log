@@ -1,26 +1,27 @@
-﻿python.exe : 98 INFO: PyInstaller: 6.20.0, contrib hooks: 2026.5
-At line:1 char:354
-+ ... _server.py; & "C:\Users\admin\AppData\Local\Microsoft\WindowsApps\pyt ...
+﻿python.exe : 704 INFO: PyInstaller: 6.20.0, contrib hooks: 2026.5
+At line:1 char:419
++ ... ython.exe"; & $py -m PyInstaller --noconfirm --clean opennezt-backend ...
 +                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    + CategoryInfo          : NotSpecified: (98 INFO: PyInst...b hooks: 2026.5:String) [], RemoteException
+    + CategoryInfo          : NotSpecified: (704 INFO: PyIns...b hooks: 2026.5:String) [], RemoteException
     + FullyQualifiedErrorId : NativeCommandError
  
-98 INFO: Python: 3.10.11
-107 INFO: Platform: Windows-10-10.0.26200-SP0
-107 INFO: Python environment: C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.10_3.10.3056.0_x64__qbz5n2kfra8p0
+704 INFO: Python: 3.10.11
+716 INFO: Platform: Windows-10-10.0.26200-SP0
+716 INFO: Python environment: C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.10_3.10.3056.0_x64__qbz5n2kfra8p0
+723 INFO: Removing temporary files and cleaning cache in C:\Users\admin\AppData\Local\pyinstaller
 [transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can 
 be used.
 [transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can 
 be used.
-164 WARNING: Failed to collect submodules for 'onnxruntime.tools' because importing 'onnxruntime.tools' raised: 
+290 WARNING: Failed to collect submodules for 'onnxruntime.tools' because importing 'onnxruntime.tools' raised: 
 AttributeError: module 'torch' has no attribute 'nn'
 [transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can 
 be used.
 [transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can 
 be used.
-2025 WARNING: Failed to collect submodules for 'transformers.models.esm.openfold_utils' because importing 
+4774 WARNING: Failed to collect submodules for 'transformers.models.esm.openfold_utils' because importing 
 'transformers.models.esm.openfold_utils' raised: ModuleNotFoundError: No module named 'torch.nn'
-9197 INFO: Module search paths (PYTHONPATH):
+20119 INFO: Module search paths (PYTHONPATH):
 ['D:\\VAIC\\OpenNezt-PTIT\\backend',
  'C:\\Program '
  'Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.10_3.10.3056.0_x64__qbz5n2kfra8p0\\python310.zip',
@@ -44,199 +45,199 @@ ython310\\site-packages\\Pythonwin',
  'D:\\VAIC\\OpenNezt-PTIT\\backend']
 pygame 2.6.1 (SDL 2.28.4, Python 3.10.11)
 Hello from the pygame community. https://www.pygame.org/contribute.html
-10079 INFO: Appending 'binaries' from .spec
-10079 INFO: Appending 'datas' from .spec
-10287 INFO: checking Analysis
-10399 INFO: Building because hiddenimports changed
-10399 INFO: Looking for Python shared library...
-10399 INFO: Using Python shared library: C:\Program 
+21514 INFO: Appending 'binaries' from .spec
+21514 INFO: Appending 'datas' from .spec
+21786 INFO: checking Analysis
+21786 INFO: Building Analysis because Analysis-00.toc is non existent
+21786 INFO: Looking for Python shared library...
+21786 INFO: Using Python shared library: C:\Program 
 Files\WindowsApps\PythonSoftwareFoundation.Python.3.10_3.10.3056.0_x64__qbz5n2kfra8p0\python310.dll
-10399 INFO: Running Analysis Analysis-00.toc
-10399 INFO: Target bytecode optimization level: 0
-10399 INFO: Initializing module dependency graph...
-10413 INFO: Initializing module graph hook caches...
-10503 INFO: Analyzing modules for base_library.zip ...
-11010 INFO: Processing standard module hook 'hook-heapq.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFou
-ndation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks'
-11173 INFO: Processing standard module hook 'hook-encodings.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwar
+21786 INFO: Running Analysis Analysis-00.toc
+21786 INFO: Target bytecode optimization level: 0
+21786 INFO: Initializing module dependency graph...
+21792 INFO: Initializing module graph hook caches...
+21867 INFO: Analyzing modules for base_library.zip ...
+22395 INFO: Processing standard module hook 'hook-encodings.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwar
 eFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks'
-11850 INFO: Processing standard module hook 'hook-pickle.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFo
+22768 INFO: Processing standard module hook 'hook-heapq.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFou
+ndation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks'
+22993 INFO: Processing standard module hook 'hook-pickle.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFo
 undation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks'
-12483 INFO: Caching module dependency graph...
-12515 INFO: Analyzing D:\VAIC\OpenNezt-PTIT\backend\run_server.py
-12525 INFO: Processing standard module hook 'hook-uvicorn.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareF
+24134 INFO: Caching module dependency graph...
+24161 INFO: Analyzing D:\VAIC\OpenNezt-PTIT\backend\run_server.py
+24172 INFO: Processing standard module hook 'hook-uvicorn.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareF
 oundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks
 '
-12884 INFO: Processing standard module hook 'hook-multiprocessing.util.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\Py
+24573 INFO: Processing standard module hook 'hook-multiprocessing.util.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\Py
 thonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks'
-12981 INFO: Processing standard module hook 'hook-xml.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFound
+24688 INFO: Processing standard module hook 'hook-xml.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFound
 ation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks'
-13099 INFO: Processing standard module hook 'hook-_ctypes.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareF
+24818 INFO: Processing standard module hook 'hook-_ctypes.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareF
 oundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks'
-13576 INFO: Processing standard module hook 'hook-platform.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftware
+25330 INFO: Processing standard module hook 'hook-platform.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftware
 Foundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks'
-13618 INFO: Processing pre-safe-import-module hook 'hook-typing_extensions.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages
+25385 INFO: Processing pre-safe-import-module hook 'hook-typing_extensions.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages
 \\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks\
 \pre_safe_import_module'
-13630 INFO: SetuptoolsInfo: initializing cached setuptools info...
-14717 INFO: Processing standard module hook 'hook-difflib.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareF
+25394 INFO: SetuptoolsInfo: initializing cached setuptools info...
+26533 INFO: Processing standard module hook 'hook-difflib.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareF
 oundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks'
-15000 INFO: Processing standard module hook 'hook-IPython.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareF
+26862 INFO: Processing standard module hook 'hook-IPython.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareF
 oundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks
 '
-18452 INFO: Processing standard module hook 'hook-xml.dom.domreg.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSo
+30661 INFO: Processing standard module hook 'hook-xml.dom.domreg.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSo
 ftwareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks'
-18581 INFO: Processing standard module hook 'hook-matplotlib.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwa
+30799 INFO: Processing standard module hook 'hook-matplotlib.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwa
 reFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks'
-19221 INFO: Processing pre-safe-import-module hook 'hook-packaging.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\Python
+31336 INFO: Processing pre-safe-import-module hook 'hook-packaging.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\Python
 SoftwareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks\\pre_saf
 e_import_module'
-19329 INFO: Processing standard module hook 'hook-numpy.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFou
+31436 INFO: Processing standard module hook 'hook-numpy.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFou
 ndation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks'
-19805 INFO: Processing standard module hook 'hook-sysconfig.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwar
+32003 INFO: Processing standard module hook 'hook-sysconfig.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwar
 eFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks'
-20879 INFO: Processing standard module hook 'hook-psutil.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFo
+33179 INFO: Processing standard module hook 'hook-psutil.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFo
 undation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
-22082 INFO: Processing standard module hook 'hook-charset_normalizer.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\Pyth
+34566 INFO: Processing standard module hook 'hook-charset_normalizer.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\Pyth
 onSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\_pyinstaller_hooks_contri
 b\\stdhooks'
-22507 INFO: Processing pre-safe-import-module hook 'hook-gi.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwar
+35087 INFO: Processing pre-safe-import-module hook 'hook-gi.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwar
 eFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks\\pre_safe_impor
 t_module'
-22665 INFO: Processing standard module hook 'hook-matplotlib.backend_bases.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages
+35261 INFO: Processing standard module hook 'hook-matplotlib.backend_bases.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages
 \\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks'
-22782 INFO: Processing standard module hook 'hook-PIL.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFound
+35398 INFO: Processing standard module hook 'hook-PIL.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFound
 ation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks'
-22845 INFO: Processing standard module hook 'hook-PIL.Image.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwar
+35457 INFO: Processing standard module hook 'hook-PIL.Image.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwar
 eFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks'
-23147 INFO: Processing standard module hook 'hook-xml.etree.cElementTree.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\
+35811 INFO: Processing standard module hook 'hook-xml.etree.cElementTree.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\
 PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks'
-23175 INFO: Processing standard module hook 'hook-PIL.ImageFilter.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonS
+35852 INFO: Processing standard module hook 'hook-PIL.ImageFilter.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonS
 oftwareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks'
-23984 INFO: Processing standard module hook 'hook-jinja2.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFo
+36755 INFO: Processing standard module hook 'hook-jinja2.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFo
 undation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
-24517 INFO: Processing standard module hook 'hook-matplotlib.backends.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\Pyt
+37275 INFO: Processing standard module hook 'hook-matplotlib.backends.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\Pyt
 honSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks'
-24625 INFO: Processing standard module hook 'hook-matplotlib.pyplot.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\Pytho
+37352 INFO: Processing standard module hook 'hook-matplotlib.pyplot.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\Pytho
 nSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks'
-25515 INFO: Processing standard module hook 'hook-dateutil.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftware
+38294 INFO: Processing standard module hook 'hook-dateutil.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftware
 Foundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\_pyinstaller_hooks_contrib\\stdhook
 s'
-25594 INFO: Processing pre-safe-import-module hook 'hook-six.moves.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\Python
+38453 INFO: Processing pre-safe-import-module hook 'hook-six.moves.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\Python
 SoftwareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks\\pre_saf
 e_import_module'
-27403 INFO: Processing standard module hook 'hook-certifi.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareF
+40433 INFO: Processing standard module hook 'hook-certifi.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareF
 oundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks
 '
-27485 INFO: Processing standard module hook 'hook-pygments.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftware
+40519 INFO: Processing standard module hook 'hook-pygments.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftware
 Foundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks'
-29443 INFO: Processing standard module hook 'hook-wcwidth.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareF
+42846 INFO: Processing standard module hook 'hook-wcwidth.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareF
 oundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks'
-29535 INFO: Processing pre-safe-import-module hook 'hook-backports.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\Python
+43008 INFO: Processing pre-safe-import-module hook 'hook-backports.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\Python
 SoftwareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks\\pre_saf
 e_import_module'
-29544 INFO: Setuptools: 'backports' appears to be a full setuptools-vendored copy - creating alias to 
+43022 INFO: Setuptools: 'backports' appears to be a full setuptools-vendored copy - creating alias to 
 'setuptools._vendor.backports'!
-29580 INFO: Processing standard module hook 'hook-setuptools.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwa
+43037 INFO: Processing standard module hook 'hook-setuptools.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwa
 reFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks'
-29587 INFO: Processing pre-safe-import-module hook 'hook-distutils.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\Python
+43095 INFO: Processing pre-safe-import-module hook 'hook-distutils.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\Python
 SoftwareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks\\pre_saf
 e_import_module'
-29598 INFO: Processing pre-find-module-path hook 'hook-distutils.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSo
+43104 INFO: Processing pre-find-module-path hook 'hook-distutils.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSo
 ftwareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks\\pre_find_
 module_path'
-29840 INFO: Processing standard module hook 'hook-distutils.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwar
+43342 INFO: Processing standard module hook 'hook-distutils.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwar
 eFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks'
-29856 INFO: Processing standard module hook 'hook-distutils.util.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSo
+43370 INFO: Processing standard module hook 'hook-distutils.util.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSo
 ftwareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks'
-29871 INFO: Processing standard module hook 'hook-_osx_support.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoft
+43397 INFO: Processing standard module hook 'hook-_osx_support.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoft
 wareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks'
-30018 INFO: Processing pre-safe-import-module hook 'hook-jaraco.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSof
+43570 INFO: Processing pre-safe-import-module hook 'hook-jaraco.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSof
 twareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks\\pre_safe_i
 mport_module'
-30032 INFO: Setuptools: 'jaraco' appears to be a full setuptools-vendored copy - creating alias to 'setuptools._vendor.jaraco'!
-30036 INFO: Processing standard module hook 'hook-setuptools._vendor.jaraco.text.py' from 'C:\\Users\\admin\\AppData\\Local\\Pa
+43584 INFO: Setuptools: 'jaraco' appears to be a full setuptools-vendored copy - creating alias to 'setuptools._vendor.jaraco'!
+43598 INFO: Processing standard module hook 'hook-setuptools._vendor.jaraco.text.py' from 'C:\\Users\\admin\\AppData\\Local\\Pa
 ckages\\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\
 hooks'
-30043 INFO: Processing pre-safe-import-module hook 'hook-importlib_resources.py' from 'C:\\Users\\admin\\AppData\\Local\\Packag
+43600 INFO: Processing pre-safe-import-module hook 'hook-importlib_resources.py' from 'C:\\Users\\admin\\AppData\\Local\\Packag
 es\\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hook
 s\\pre_safe_import_module'
-30126 INFO: Processing pre-safe-import-module hook 'hook-more_itertools.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\P
+43760 INFO: Processing pre-safe-import-module hook 'hook-more_itertools.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\P
 ythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks\\pr
 e_safe_import_module'
-30133 INFO: Setuptools: 'more_itertools' appears to be a setuptools-vendored copy - creating alias to 
+43768 INFO: Setuptools: 'more_itertools' appears to be a setuptools-vendored copy - creating alias to 
 'setuptools._vendor.more_itertools'!
-30329 INFO: Processing pre-safe-import-module hook 'hook-tomli.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoft
+44170 INFO: Processing pre-safe-import-module hook 'hook-tomli.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoft
 wareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks\\pre_safe_im
 port_module'
-30329 INFO: Setuptools: 'tomli' appears to be a setuptools-vendored copy - creating alias to 'setuptools._vendor.tomli'!
-30617 INFO: Processing pre-safe-import-module hook 'hook-wheel.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoft
+44177 INFO: Setuptools: 'tomli' appears to be a setuptools-vendored copy - creating alias to 'setuptools._vendor.tomli'!
+44853 INFO: Processing pre-safe-import-module hook 'hook-wheel.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoft
 wareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks\\pre_safe_im
 port_module'
-30624 INFO: Setuptools: 'wheel' appears to be a setuptools-vendored copy - creating alias to 'setuptools._vendor.wheel'!
-31793 INFO: Processing standard module hook 'hook-jedi.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFoun
+44859 INFO: Setuptools: 'wheel' appears to be a setuptools-vendored copy - creating alias to 'setuptools._vendor.wheel'!
+46231 INFO: Processing standard module hook 'hook-jedi.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFoun
 dation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
-32986 INFO: Processing standard module hook 'hook-parso.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFou
+47454 INFO: Processing standard module hook 'hook-parso.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFou
 ndation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
-34165 INFO: Processing standard module hook 'hook-pkg_resources.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSof
+48944 INFO: Processing standard module hook 'hook-pkg_resources.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSof
 twareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks'
-34637 INFO: Processing standard module hook 'hook-sqlite3.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareF
+49452 INFO: Processing standard module hook 'hook-sqlite3.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareF
 oundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks'
-35418 INFO: Processing standard module hook 'hook-zmq.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFound
+50321 INFO: Processing standard module hook 'hook-zmq.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFound
 ation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
-36041 INFO: Processing standard module hook 'hook-pycparser.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwar
+50997 INFO: Processing standard module hook 'hook-pycparser.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwar
 eFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\_pyinstaller_hooks_contrib\\stdhoo
 ks'
-36780 INFO: Processing pre-safe-import-module hook 'hook-platformdirs.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\Pyt
+51863 INFO: Processing pre-safe-import-module hook 'hook-platformdirs.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\Pyt
 honSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks\\pre_
 safe_import_module'
-36796 INFO: Processing standard module hook 'hook-platformdirs.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoft
+51893 INFO: Processing standard module hook 'hook-platformdirs.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoft
 wareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\_pyinstaller_hooks_contrib\\std
 hooks'
-36964 INFO: Processing pre-safe-import-module hook 'hook-importlib_metadata.py' from 'C:\\Users\\admin\\AppData\\Local\\Package
+52105 INFO: Processing pre-safe-import-module hook 'hook-importlib_metadata.py' from 'C:\\Users\\admin\\AppData\\Local\\Package
 s\\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks
 \\pre_safe_import_module'
-36966 INFO: Setuptools: 'importlib_metadata' appears to be a setuptools-vendored copy - creating alias to 
+52111 INFO: Setuptools: 'importlib_metadata' appears to be a setuptools-vendored copy - creating alias to 
 'setuptools._vendor.importlib_metadata'!
-36979 INFO: Processing standard module hook 'hook-setuptools._vendor.importlib_metadata.py' from 'C:\\Users\\admin\\AppData\\Lo
+52137 INFO: Processing standard module hook 'hook-setuptools._vendor.importlib_metadata.py' from 'C:\\Users\\admin\\AppData\\Lo
 cal\\Packages\\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInst
 aller\\hooks'
-36997 INFO: Processing pre-safe-import-module hook 'hook-zipp.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftw
+52225 INFO: Processing pre-safe-import-module hook 'hook-zipp.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftw
 areFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks\\pre_safe_imp
 ort_module'
-37001 INFO: Setuptools: 'zipp' appears to be a setuptools-vendored copy - creating alias to 'setuptools._vendor.zipp'!
-37256 INFO: Processing pre-find-module-path hook 'hook-tkinter.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoft
+52231 INFO: Setuptools: 'zipp' appears to be a setuptools-vendored copy - creating alias to 'setuptools._vendor.zipp'!
+52595 INFO: Processing pre-find-module-path hook 'hook-tkinter.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoft
 wareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks\\pre_find_mo
 dule_path'
-37271 INFO: TclTkInfo: initializing cached Tcl/Tk info...
-37666 INFO: Processing standard module hook 'hook-_tkinter.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftware
+52605 INFO: TclTkInfo: initializing cached Tcl/Tk info...
+53033 INFO: Processing standard module hook 'hook-_tkinter.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftware
 Foundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks'
-38267 INFO: Processing standard module hook 'hook-websockets.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwa
+53777 INFO: Processing standard module hook 'hook-websockets.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwa
 reFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\_pyinstaller_hooks_contrib\\stdho
 oks'
-39192 INFO: Processing standard module hook 'hook-cryptography.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoft
+54849 INFO: Processing standard module hook 'hook-cryptography.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoft
 wareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\_pyinstaller_hooks_contrib\\std
 hooks'
-40623 INFO: hook-cryptography: cryptography does not seem to be using dynamically linked OpenSSL.
-41469 INFO: Processing standard module hook 'hook-anyio.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFou
+56377 INFO: hook-cryptography: cryptography does not seem to be using dynamically linked OpenSSL.
+57418 INFO: Processing standard module hook 'hook-anyio.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFou
 ndation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
-42643 INFO: Processing standard module hook 'hook-pydantic.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftware
+58647 INFO: Processing standard module hook 'hook-pydantic.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftware
 Foundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\_pyinstaller_hooks_contrib\\stdhook
 s'
 C:\Users\admin\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\si
 te-packages\pydantic\experimental\__init__.py:7: PydanticExperimentalWarning: This module is experimental, its contents are 
 subject to change and deprecation.
   warnings.warn(
-43328 INFO: Processing standard module hook 'hook-rich.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFoun
+59476 INFO: Processing standard module hook 'hook-rich.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFoun
 dation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
-45140 INFO: Processing standard module hook 'hook-zoneinfo.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftware
+61612 INFO: Processing standard module hook 'hook-zoneinfo.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftware
 Foundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\_pyinstaller_hooks_contrib\\stdhook
 s'
-47604 INFO: Processing standard module hook 'hook-av.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFounda
+64404 INFO: Processing standard module hook 'hook-av.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFounda
 tion.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
-48234 INFO: Processing standard module hook 'hook-torch.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFou
+65091 INFO: Processing standard module hook 'hook-torch.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFou
 ndation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
-48472 WARNING: hook-torch: failed to collect MKL DLLs!
+65310 WARNING: hook-torch: failed to collect MKL DLLs!
 Traceback (most recent call last):
   File "C:\Users\admin\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Pyth
 on310\site-packages\_pyinstaller_hooks_contrib\stdhooks\hook-torch.py", line 172, in <module>
@@ -253,539 +254,543 @@ Files\WindowsApps\PythonSoftwareFoundation.Python.3.10_3.10.3056.0_x64__qbz5n2kf
 line 548, in from_name
     raise PackageNotFoundError(name)
 importlib.metadata.PackageNotFoundError: No package metadata was found for torch
-48557 INFO: Processing pre-safe-import-module hook 'hook-tensorflow.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\Pytho
+65383 INFO: Processing pre-safe-import-module hook 'hook-tensorflow.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\Pytho
 nSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\_pyinstaller_hooks_contrib
 \\pre_safe_import_module'
-48890 INFO: Processing standard module hook 'hook-pandas.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFo
+65713 INFO: Processing standard module hook 'hook-pandas.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFo
 undation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks'
-51894 INFO: Processing standard module hook 'hook-pytz.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFoun
+68146 INFO: Processing standard module hook 'hook-pytz.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFoun
 dation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks'
-54294 INFO: Processing standard module hook 'hook-pandas.io.formats.style.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\
+70650 INFO: Processing standard module hook 'hook-pandas.io.formats.style.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\
 \PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks'
-55934 INFO: Processing standard module hook 'hook-pandas.plotting.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonS
+72475 INFO: Processing standard module hook 'hook-pandas.plotting.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonS
 oftwareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks'
-56932 INFO: Processing standard module hook 'hook-sqlalchemy.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwa
+73610 INFO: Processing standard module hook 'hook-sqlalchemy.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwa
 reFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks'
-60878 INFO: Processing standard module hook 'hook-pandas.io.clipboard.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\Pyt
+77940 INFO: Processing standard module hook 'hook-pandas.io.clipboard.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\Pyt
 honSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks'
-61160 INFO: Processing standard module hook 'hook-fsspec.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFo
+78247 INFO: Processing standard module hook 'hook-fsspec.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFo
 undation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
-61775 INFO: Processing standard module hook 'hook-lxml.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFoun
+78880 INFO: Processing standard module hook 'hook-lxml.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFoun
 dation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
-62168 INFO: Processing standard module hook 'hook-lxml.etree.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwa
+79176 INFO: Processing standard module hook 'hook-lxml.etree.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwa
 reFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\_pyinstaller_hooks_contrib\\stdho
 oks'
-65232 INFO: Processing standard module hook 'hook-transformers.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoft
+82658 INFO: Processing standard module hook 'hook-transformers.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoft
 wareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\_pyinstaller_hooks_contrib\\std
 hooks'
 [transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can 
 be used.
-66501 INFO: Processing standard module hook 'hook-regex.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFou
+84086 INFO: Processing standard module hook 'hook-regex.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFou
 ndation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
-68543 INFO: Processing standard module hook 'hook-soundfile.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwar
+85820 INFO: Processing standard module hook 'hook-soundfile.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwar
 eFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\_pyinstaller_hooks_contrib\\stdhoo
 ks'
-88880 INFO: Processing standard module hook 'hook-onnxruntime.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftw
-areFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\_pyinstaller_hooks_contrib\\stdh
-ooks'
-89199 INFO: Analyzing hidden import 'uvicorn.__main__'
-89205 INFO: Analyzing hidden import 'uvicorn.lifespan'
-89205 INFO: Analyzing hidden import 'uvicorn.lifespan.off'
-89213 INFO: Analyzing hidden import 'uvicorn.lifespan.on'
-89223 INFO: Analyzing hidden import 'uvicorn.loops'
-89223 INFO: Analyzing hidden import 'uvicorn.loops.asyncio'
-89229 INFO: Analyzing hidden import 'uvicorn.loops.auto'
-89245 INFO: Analyzing hidden import 'uvicorn.protocols.http.auto'
-89246 INFO: Analyzing hidden import 'uvicorn.protocols.websockets.auto'
-89263 INFO: Analyzing hidden import 'uvicorn.workers'
-89275 INFO: Analyzing hidden import 'faster_whisper.assets'
-89275 INFO: Analyzing hidden import 'ctranslate2.converters.eole_ct2'
-89286 INFO: Analyzing hidden import 'onnxruntime.capi.convert_npz_to_onnx_adapter'
-89294 INFO: Analyzing hidden import 'onnxruntime.datasets'
-89304 INFO: Analyzing hidden import 'onnxruntime.transformers.affinity_helper'
-89309 INFO: Analyzing hidden import 'onnxruntime.transformers.benchmark'
-89328 INFO: Analyzing hidden import 'onnxruntime.transformers.benchmark_helper'
-89474 INFO: Analyzing hidden import 'onnxruntime.transformers.bert_perf_test'
-89488 INFO: Analyzing hidden import 'onnxruntime.transformers.bert_test_data'
-89503 INFO: Analyzing hidden import 'onnxruntime.transformers.compare_bert_results'
-89516 INFO: Analyzing hidden import 'onnxruntime.transformers.constants'
-89523 INFO: Analyzing hidden import 'onnxruntime.transformers.convert_generation'
-102514 INFO: Analyzing hidden import 'onnxruntime.transformers.convert_tf_models_to_pytorch'
-102545 INFO: Processing standard module hook 'hook-urllib3.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftware
+102307 INFO: Processing standard module hook 'hook-onnxruntime.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoft
+wareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\_pyinstaller_hooks_contrib\\std
+hooks'
+102492 INFO: Analyzing hidden import 'appdirs'
+102506 INFO: Processing standard module hook 'hook-appdirs.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftware
 Foundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\_pyinstaller_hooks_contrib\\stdhook
 s'
-103188 INFO: Analyzing hidden import 'onnxruntime.transformers.convert_to_packing_mode'
-103188 INFO: Analyzing hidden import 'onnxruntime.transformers.dynamo_onnx_helper'
-103204 INFO: Analyzing hidden import 'onnxruntime.transformers.float16'
-103220 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_attention'
-103336 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_attention_clip'
-103350 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_attention_sam2'
-103363 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_attention_unet'
-103387 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_attention_vae'
-103395 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_bart_attention'
-103414 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_base'
-103423 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_bias_add'
-103426 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_biasgelu'
-103431 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_biassplitgelu'
-103441 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_conformer_attention'
-103441 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_constant_fold'
-103457 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_embedlayer'
-103477 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_fastgelu'
-103489 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_gelu'
-103500 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_gelu_approximation'
-103505 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_gemmfastgelu'
-103516 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_gpt_attention'
-103529 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_gpt_attention_megatron'
-103537 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_gpt_attention_no_past'
-103549 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_group_norm'
-103560 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_layernorm'
-103573 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_mha_mmdit'
-103583 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_nhwc_conv'
-103590 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_options'
-103602 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_qordered_attention'
-103612 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_qordered_gelu'
-103618 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_qordered_layernorm'
-103628 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_qordered_matmul'
-103638 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_quickgelu'
-103643 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_reshape'
-103654 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_rotary_attention'
-103677 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_shape'
-103685 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_simplified_layernorm'
-103697 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_skip_group_norm'
-103706 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_skiplayernorm'
-103716 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_transpose'
-103726 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_utils'
-103737 INFO: Analyzing hidden import 'onnxruntime.transformers.huggingface_models'
-103737 INFO: Analyzing hidden import 'onnxruntime.transformers.import_utils'
-103745 INFO: Analyzing hidden import 'onnxruntime.transformers.io_binding_helper'
-103763 INFO: Analyzing hidden import 'onnxruntime.transformers.large_model_exporter'
-103769 INFO: Analyzing hidden import 'onnxruntime.transformers.metrics'
-103783 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_exporter'
-103801 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_model'
-103822 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_model_bart'
-103850 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_model_bert'
-103864 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_model_bert_keras'
-103895 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_model_bert_tf'
-103909 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_model_clip'
-103914 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_model_conformer'
-103928 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_model_gpt2'
-103938 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_model_mmdit'
-103947 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_model_phi'
-104052 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_model_sam2'
-104066 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_model_t5'
-104084 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_model_tnlr'
-104094 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_model_unet'
-104107 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_model_vae'
-104116 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_utils'
-104123 INFO: Analyzing hidden import 'onnxruntime.transformers.optimizer'
-104143 INFO: Analyzing hidden import 'onnxruntime.transformers.past_helper'
-104149 INFO: Analyzing hidden import 'onnxruntime.transformers.profile_result_processor'
-104159 INFO: Analyzing hidden import 'onnxruntime.transformers.profiler'
-104173 INFO: Analyzing hidden import 'onnxruntime.transformers.quantize_helper'
-104840 INFO: Analyzing hidden import 'onnxruntime.transformers.shape_infer_helper'
-104850 INFO: Analyzing hidden import 'onnxruntime.transformers.shape_optimizer'
-104861 INFO: Analyzing hidden import 'onnxruntime.transformers.torch_onnx_export_helper'
-104872 INFO: Analyzing hidden import 'transformers.cli'
-104876 INFO: Analyzing hidden import 'transformers.cli.add_new_model_like'
-105359 INFO: Analyzing hidden import 'transformers.cli.chat'
-105377 INFO: Analyzing hidden import 'transformers.cli.download'
-105385 INFO: Analyzing hidden import 'transformers.cli.serve'
-105510 INFO: Analyzing hidden import 'transformers.cli.system'
-105521 INFO: Analyzing hidden import 'transformers.cli.transformers'
-105528 INFO: Analyzing hidden import 'transformers.convert_slow_tokenizers_checkpoints_to_fast'
-105536 INFO: Analyzing hidden import 'transformers.data.metrics.squad_metrics'
-105554 INFO: Analyzing hidden import 'transformers.exporters'
-105787 INFO: Analyzing hidden import 'transformers.integrations.mistral'
-105794 INFO: Analyzing hidden import 'transformers.integrations.tiktoken'
-105803 INFO: Analyzing hidden import 'transformers.modeling_attn_mask_utils'
-105818 INFO: Analyzing hidden import 'transformers.models.afmoe.modular_afmoe'
-105830 INFO: Analyzing hidden import 'transformers.models.aimv2.modular_aimv2'
-105855 INFO: Analyzing hidden import 'transformers.models.altclip.modular_altclip'
-105869 INFO: Analyzing hidden import 'transformers.models.apertus.modular_apertus'
-105883 INFO: Analyzing hidden import 'transformers.models.arcee.modular_arcee'
-105890 INFO: Analyzing hidden import 'transformers.models.aria.modular_aria'
-105906 INFO: Analyzing hidden import 'transformers.models.audio_spectrogram_transformer.modular_audio_spectrogram_transformer'
-105922 INFO: Analyzing hidden import 'transformers.models.audioflamingo3.modular_audioflamingo3'
-105936 INFO: Analyzing hidden import 'transformers.models.aya_vision.modular_aya_vision'
-105946 INFO: Analyzing hidden import 'transformers.models.bamba.modular_bamba'
-105966 INFO: Analyzing hidden import 'transformers.models.bart.tokenization_bart'
-105966 INFO: Analyzing hidden import 'transformers.models.beit.modular_beit'
-105995 INFO: Analyzing hidden import 'transformers.models.biogpt.modular_biogpt'
-106010 INFO: Analyzing hidden import 'transformers.models.bitnet.modular_bitnet'
-106017 INFO: Analyzing hidden import 'transformers.models.blt.modular_blt'
-106042 INFO: Analyzing hidden import 'transformers.models.camembert.modular_camembert'
-106055 INFO: Analyzing hidden import 'transformers.models.chinese_clip.image_processing_pil_chinese_clip'
-106057 INFO: Analyzing hidden import 'transformers.models.chinese_clip.modular_chinese_clip'
-106069 INFO: Analyzing hidden import 'transformers.models.chmv2.modular_chmv2'
-106086 INFO: Analyzing hidden import 'transformers.models.clipseg.modular_clipseg'
-106096 INFO: Analyzing hidden import 'transformers.models.cohere.modular_cohere'
-106107 INFO: Analyzing hidden import 'transformers.models.cohere2.modular_cohere2'
-106118 INFO: Analyzing hidden import 'transformers.models.cohere2_moe.modular_cohere2_moe'
-106136 INFO: Analyzing hidden import 'transformers.models.cohere2_vision.modular_cohere2_vision'
-106144 INFO: Analyzing hidden import 'transformers.models.cohere_asr.modular_cohere_asr'
-106160 INFO: Analyzing hidden import 'transformers.models.colmodernvbert.modular_colmodernvbert'
-106168 INFO: Analyzing hidden import 'transformers.models.colpali.modular_colpali'
-106186 INFO: Analyzing hidden import 'transformers.models.colqwen2.modular_colqwen2'
-106198 INFO: Analyzing hidden import 'transformers.models.conditional_detr.modular_conditional_detr'
-106217 INFO: Analyzing hidden import 'transformers.models.cosmos3_omni'
-106237 INFO: Analyzing hidden import 'transformers.models.cosmos3_omni.modular_cosmos3_omni'
-106244 INFO: Analyzing hidden import 'transformers.models.cpm.tokenization_cpm_fast'
-106244 INFO: Analyzing hidden import 'transformers.models.csm.modular_csm'
-106263 INFO: Analyzing hidden import 'transformers.models.cwm.modular_cwm'
-106271 INFO: Analyzing hidden import 'transformers.models.d_fine.modular_d_fine'
-106386 INFO: Analyzing hidden import 'transformers.models.data2vec.modular_data2vec_audio'
-106398 INFO: Analyzing hidden import 'transformers.models.data2vec.modular_data2vec_text'
-106414 INFO: Analyzing hidden import 'transformers.models.dbrx.modular_dbrx'
-106424 INFO: Analyzing hidden import 'transformers.models.deepseek_ocr2.modular_deepseek_ocr2'
-106440 INFO: Analyzing hidden import 'transformers.models.deepseek_v2.modular_deepseek_v2'
-106470 INFO: Analyzing hidden import 'transformers.models.deepseek_v3.modular_deepseek_v3'
-106474 INFO: Analyzing hidden import 'transformers.models.deepseek_v32.modular_deepseek_v32'
-106503 INFO: Analyzing hidden import 'transformers.models.deepseek_v4.modular_deepseek_v4'
-106536 INFO: Analyzing hidden import 'transformers.models.deepseek_vl.modular_deepseek_vl'
-106548 INFO: Analyzing hidden import 'transformers.models.deepseek_vl_hybrid.modular_deepseek_vl_hybrid'
-106567 INFO: Analyzing hidden import 'transformers.models.deformable_detr.modular_deformable_detr'
-106588 INFO: Analyzing hidden import 'transformers.models.deimv2.modular_deimv2'
-106614 INFO: Analyzing hidden import 'transformers.models.deit.modular_deit'
-106622 INFO: Analyzing hidden import 'transformers.models.dia.modular_dia'
-106630 INFO: Analyzing hidden import 'transformers.models.diffllama.modular_diffllama'
-106650 INFO: Analyzing hidden import 'transformers.models.diffusion_gemma.modular_diffusion_gemma'
-106678 INFO: Analyzing hidden import 'transformers.models.dinov2_with_registers.modular_dinov2_with_registers'
-106688 INFO: Analyzing hidden import 'transformers.models.dinov3_vit.modular_dinov3_vit'
-106700 INFO: Analyzing hidden import 'transformers.models.doge.modular_doge'
-106725 INFO: Analyzing hidden import 'transformers.models.dots1.modular_dots1'
-106738 INFO: Analyzing hidden import 'transformers.models.dpt.modular_dpt'
-106748 INFO: Analyzing hidden import 'transformers.models.edgetam.modular_edgetam'
-106759 INFO: Analyzing hidden import 'transformers.models.edgetam_video.modular_edgetam_video'
-106784 INFO: Analyzing hidden import 'transformers.models.efficientloftr.modular_efficientloftr'
-106792 INFO: Analyzing hidden import 'transformers.models.emu3.modular_emu3'
-106819 INFO: Analyzing hidden import 'transformers.models.eomt.modular_eomt'
-106833 INFO: Analyzing hidden import 'transformers.models.eomt_dinov3.modular_eomt_dinov3'
-106942 INFO: Analyzing hidden import 'transformers.models.ernie.modular_ernie'
-106960 INFO: Analyzing hidden import 'transformers.models.ernie4_5.modular_ernie4_5'
-106973 INFO: Analyzing hidden import 'transformers.models.ernie4_5_moe.modular_ernie4_5_moe'
-106988 INFO: Analyzing hidden import 'transformers.models.ernie4_5_vl_moe.modular_ernie4_5_vl_moe'
-107014 INFO: Analyzing hidden import 'transformers.models.eurobert'
-107033 INFO: Analyzing hidden import 'transformers.models.eurobert.modular_eurobert'
-107045 INFO: Analyzing hidden import 'transformers.models.evolla.modular_evolla'
-107056 INFO: Analyzing hidden import 'transformers.models.exaone4.modular_exaone4'
-107072 INFO: Analyzing hidden import 'transformers.models.exaone4_5.modular_exaone4_5'
-107089 INFO: Analyzing hidden import 'transformers.models.exaone_moe.modular_exaone_moe'
-107099 INFO: Analyzing hidden import 'transformers.models.falcon_h1.modular_falcon_h1'
-107119 INFO: Analyzing hidden import 'transformers.models.falcon_mamba.modular_falcon_mamba'
-107135 INFO: Analyzing hidden import 'transformers.models.fast_vlm.modular_fast_vlm'
-107143 INFO: Analyzing hidden import 'transformers.models.flex_olmo.modular_flex_olmo'
-107159 INFO: Analyzing hidden import 'transformers.models.florence2.modular_florence2'
-107192 INFO: Analyzing hidden import 'transformers.models.gemma.modular_gemma'
-107205 INFO: Analyzing hidden import 'transformers.models.gemma2.modular_gemma2'
-107219 INFO: Analyzing hidden import 'transformers.models.gemma3.modular_gemma3'
-107237 INFO: Analyzing hidden import 'transformers.models.gemma3n.modular_gemma3n'
-107369 INFO: Analyzing hidden import 'transformers.models.gemma4.modular_gemma4'
-107408 INFO: Analyzing hidden import 'transformers.models.gemma4_unified.modular_gemma4_unified'
-107434 INFO: Analyzing hidden import 'transformers.models.gemma4_unified_assistant.modular_gemma4_unified_assistant'
-107442 INFO: Analyzing hidden import 'transformers.models.glm.modular_glm'
-107453 INFO: Analyzing hidden import 'transformers.models.glm4.modular_glm4'
-107465 INFO: Analyzing hidden import 'transformers.models.glm46v.modular_glm46v'
-107481 INFO: Analyzing hidden import 'transformers.models.glm4_moe.modular_glm4_moe'
-107491 INFO: Analyzing hidden import 'transformers.models.glm4_moe_lite.modular_glm4_moe_lite'
-107501 INFO: Analyzing hidden import 'transformers.models.glm4v.modular_glm4v'
-107525 INFO: Analyzing hidden import 'transformers.models.glm4v_moe.modular_glm4v_moe'
-107541 INFO: Analyzing hidden import 'transformers.models.glm_image.modular_glm_image'
-107565 INFO: Analyzing hidden import 'transformers.models.glm_moe_dsa.modular_glm_moe_dsa'
-107581 INFO: Analyzing hidden import 'transformers.models.glm_ocr.modular_glm_ocr'
-107591 INFO: Analyzing hidden import 'transformers.models.glmasr.modular_glmasr'
-107609 INFO: Analyzing hidden import 'transformers.models.glmga.modular_glmga'
-107624 INFO: Analyzing hidden import 'transformers.models.got_ocr2.modular_got_ocr2'
-107629 INFO: Analyzing hidden import 'transformers.models.gpt_neox.modular_gpt_neox'
-107646 INFO: Analyzing hidden import 'transformers.models.gpt_oss.modular_gpt_oss'
-107662 INFO: Analyzing hidden import 'transformers.models.granite.modular_granite'
-107676 INFO: Analyzing hidden import 'transformers.models.granite4_vision.modular_granite4_vision'
-107692 INFO: Analyzing hidden import 'transformers.models.granite_speech_plus.modular_granite_speech_plus'
-107703 INFO: Analyzing hidden import 'transformers.models.granitemoe.modular_granitemoe'
-107718 INFO: Analyzing hidden import 'transformers.models.granitemoehybrid.modular_granitemoehybrid'
-107726 INFO: Analyzing hidden import 'transformers.models.granitemoeshared.modular_granitemoeshared'
-107740 INFO: Analyzing hidden import 'transformers.models.grounding_dino.modular_grounding_dino'
-107750 INFO: Analyzing hidden import 'transformers.models.helium.modular_helium'
-107760 INFO: Analyzing hidden import 'transformers.models.hgnet_v2.modular_hgnet_v2'
-107771 INFO: Analyzing hidden import 'transformers.models.higgs_audio_v2.modular_higgs_audio_v2'
-107791 INFO: Analyzing hidden import 'transformers.models.higgs_audio_v2_tokenizer.modular_higgs_audio_v2_tokenizer'
-107799 INFO: Analyzing hidden import 'transformers.models.hrm_text'
-107903 INFO: Analyzing hidden import 'transformers.models.hrm_text.modular_hrm_text'
-107921 INFO: Analyzing hidden import 'transformers.models.hubert.modular_hubert'
-107941 INFO: Analyzing hidden import 'transformers.models.hunyuan_v1_dense.modular_hunyuan_v1_dense'
-107951 INFO: Analyzing hidden import 'transformers.models.hunyuan_v1_moe.modular_hunyuan_v1_moe'
-107963 INFO: Analyzing hidden import 'transformers.models.hunyuan_vl'
-107999 INFO: Analyzing hidden import 'transformers.models.hunyuan_vl.modular_hunyuan_vl'
-108035 INFO: Analyzing hidden import 'transformers.models.hy_v3.modular_hy_v3'
-108048 INFO: Analyzing hidden import 'transformers.models.hyperclovax.modular_hyperclovax'
-108055 INFO: Analyzing hidden import 'transformers.models.ijepa.modular_ijepa'
-108069 INFO: Analyzing hidden import 'transformers.models.informer.modular_informer'
-108079 INFO: Analyzing hidden import 'transformers.models.inkling.modular_inkling'
-108110 INFO: Analyzing hidden import 'transformers.models.instructblipvideo.modular_instructblipvideo'
-108120 INFO: Analyzing hidden import 'transformers.models.internvl.modular_internvl'
-108142 INFO: Analyzing hidden import 'transformers.models.jais2.modular_jais2'
-108149 INFO: Analyzing hidden import 'transformers.models.jamba.modular_jamba'
-108167 INFO: Analyzing hidden import 'transformers.models.janus.modular_janus'
-108190 INFO: Analyzing hidden import 'transformers.models.jetmoe.modular_jetmoe'
-108204 INFO: Analyzing hidden import 'transformers.models.jina_embeddings_v3.modular_jina_embeddings_v3'
-108220 INFO: Analyzing hidden import 'transformers.models.kimi_k25.modular_kimi_k25'
-108236 INFO: Analyzing hidden import 'transformers.models.kyutai_speech_to_text.modular_kyutai_speech_to_text'
-108253 INFO: Analyzing hidden import 'transformers.models.laguna.modular_laguna'
-108267 INFO: Analyzing hidden import 'transformers.models.lasr.modular_lasr'
-108287 INFO: Analyzing hidden import 'transformers.models.lasr.processing_lasr'
-108290 INFO: Analyzing hidden import 'transformers.models.layoutxlm.modular_layoutxlm'
-108300 INFO: Analyzing hidden import 'transformers.models.lfm2.modular_lfm2'
-108313 INFO: Analyzing hidden import 'transformers.models.lfm2_moe.modular_lfm2_moe'
-108327 INFO: Analyzing hidden import 'transformers.models.lfm2_vl.modular_lfm2_vl'
-108343 INFO: Analyzing hidden import 'transformers.models.lightglue.modular_lightglue'
-108360 INFO: Analyzing hidden import 'transformers.models.lighton_ocr'
-108380 INFO: Analyzing hidden import 'transformers.models.lighton_ocr.modular_lighton_ocr'
-108392 INFO: Analyzing hidden import 'transformers.models.llava_next_video.modular_llava_next_video'
-108407 INFO: Analyzing hidden import 'transformers.models.llava_next_video.video_processing_llava_next_video'
-108407 INFO: Analyzing hidden import 'transformers.models.llava_onevision.modular_llava_onevision'
-108425 INFO: Analyzing hidden import 'transformers.models.longcat_flash.modular_longcat_flash'
-108439 INFO: Analyzing hidden import 'transformers.models.lw_detr.modular_lw_detr'
-108550 INFO: Analyzing hidden import 'transformers.models.markuplm.tokenization_markuplm'
-108566 INFO: Analyzing hidden import 'transformers.models.mask2former.modular_mask2former'
-108588 INFO: Analyzing hidden import 'transformers.models.maskformer.modular_maskformer'
-108612 INFO: Analyzing hidden import 'transformers.models.megatron_gpt2.checkpoint_reshaping_and_interoperability'
-108613 INFO: Analyzing hidden import 'transformers.models.mellum.modular_mellum'
-108636 INFO: Analyzing hidden import 'transformers.models.metaclip_2.modular_metaclip_2'
-108645 INFO: Analyzing hidden import 'transformers.models.mimo_v2_flash.modular_mimo_v2_flash'
-108661 INFO: Analyzing hidden import 'transformers.models.minicpm3.modular_minicpm3'
-108669 INFO: Analyzing hidden import 'transformers.models.minicpmv4_6.modular_minicpmv4_6'
-108692 INFO: Analyzing hidden import 'transformers.models.minimax.modular_minimax'
-108708 INFO: Analyzing hidden import 'transformers.models.minimax_m2.modular_minimax_m2'
-108716 INFO: Analyzing hidden import 'transformers.models.minimax_m3_vl.modular_minimax_m3_vl'
-108740 INFO: Analyzing hidden import 'transformers.models.ministral.modular_ministral'
-108758 INFO: Analyzing hidden import 'transformers.models.ministral3.modular_ministral3'
-108767 INFO: Analyzing hidden import 'transformers.models.mistral.modular_mistral'
-108777 INFO: Analyzing hidden import 'transformers.models.mistral3.modular_mistral3'
-108787 INFO: Analyzing hidden import 'transformers.models.mistral4.modular_mistral4'
-108797 INFO: Analyzing hidden import 'transformers.models.mixtral.modular_mixtral'
-108819 INFO: Analyzing hidden import 'transformers.models.mlcd.modular_mlcd'
-108842 INFO: Analyzing hidden import 'transformers.models.mm_grounding_dino.modular_mm_grounding_dino'
-108857 INFO: Analyzing hidden import 'transformers.models.mobilenet_v1.image_processing_pil_mobilenet_v1'
-108857 INFO: Analyzing hidden import 'transformers.models.modernbert.modular_modernbert'
-108882 INFO: Analyzing hidden import 'transformers.models.modernbert_decoder.modular_modernbert_decoder'
-108903 INFO: Analyzing hidden import 'transformers.models.modernvbert.modular_modernvbert'
-108918 INFO: Analyzing hidden import 'transformers.models.moonshine.modular_moonshine'
-108927 INFO: Analyzing hidden import 'transformers.models.moonshine_streaming.modular_moonshine_streaming'
-108952 INFO: Analyzing hidden import 'transformers.models.moonshine_streaming.processing_moonshine_streaming'
-108953 INFO: Analyzing hidden import 'transformers.models.musicflamingo.modular_musicflamingo'
-108965 INFO: Analyzing hidden import 'transformers.models.musicgen_melody.feature_extraction_musicgen_melody'
-108969 INFO: Analyzing hidden import 'transformers.models.musicgen_melody.processing_musicgen_melody'
-108971 INFO: Analyzing hidden import 'transformers.models.nanochat.modular_nanochat'
-108981 INFO: Analyzing hidden import 'transformers.models.nemotron3_5_asr'
-109022 INFO: Analyzing hidden import 'transformers.models.nemotron3_5_asr.modular_nemotron3_5_asr'
-109044 INFO: Analyzing hidden import 'transformers.models.nemotron_asr_streaming.modular_nemotron_asr_streaming'
-109070 INFO: Analyzing hidden import 'transformers.models.nemotron_h.modular_nemotron_h'
-109078 INFO: Analyzing hidden import 'transformers.models.nomic_bert.modular_nomic_bert'
-109092 INFO: Analyzing hidden import 'transformers.models.nougat.configuration_nougat'
-109092 INFO: Analyzing hidden import 'transformers.models.olmo.modular_olmo'
-109109 INFO: Analyzing hidden import 'transformers.models.olmo2.modular_olmo2'
-109119 INFO: Analyzing hidden import 'transformers.models.olmo3.modular_olmo3'
-109131 INFO: Analyzing hidden import 'transformers.models.olmo_hybrid.modular_olmo_hybrid'
-109228 INFO: Analyzing hidden import 'transformers.models.olmoe.modular_olmoe'
-109250 INFO: Analyzing hidden import 'transformers.models.openai_privacy_filter.modular_openai_privacy_filter'
-109259 INFO: Analyzing hidden import 'transformers.models.ovis2.modular_ovis2'
-109285 INFO: Analyzing hidden import 'transformers.models.owlv2.modular_owlv2'
-109299 INFO: Analyzing hidden import 'transformers.models.paddleocr_vl.modular_paddleocr_vl'
-109320 INFO: Analyzing hidden import 'transformers.models.parakeet.modular_parakeet'
-109342 INFO: Analyzing hidden import 'transformers.models.pe_audio.modular_pe_audio'
-109355 INFO: Analyzing hidden import 'transformers.models.pe_audio_video.modular_pe_audio_video'
-109373 INFO: Analyzing hidden import 'transformers.models.pe_video.modular_pe_video'
-109385 INFO: Analyzing hidden import 'transformers.models.perception_lm.modular_perception_lm'
-109391 INFO: Analyzing hidden import 'transformers.models.perception_lm.video_processing_perception_lm'
-109391 INFO: Analyzing hidden import 'transformers.models.phi.modular_phi'
-109406 INFO: Analyzing hidden import 'transformers.models.phi3.modular_phi3'
-109416 INFO: Analyzing hidden import 'transformers.models.phi4_multimodal.modular_phi4_multimodal'
-109449 INFO: Analyzing hidden import 'transformers.models.phimoe.modular_phimoe'
-109453 INFO: Analyzing hidden import 'transformers.models.pi0.modular_pi0'
-109473 INFO: Analyzing hidden import 'transformers.models.pi0.processing_pi0'
-109485 INFO: Analyzing hidden import 'transformers.models.pixio.modular_pixio'
-109493 INFO: Analyzing hidden import 'transformers.models.plbart.modular_plbart'
-109505 INFO: Analyzing hidden import 'transformers.models.pop2piano.feature_extraction_pop2piano'
-109505 INFO: Analyzing hidden import 'transformers.models.pop2piano.processing_pop2piano'
-109505 INFO: Analyzing hidden import 'transformers.models.pop2piano.tokenization_pop2piano'
-109516 INFO: Analyzing hidden import 'transformers.models.pp_chart2table.modular_pp_chart2table'
-109530 INFO: Analyzing hidden import 'transformers.models.pp_doclayout_v2.modular_pp_doclayout_v2'
-109548 INFO: Analyzing hidden import 'transformers.models.pp_doclayout_v3.modular_pp_doclayout_v3'
-109564 INFO: Analyzing hidden import 'transformers.models.pp_formulanet'
-109596 INFO: Analyzing hidden import 'transformers.models.pp_formulanet.modular_pp_formulanet'
-109628 INFO: Analyzing hidden import 'transformers.models.pp_formulanet.processing_pp_formulanet'
-109628 INFO: Analyzing hidden import 'transformers.models.pp_lcnet.modular_pp_lcnet'
-109644 INFO: Analyzing hidden import 'transformers.models.pp_lcnet_v3.modular_pp_lcnet_v3'
-109655 INFO: Analyzing hidden import 'transformers.models.pp_lcnet_v4.modular_pp_lcnet_v4'
-109664 INFO: Analyzing hidden import 'transformers.models.pp_ocrv5_mobile_det.modular_pp_ocrv5_mobile_det'
-109676 INFO: Analyzing hidden import 'transformers.models.pp_ocrv5_mobile_rec'
-109688 INFO: Analyzing hidden import 'transformers.models.pp_ocrv5_mobile_rec.modular_pp_ocrv5_mobile_rec'
-109706 INFO: Analyzing hidden import 'transformers.models.pp_ocrv5_server_det.modular_pp_ocrv5_server_det'
-109723 INFO: Analyzing hidden import 'transformers.models.pp_ocrv5_server_rec.modular_pp_ocrv5_server_rec'
-109748 INFO: Analyzing hidden import 'transformers.models.pp_ocrv6_medium_det.modular_pp_ocrv6_medium_det'
-109754 INFO: Analyzing hidden import 'transformers.models.pp_ocrv6_small_det.modular_pp_ocrv6_small_det'
-109765 INFO: Analyzing hidden import 'transformers.models.pp_ocrv6_small_rec.image_processing_pp_ocrv6_small_rec'
-109765 INFO: Analyzing hidden import 'transformers.models.pp_ocrv6_small_rec.modular_pp_ocrv6_small_rec'
-109772 INFO: Analyzing hidden import 'transformers.models.pp_ocrv6_tiny_rec.modular_pp_ocrv6_tiny_rec'
-109786 INFO: Analyzing hidden import 'transformers.models.prompt_depth_anything.modular_prompt_depth_anything'
-109791 INFO: Analyzing hidden import 'transformers.models.qianfan_ocr.modular_qianfan_ocr'
-109806 INFO: Analyzing hidden import 'transformers.models.qwen2.modular_qwen2'
-109827 INFO: Analyzing hidden import 'transformers.models.qwen2_5_omni.modular_qwen2_5_omni'
-109980 INFO: Analyzing hidden import 'transformers.models.qwen2_5_vl.modular_qwen2_5_vl'
-109998 INFO: Analyzing hidden import 'transformers.models.qwen2_moe.modular_qwen2_moe'
-110011 INFO: Analyzing hidden import 'transformers.models.qwen2_vl.video_processing_qwen2_vl'
-110016 INFO: Analyzing hidden import 'transformers.models.qwen3.modular_qwen3'
-110026 INFO: Analyzing hidden import 'transformers.models.qwen3_5.modular_qwen3_5'
-110042 INFO: Analyzing hidden import 'transformers.models.qwen3_5_moe.modular_qwen3_5_moe'
-110056 INFO: Analyzing hidden import 'transformers.models.qwen3_asr.modular_qwen3_asr'
-110069 INFO: Analyzing hidden import 'transformers.models.qwen3_moe.modular_qwen3_moe'
-110081 INFO: Analyzing hidden import 'transformers.models.qwen3_next.modular_qwen3_next'
-110101 INFO: Analyzing hidden import 'transformers.models.qwen3_omni_moe.modular_qwen3_omni_moe'
-110133 INFO: Analyzing hidden import 'transformers.models.qwen3_vl.modular_qwen3_vl'
-110168 INFO: Analyzing hidden import 'transformers.models.qwen3_vl_moe.modular_qwen3_vl_moe'
-110180 INFO: Analyzing hidden import 'transformers.models.radio.modular_radio'
-110195 INFO: Analyzing hidden import 'transformers.models.rf_detr.modular_rf_detr'
-110212 INFO: Analyzing hidden import 'transformers.models.roberta.modular_roberta'
-110236 INFO: Analyzing hidden import 'transformers.models.roberta.tokenization_roberta_old'
-110236 INFO: Analyzing hidden import 'transformers.models.rt_detr.modular_rt_detr'
-110364 INFO: Analyzing hidden import 'transformers.models.rt_detr_v2.modular_rt_detr_v2'
-110370 INFO: Analyzing hidden import 'transformers.models.sam2.modular_sam2'
-110402 INFO: Analyzing hidden import 'transformers.models.sam2_video.modular_sam2_video'
-110448 INFO: Analyzing hidden import 'transformers.models.sam3.modular_sam3'
-110458 INFO: Analyzing hidden import 'transformers.models.sam3_lite_text.modular_sam3_lite_text'
-110462 INFO: Analyzing hidden import 'transformers.models.sam3_tracker.modular_sam3_tracker'
-110482 INFO: Analyzing hidden import 'transformers.models.sam3_tracker_video.modular_sam3_tracker_video'
-110495 INFO: Analyzing hidden import 'transformers.models.sam_hq.modular_sam_hq'
-110508 INFO: Analyzing hidden import 'transformers.models.sapiens2.modular_sapiens2'
-110542 INFO: Analyzing hidden import 'transformers.models.seed_oss.modular_seed_oss'
-110552 INFO: Analyzing hidden import 'transformers.models.segformer.modular_segformer'
-110569 INFO: Analyzing hidden import 'transformers.models.sew.modular_sew'
-110587 INFO: Analyzing hidden import 'transformers.models.siglip2.modular_siglip2'
-110603 INFO: Analyzing hidden import 'transformers.models.slanet.modular_slanet'
-110603 INFO: Analyzing hidden import 'transformers.models.slanext.modular_slanext'
-110635 INFO: Analyzing hidden import 'transformers.models.smollm3.modular_smollm3'
-110635 INFO: Analyzing hidden import 'transformers.models.smolvlm.modular_smolvlm'
-110653 INFO: Analyzing hidden import 'transformers.models.smolvlm.video_processing_smolvlm'
-110653 INFO: Analyzing hidden import 'transformers.models.solar_open.modular_solar_open'
-110667 INFO: Analyzing hidden import 'transformers.models.starcoder2.modular_starcoder2'
-110671 INFO: Analyzing hidden import 'transformers.models.swin.modular_swin'
-110791 INFO: Analyzing hidden import 'transformers.models.switch_transformers.modular_switch_transformers'
-110812 INFO: Analyzing hidden import 'transformers.models.t5gemma.modular_t5gemma'
-110837 INFO: Analyzing hidden import 'transformers.models.t5gemma2.modular_t5gemma2'
-110859 INFO: Analyzing hidden import 'transformers.models.timesfm.modular_timesfm'
-110891 INFO: Analyzing hidden import 'transformers.models.timesfm2_5.modular_timesfm2_5'
-110906 INFO: Analyzing hidden import 'transformers.models.tipsv2'
-110922 INFO: Analyzing hidden import 'transformers.models.tipsv2.modular_tipsv2'
-110955 INFO: Analyzing hidden import 'transformers.models.tipsv2_dpt'
-110968 INFO: Analyzing hidden import 'transformers.models.tipsv2_dpt.modular_tipsv2_dpt'
-110992 INFO: Analyzing hidden import 'transformers.models.unispeech.modular_unispeech'
-111000 INFO: Analyzing hidden import 'transformers.models.unispeech_sat.modular_unispeech_sat'
-111016 INFO: Analyzing hidden import 'transformers.models.uvdoc.modular_uvdoc'
-111032 INFO: Analyzing hidden import 'transformers.models.vaultgemma.modular_vaultgemma'
-111032 INFO: Analyzing hidden import 'transformers.models.vibevoice_acoustic_tokenizer'
-111047 INFO: Analyzing hidden import 'transformers.models.vibevoice_acoustic_tokenizer.modular_vibevoice_acoustic_tokenizer'
-111075 INFO: Analyzing hidden import 'transformers.models.vibevoice_asr.modular_vibevoice_asr'
-111081 INFO: Analyzing hidden import 'transformers.models.video_llama_3.modular_video_llama_3'
-111111 INFO: Analyzing hidden import 'transformers.models.video_llava.video_processing_video_llava'
-111111 INFO: Analyzing hidden import 'transformers.models.videomt.modular_videomt'
-111133 INFO: Analyzing hidden import 'transformers.models.videoprism.modular_videoprism'
-111154 INFO: Analyzing hidden import 'transformers.models.vipllava.modular_vipllava'
-111164 INFO: Analyzing hidden import 'transformers.models.vit_mae.modular_vit_mae'
-111175 INFO: Analyzing hidden import 'transformers.models.vit_msn.modular_vit_msn'
-111190 INFO: Analyzing hidden import 'transformers.models.vivit.modular_vivit'
-111192 INFO: Analyzing hidden import 'transformers.models.voxtral.modular_voxtral'
-111206 INFO: Analyzing hidden import 'transformers.models.voxtral_realtime.feature_extraction_voxtral_realtime'
-111206 INFO: Analyzing hidden import 'transformers.models.voxtral_realtime.modular_voxtral_realtime'
-111223 INFO: Analyzing hidden import 'transformers.models.wav2vec2_bert.modular_wav2vec2_bert'
-111350 INFO: Analyzing hidden import 'transformers.models.wav2vec2_conformer.modular_wav2vec2_conformer'
-111370 INFO: Analyzing hidden import 'transformers.models.wavlm.modular_wavlm'
-111382 INFO: Analyzing hidden import 'transformers.models.x_clip.modular_x_clip'
-111398 INFO: Analyzing hidden import 'transformers.models.xcodec2.modular_xcodec2'
-111413 INFO: Analyzing hidden import 'transformers.models.xlm_roberta.modular_xlm_roberta'
-111429 INFO: Analyzing hidden import 'transformers.models.xlm_roberta_xl.modular_xlm_roberta_xl'
-111445 INFO: Analyzing hidden import 'transformers.models.xlstm.configuration_xlstm'
-111445 INFO: Analyzing hidden import 'transformers.models.xlstm.modeling_xlstm'
-111477 INFO: Analyzing hidden import 'transformers.models.yolos.modular_yolos'
-111487 INFO: Analyzing hidden import 'transformers.models.youtu.modular_youtu'
-111493 INFO: Analyzing hidden import 'transformers.models.zamba2.modular_zamba2'
-111518 INFO: Analyzing hidden import 'transformers.models.zaya.modular_zaya'
-111546 INFO: Analyzing hidden import 'transformers.testing_utils'
-111741 INFO: Analyzing hidden import 'transformers.utils.attention_visualizer'
-111756 INFO: Analyzing hidden import 'transformers.utils.backbone_utils'
-111756 INFO: Analyzing hidden import 'transformers.utils.dummy_detectron2_objects'
-111756 INFO: Analyzing hidden import 
+102515 INFO: Analyzing hidden import 'uvicorn.__main__'
+102517 INFO: Analyzing hidden import 'uvicorn.lifespan'
+102517 INFO: Analyzing hidden import 'uvicorn.lifespan.off'
+102524 INFO: Analyzing hidden import 'uvicorn.lifespan.on'
+102534 INFO: Analyzing hidden import 'uvicorn.loops'
+102534 INFO: Analyzing hidden import 'uvicorn.loops.asyncio'
+102541 INFO: Analyzing hidden import 'uvicorn.loops.auto'
+102551 INFO: Analyzing hidden import 'uvicorn.protocols.http.auto'
+102562 INFO: Analyzing hidden import 'uvicorn.protocols.websockets.auto'
+102571 INFO: Analyzing hidden import 'uvicorn.workers'
+102582 INFO: Analyzing hidden import 'faster_whisper.assets'
+102584 INFO: Analyzing hidden import 'ctranslate2.converters.eole_ct2'
+102596 INFO: Analyzing hidden import 'onnxruntime.capi.convert_npz_to_onnx_adapter'
+102598 INFO: Analyzing hidden import 'onnxruntime.datasets'
+102598 INFO: Analyzing hidden import 'onnxruntime.transformers.affinity_helper'
+102600 INFO: Analyzing hidden import 'onnxruntime.transformers.benchmark'
+102611 INFO: Analyzing hidden import 'onnxruntime.transformers.benchmark_helper'
+102754 INFO: Analyzing hidden import 'onnxruntime.transformers.bert_perf_test'
+102762 INFO: Analyzing hidden import 'onnxruntime.transformers.bert_test_data'
+102768 INFO: Analyzing hidden import 'onnxruntime.transformers.compare_bert_results'
+102774 INFO: Analyzing hidden import 'onnxruntime.transformers.constants'
+102774 INFO: Analyzing hidden import 'onnxruntime.transformers.convert_generation'
+116726 INFO: Analyzing hidden import 'onnxruntime.transformers.convert_tf_models_to_pytorch'
+116764 INFO: Processing standard module hook 'hook-urllib3.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftware
+Foundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\_pyinstaller_hooks_contrib\\stdhook
+s'
+117526 INFO: Analyzing hidden import 'onnxruntime.transformers.convert_to_packing_mode'
+117542 INFO: Analyzing hidden import 'onnxruntime.transformers.dynamo_onnx_helper'
+117546 INFO: Analyzing hidden import 'onnxruntime.transformers.float16'
+117557 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_attention'
+117567 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_attention_clip'
+117567 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_attention_sam2'
+117582 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_attention_unet'
+117602 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_attention_vae'
+117612 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_bart_attention'
+117615 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_base'
+117615 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_bias_add'
+117615 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_biasgelu'
+117615 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_biassplitgelu'
+117630 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_conformer_attention'
+117632 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_constant_fold'
+117632 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_embedlayer'
+117646 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_fastgelu'
+117649 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_gelu'
+117649 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_gelu_approximation'
+117649 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_gemmfastgelu'
+117661 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_gpt_attention'
+117661 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_gpt_attention_megatron'
+117661 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_gpt_attention_no_past'
+117677 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_group_norm'
+117677 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_layernorm'
+117677 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_mha_mmdit'
+117693 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_nhwc_conv'
+117699 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_options'
+117699 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_qordered_attention'
+117709 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_qordered_gelu'
+117712 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_qordered_layernorm'
+117712 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_qordered_matmul'
+117712 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_quickgelu'
+117712 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_reshape'
+117712 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_rotary_attention'
+117822 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_shape'
+117822 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_simplified_layernorm'
+117836 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_skip_group_norm'
+117836 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_skiplayernorm'
+117836 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_transpose'
+117836 INFO: Analyzing hidden import 'onnxruntime.transformers.fusion_utils'
+117852 INFO: Analyzing hidden import 'onnxruntime.transformers.huggingface_models'
+117856 INFO: Analyzing hidden import 'onnxruntime.transformers.import_utils'
+117856 INFO: Analyzing hidden import 'onnxruntime.transformers.io_binding_helper'
+117856 INFO: Analyzing hidden import 'onnxruntime.transformers.large_model_exporter'
+117868 INFO: Analyzing hidden import 'onnxruntime.transformers.metrics'
+117868 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_exporter'
+117884 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_model'
+117912 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_model_bart'
+117918 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_model_bert'
+117931 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_model_bert_keras'
+117931 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_model_bert_tf'
+117950 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_model_clip'
+117953 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_model_conformer'
+117955 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_model_gpt2'
+117956 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_model_mmdit'
+117956 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_model_phi'
+117963 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_model_sam2'
+117979 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_model_t5'
+117979 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_model_tnlr'
+117995 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_model_unet'
+118003 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_model_vae'
+118003 INFO: Analyzing hidden import 'onnxruntime.transformers.onnx_utils'
+118003 INFO: Analyzing hidden import 'onnxruntime.transformers.optimizer'
+118013 INFO: Analyzing hidden import 'onnxruntime.transformers.past_helper'
+118013 INFO: Analyzing hidden import 'onnxruntime.transformers.profile_result_processor'
+118027 INFO: Analyzing hidden import 'onnxruntime.transformers.profiler'
+118027 INFO: Analyzing hidden import 'onnxruntime.transformers.quantize_helper'
+118419 INFO: Analyzing hidden import 'onnxruntime.transformers.shape_infer_helper'
+118419 INFO: Analyzing hidden import 'onnxruntime.transformers.shape_optimizer'
+118435 INFO: Analyzing hidden import 'onnxruntime.transformers.torch_onnx_export_helper'
+118435 INFO: Analyzing hidden import 'transformers.cli'
+118435 INFO: Analyzing hidden import 'transformers.cli.add_new_model_like'
+118985 INFO: Analyzing hidden import 'transformers.cli.chat'
+119002 INFO: Analyzing hidden import 'transformers.cli.download'
+119002 INFO: Analyzing hidden import 'transformers.cli.serve'
+119147 INFO: Analyzing hidden import 'transformers.cli.system'
+119150 INFO: Analyzing hidden import 'transformers.cli.transformers'
+119151 INFO: Analyzing hidden import 'transformers.convert_slow_tokenizers_checkpoints_to_fast'
+119154 INFO: Analyzing hidden import 'transformers.data.metrics.squad_metrics'
+119166 INFO: Analyzing hidden import 'transformers.exporters'
+119253 INFO: Analyzing hidden import 'transformers.integrations.mistral'
+119256 INFO: Analyzing hidden import 'transformers.integrations.tiktoken'
+119256 INFO: Analyzing hidden import 'transformers.modeling_attn_mask_utils'
+119263 INFO: Analyzing hidden import 'transformers.models.afmoe.modular_afmoe'
+119271 INFO: Analyzing hidden import 'transformers.models.aimv2.modular_aimv2'
+119278 INFO: Analyzing hidden import 'transformers.models.altclip.modular_altclip'
+119285 INFO: Analyzing hidden import 'transformers.models.apertus.modular_apertus'
+119291 INFO: Analyzing hidden import 'transformers.models.arcee.modular_arcee'
+119291 INFO: Analyzing hidden import 'transformers.models.aria.modular_aria'
+119307 INFO: Analyzing hidden import 'transformers.models.audio_spectrogram_transformer.modular_audio_spectrogram_transformer'
+119312 INFO: Analyzing hidden import 'transformers.models.audioflamingo3.modular_audioflamingo3'
+119318 INFO: Analyzing hidden import 'transformers.models.aya_vision.modular_aya_vision'
+119321 INFO: Analyzing hidden import 'transformers.models.bamba.modular_bamba'
+119336 INFO: Analyzing hidden import 'transformers.models.bart.tokenization_bart'
+119336 INFO: Analyzing hidden import 'transformers.models.beit.modular_beit'
+119435 INFO: Analyzing hidden import 'transformers.models.biogpt.modular_biogpt'
+119445 INFO: Analyzing hidden import 'transformers.models.bitnet.modular_bitnet'
+119448 INFO: Analyzing hidden import 'transformers.models.blt.modular_blt'
+119465 INFO: Analyzing hidden import 'transformers.models.camembert.modular_camembert'
+119470 INFO: Analyzing hidden import 'transformers.models.chinese_clip.image_processing_pil_chinese_clip'
+119472 INFO: Analyzing hidden import 'transformers.models.chinese_clip.modular_chinese_clip'
+119479 INFO: Analyzing hidden import 'transformers.models.chmv2.modular_chmv2'
+119487 INFO: Analyzing hidden import 'transformers.models.clipseg.modular_clipseg'
+119495 INFO: Analyzing hidden import 'transformers.models.cohere.modular_cohere'
+119501 INFO: Analyzing hidden import 'transformers.models.cohere2.modular_cohere2'
+119506 INFO: Analyzing hidden import 'transformers.models.cohere2_moe.modular_cohere2_moe'
+119512 INFO: Analyzing hidden import 'transformers.models.cohere2_vision.modular_cohere2_vision'
+119519 INFO: Analyzing hidden import 'transformers.models.cohere_asr.modular_cohere_asr'
+119524 INFO: Analyzing hidden import 'transformers.models.colmodernvbert.modular_colmodernvbert'
+119531 INFO: Analyzing hidden import 'transformers.models.colpali.modular_colpali'
+119532 INFO: Analyzing hidden import 'transformers.models.colqwen2.modular_colqwen2'
+119540 INFO: Analyzing hidden import 'transformers.models.conditional_detr.modular_conditional_detr'
+119556 INFO: Analyzing hidden import 'transformers.models.cosmos3_omni'
+119576 INFO: Analyzing hidden import 'transformers.models.cosmos3_omni.modular_cosmos3_omni'
+119579 INFO: Analyzing hidden import 'transformers.models.cpm.tokenization_cpm_fast'
+119585 INFO: Analyzing hidden import 'transformers.models.csm.modular_csm'
+119602 INFO: Analyzing hidden import 'transformers.models.cwm.modular_cwm'
+119607 INFO: Analyzing hidden import 'transformers.models.d_fine.modular_d_fine'
+119633 INFO: Analyzing hidden import 'transformers.models.data2vec.modular_data2vec_audio'
+119640 INFO: Analyzing hidden import 'transformers.models.data2vec.modular_data2vec_text'
+119644 INFO: Analyzing hidden import 'transformers.models.dbrx.modular_dbrx'
+119656 INFO: Analyzing hidden import 'transformers.models.deepseek_ocr2.modular_deepseek_ocr2'
+119674 INFO: Analyzing hidden import 'transformers.models.deepseek_v2.modular_deepseek_v2'
+119680 INFO: Analyzing hidden import 'transformers.models.deepseek_v3.modular_deepseek_v3'
+119689 INFO: Analyzing hidden import 'transformers.models.deepseek_v32.modular_deepseek_v32'
+119696 INFO: Analyzing hidden import 'transformers.models.deepseek_v4.modular_deepseek_v4'
+119720 INFO: Analyzing hidden import 'transformers.models.deepseek_vl.modular_deepseek_vl'
+119727 INFO: Analyzing hidden import 'transformers.models.deepseek_vl_hybrid.modular_deepseek_vl_hybrid'
+119740 INFO: Analyzing hidden import 'transformers.models.deformable_detr.modular_deformable_detr'
+119867 INFO: Analyzing hidden import 'transformers.models.deimv2.modular_deimv2'
+119886 INFO: Analyzing hidden import 'transformers.models.deit.modular_deit'
+119892 INFO: Analyzing hidden import 'transformers.models.dia.modular_dia'
+119902 INFO: Analyzing hidden import 'transformers.models.diffllama.modular_diffllama'
+119904 INFO: Analyzing hidden import 'transformers.models.diffusion_gemma.modular_diffusion_gemma'
+119927 INFO: Analyzing hidden import 'transformers.models.dinov2_with_registers.modular_dinov2_with_registers'
+119934 INFO: Analyzing hidden import 'transformers.models.dinov3_vit.modular_dinov3_vit'
+119943 INFO: Analyzing hidden import 'transformers.models.doge.modular_doge'
+119956 INFO: Analyzing hidden import 'transformers.models.dots1.modular_dots1'
+119958 INFO: Analyzing hidden import 'transformers.models.dpt.modular_dpt'
+119962 INFO: Analyzing hidden import 'transformers.models.edgetam.modular_edgetam'
+119966 INFO: Analyzing hidden import 'transformers.models.edgetam_video.modular_edgetam_video'
+119983 INFO: Analyzing hidden import 'transformers.models.efficientloftr.modular_efficientloftr'
+119984 INFO: Analyzing hidden import 'transformers.models.emu3.modular_emu3'
+119998 INFO: Analyzing hidden import 'transformers.models.eomt.modular_eomt'
+120004 INFO: Analyzing hidden import 'transformers.models.eomt_dinov3.modular_eomt_dinov3'
+120015 INFO: Analyzing hidden import 'transformers.models.ernie.modular_ernie'
+120024 INFO: Analyzing hidden import 'transformers.models.ernie4_5.modular_ernie4_5'
+120028 INFO: Analyzing hidden import 'transformers.models.ernie4_5_moe.modular_ernie4_5_moe'
+120033 INFO: Analyzing hidden import 'transformers.models.ernie4_5_vl_moe.modular_ernie4_5_vl_moe'
+120056 INFO: Analyzing hidden import 'transformers.models.eurobert'
+120060 INFO: Analyzing hidden import 'transformers.models.eurobert.modular_eurobert'
+120074 INFO: Analyzing hidden import 'transformers.models.evolla.modular_evolla'
+120086 INFO: Analyzing hidden import 'transformers.models.exaone4.modular_exaone4'
+120093 INFO: Analyzing hidden import 'transformers.models.exaone4_5.modular_exaone4_5'
+120100 INFO: Analyzing hidden import 'transformers.models.exaone_moe.modular_exaone_moe'
+120103 INFO: Analyzing hidden import 'transformers.models.falcon_h1.modular_falcon_h1'
+120123 INFO: Analyzing hidden import 'transformers.models.falcon_mamba.modular_falcon_mamba'
+120132 INFO: Analyzing hidden import 'transformers.models.fast_vlm.modular_fast_vlm'
+120235 INFO: Analyzing hidden import 'transformers.models.flex_olmo.modular_flex_olmo'
+120236 INFO: Analyzing hidden import 'transformers.models.florence2.modular_florence2'
+120255 INFO: Analyzing hidden import 'transformers.models.gemma.modular_gemma'
+120268 INFO: Analyzing hidden import 'transformers.models.gemma2.modular_gemma2'
+120275 INFO: Analyzing hidden import 'transformers.models.gemma3.modular_gemma3'
+120291 INFO: Analyzing hidden import 'transformers.models.gemma3n.modular_gemma3n'
+120328 INFO: Analyzing hidden import 'transformers.models.gemma4.modular_gemma4'
+120364 INFO: Analyzing hidden import 'transformers.models.gemma4_unified.modular_gemma4_unified'
+120382 INFO: Analyzing hidden import 'transformers.models.gemma4_unified_assistant.modular_gemma4_unified_assistant'
+120382 INFO: Analyzing hidden import 'transformers.models.glm.modular_glm'
+120387 INFO: Analyzing hidden import 'transformers.models.glm4.modular_glm4'
+120389 INFO: Analyzing hidden import 'transformers.models.glm46v.modular_glm46v'
+120392 INFO: Analyzing hidden import 'transformers.models.glm4_moe.modular_glm4_moe'
+120396 INFO: Analyzing hidden import 'transformers.models.glm4_moe_lite.modular_glm4_moe_lite'
+120398 INFO: Analyzing hidden import 'transformers.models.glm4v.modular_glm4v'
+120418 INFO: Analyzing hidden import 'transformers.models.glm4v_moe.modular_glm4v_moe'
+120425 INFO: Analyzing hidden import 'transformers.models.glm_image.modular_glm_image'
+120541 INFO: Analyzing hidden import 'transformers.models.glm_moe_dsa.modular_glm_moe_dsa'
+120549 INFO: Analyzing hidden import 'transformers.models.glm_ocr.modular_glm_ocr'
+120554 INFO: Analyzing hidden import 'transformers.models.glmasr.modular_glmasr'
+120554 INFO: Analyzing hidden import 'transformers.models.glmga.modular_glmga'
+120554 INFO: Analyzing hidden import 'transformers.models.got_ocr2.modular_got_ocr2'
+120570 INFO: Analyzing hidden import 'transformers.models.gpt_neox.modular_gpt_neox'
+120570 INFO: Analyzing hidden import 'transformers.models.gpt_oss.modular_gpt_oss'
+120586 INFO: Analyzing hidden import 'transformers.models.granite.modular_granite'
+120590 INFO: Analyzing hidden import 'transformers.models.granite4_vision.modular_granite4_vision'
+120602 INFO: Analyzing hidden import 'transformers.models.granite_speech_plus.modular_granite_speech_plus'
+120605 INFO: Analyzing hidden import 'transformers.models.granitemoe.modular_granitemoe'
+120610 INFO: Analyzing hidden import 'transformers.models.granitemoehybrid.modular_granitemoehybrid'
+120616 INFO: Analyzing hidden import 'transformers.models.granitemoeshared.modular_granitemoeshared'
+120620 INFO: Analyzing hidden import 'transformers.models.grounding_dino.modular_grounding_dino'
+120622 INFO: Analyzing hidden import 'transformers.models.helium.modular_helium'
+120625 INFO: Analyzing hidden import 'transformers.models.hgnet_v2.modular_hgnet_v2'
+120631 INFO: Analyzing hidden import 'transformers.models.higgs_audio_v2.modular_higgs_audio_v2'
+120638 INFO: Analyzing hidden import 'transformers.models.higgs_audio_v2_tokenizer.modular_higgs_audio_v2_tokenizer'
+120638 INFO: Analyzing hidden import 'transformers.models.hrm_text'
+120653 INFO: Analyzing hidden import 'transformers.models.hrm_text.modular_hrm_text'
+120659 INFO: Analyzing hidden import 'transformers.models.hubert.modular_hubert'
+120662 INFO: Analyzing hidden import 'transformers.models.hunyuan_v1_dense.modular_hunyuan_v1_dense'
+120666 INFO: Analyzing hidden import 'transformers.models.hunyuan_v1_moe.modular_hunyuan_v1_moe'
+120671 INFO: Analyzing hidden import 'transformers.models.hunyuan_vl'
+120708 INFO: Analyzing hidden import 'transformers.models.hunyuan_vl.modular_hunyuan_vl'
+120724 INFO: Analyzing hidden import 'transformers.models.hy_v3.modular_hy_v3'
+120734 INFO: Analyzing hidden import 'transformers.models.hyperclovax.modular_hyperclovax'
+120736 INFO: Analyzing hidden import 'transformers.models.ijepa.modular_ijepa'
+120739 INFO: Analyzing hidden import 'transformers.models.informer.modular_informer'
+120747 INFO: Analyzing hidden import 'transformers.models.inkling.modular_inkling'
+120756 INFO: Analyzing hidden import 'transformers.models.instructblipvideo.modular_instructblipvideo'
+120771 INFO: Analyzing hidden import 'transformers.models.internvl.modular_internvl'
+120782 INFO: Analyzing hidden import 'transformers.models.jais2.modular_jais2'
+120782 INFO: Analyzing hidden import 'transformers.models.jamba.modular_jamba'
+120794 INFO: Analyzing hidden import 'transformers.models.janus.modular_janus'
+120912 INFO: Analyzing hidden import 'transformers.models.jetmoe.modular_jetmoe'
+120919 INFO: Analyzing hidden import 'transformers.models.jina_embeddings_v3.modular_jina_embeddings_v3'
+120926 INFO: Analyzing hidden import 'transformers.models.kimi_k25.modular_kimi_k25'
+120935 INFO: Analyzing hidden import 'transformers.models.kyutai_speech_to_text.modular_kyutai_speech_to_text'
+120945 INFO: Analyzing hidden import 'transformers.models.laguna.modular_laguna'
+120952 INFO: Analyzing hidden import 'transformers.models.lasr.modular_lasr'
+120957 INFO: Analyzing hidden import 'transformers.models.lasr.processing_lasr'
+120957 INFO: Analyzing hidden import 'transformers.models.layoutxlm.modular_layoutxlm'
+120957 INFO: Analyzing hidden import 'transformers.models.lfm2.modular_lfm2'
+120969 INFO: Analyzing hidden import 'transformers.models.lfm2_moe.modular_lfm2_moe'
+120973 INFO: Analyzing hidden import 'transformers.models.lfm2_vl.modular_lfm2_vl'
+120976 INFO: Analyzing hidden import 'transformers.models.lightglue.modular_lightglue'
+120991 INFO: Analyzing hidden import 'transformers.models.lighton_ocr'
+121002 INFO: Analyzing hidden import 'transformers.models.lighton_ocr.modular_lighton_ocr'
+121007 INFO: Analyzing hidden import 'transformers.models.llava_next_video.modular_llava_next_video'
+121014 INFO: Analyzing hidden import 'transformers.models.llava_next_video.video_processing_llava_next_video'
+121014 INFO: Analyzing hidden import 'transformers.models.llava_onevision.modular_llava_onevision'
+121023 INFO: Analyzing hidden import 'transformers.models.longcat_flash.modular_longcat_flash'
+121033 INFO: Analyzing hidden import 'transformers.models.lw_detr.modular_lw_detr'
+121052 INFO: Analyzing hidden import 'transformers.models.markuplm.tokenization_markuplm'
+121064 INFO: Analyzing hidden import 'transformers.models.mask2former.modular_mask2former'
+121071 INFO: Analyzing hidden import 'transformers.models.maskformer.modular_maskformer'
+121088 INFO: Analyzing hidden import 'transformers.models.megatron_gpt2.checkpoint_reshaping_and_interoperability'
+121100 INFO: Analyzing hidden import 'transformers.models.mellum.modular_mellum'
+121103 INFO: Analyzing hidden import 'transformers.models.metaclip_2.modular_metaclip_2'
+121106 INFO: Analyzing hidden import 'transformers.models.mimo_v2_flash.modular_mimo_v2_flash'
+121111 INFO: Analyzing hidden import 'transformers.models.minicpm3.modular_minicpm3'
+121117 INFO: Analyzing hidden import 'transformers.models.minicpmv4_6.modular_minicpmv4_6'
+121129 INFO: Analyzing hidden import 'transformers.models.minimax.modular_minimax'
+121137 INFO: Analyzing hidden import 'transformers.models.minimax_m2.modular_minimax_m2'
+121140 INFO: Analyzing hidden import 'transformers.models.minimax_m3_vl.modular_minimax_m3_vl'
+121161 INFO: Analyzing hidden import 'transformers.models.ministral.modular_ministral'
+121165 INFO: Analyzing hidden import 'transformers.models.ministral3.modular_ministral3'
+121165 INFO: Analyzing hidden import 'transformers.models.mistral.modular_mistral'
+121170 INFO: Analyzing hidden import 'transformers.models.mistral3.modular_mistral3'
+121268 INFO: Analyzing hidden import 'transformers.models.mistral4.modular_mistral4'
+121275 INFO: Analyzing hidden import 'transformers.models.mixtral.modular_mixtral'
+121281 INFO: Analyzing hidden import 'transformers.models.mlcd.modular_mlcd'
+121286 INFO: Analyzing hidden import 'transformers.models.mm_grounding_dino.modular_mm_grounding_dino'
+121289 INFO: Analyzing hidden import 'transformers.models.mobilenet_v1.image_processing_pil_mobilenet_v1'
+121291 INFO: Analyzing hidden import 'transformers.models.modernbert.modular_modernbert'
+121304 INFO: Analyzing hidden import 'transformers.models.modernbert_decoder.modular_modernbert_decoder'
+121313 INFO: Analyzing hidden import 'transformers.models.modernvbert.modular_modernvbert'
+121321 INFO: Analyzing hidden import 'transformers.models.moonshine.modular_moonshine'
+121329 INFO: Analyzing hidden import 'transformers.models.moonshine_streaming.modular_moonshine_streaming'
+121336 INFO: Analyzing hidden import 'transformers.models.moonshine_streaming.processing_moonshine_streaming'
+121338 INFO: Analyzing hidden import 'transformers.models.musicflamingo.modular_musicflamingo'
+121345 INFO: Analyzing hidden import 'transformers.models.musicgen_melody.feature_extraction_musicgen_melody'
+121349 INFO: Analyzing hidden import 'transformers.models.musicgen_melody.processing_musicgen_melody'
+121349 INFO: Analyzing hidden import 'transformers.models.nanochat.modular_nanochat'
+121353 INFO: Analyzing hidden import 'transformers.models.nemotron3_5_asr'
+121408 INFO: Analyzing hidden import 'transformers.models.nemotron3_5_asr.modular_nemotron3_5_asr'
+121417 INFO: Analyzing hidden import 'transformers.models.nemotron_asr_streaming.modular_nemotron_asr_streaming'
+121437 INFO: Analyzing hidden import 'transformers.models.nemotron_h.modular_nemotron_h'
+121437 INFO: Analyzing hidden import 'transformers.models.nomic_bert.modular_nomic_bert'
+121437 INFO: Analyzing hidden import 'transformers.models.nougat.configuration_nougat'
+121437 INFO: Analyzing hidden import 'transformers.models.olmo.modular_olmo'
+121454 INFO: Analyzing hidden import 'transformers.models.olmo2.modular_olmo2'
+121457 INFO: Analyzing hidden import 'transformers.models.olmo3.modular_olmo3'
+121463 INFO: Analyzing hidden import 'transformers.models.olmo_hybrid.modular_olmo_hybrid'
+121474 INFO: Analyzing hidden import 'transformers.models.olmoe.modular_olmoe'
+121479 INFO: Analyzing hidden import 'transformers.models.openai_privacy_filter.modular_openai_privacy_filter'
+121484 INFO: Analyzing hidden import 'transformers.models.ovis2.modular_ovis2'
+121493 INFO: Analyzing hidden import 'transformers.models.owlv2.modular_owlv2'
+121494 INFO: Analyzing hidden import 'transformers.models.paddleocr_vl.modular_paddleocr_vl'
+121512 INFO: Analyzing hidden import 'transformers.models.parakeet.modular_parakeet'
+121526 INFO: Analyzing hidden import 'transformers.models.pe_audio.modular_pe_audio'
+121531 INFO: Analyzing hidden import 'transformers.models.pe_audio_video.modular_pe_audio_video'
+121546 INFO: Analyzing hidden import 'transformers.models.pe_video.modular_pe_video'
+121552 INFO: Analyzing hidden import 'transformers.models.perception_lm.modular_perception_lm'
+121556 INFO: Analyzing hidden import 'transformers.models.perception_lm.video_processing_perception_lm'
+121558 INFO: Analyzing hidden import 'transformers.models.phi.modular_phi'
+121563 INFO: Analyzing hidden import 'transformers.models.phi3.modular_phi3'
+121568 INFO: Analyzing hidden import 'transformers.models.phi4_multimodal.modular_phi4_multimodal'
+121682 INFO: Analyzing hidden import 'transformers.models.phimoe.modular_phimoe'
+121688 INFO: Analyzing hidden import 'transformers.models.pi0.modular_pi0'
+121688 INFO: Analyzing hidden import 'transformers.models.pi0.processing_pi0'
+121704 INFO: Analyzing hidden import 'transformers.models.pixio.modular_pixio'
+121710 INFO: Analyzing hidden import 'transformers.models.plbart.modular_plbart'
+121714 INFO: Analyzing hidden import 'transformers.models.pop2piano.feature_extraction_pop2piano'
+121718 INFO: Analyzing hidden import 'transformers.models.pop2piano.processing_pop2piano'
+121718 INFO: Analyzing hidden import 'transformers.models.pop2piano.tokenization_pop2piano'
+121718 INFO: Analyzing hidden import 'transformers.models.pp_chart2table.modular_pp_chart2table'
+121734 INFO: Analyzing hidden import 'transformers.models.pp_doclayout_v2.modular_pp_doclayout_v2'
+121739 INFO: Analyzing hidden import 'transformers.models.pp_doclayout_v3.modular_pp_doclayout_v3'
+121766 INFO: Analyzing hidden import 'transformers.models.pp_formulanet'
+121787 INFO: Analyzing hidden import 'transformers.models.pp_formulanet.modular_pp_formulanet'
+121793 INFO: Analyzing hidden import 'transformers.models.pp_formulanet.processing_pp_formulanet'
+121797 INFO: Analyzing hidden import 'transformers.models.pp_lcnet.modular_pp_lcnet'
+121804 INFO: Analyzing hidden import 'transformers.models.pp_lcnet_v3.modular_pp_lcnet_v3'
+121806 INFO: Analyzing hidden import 'transformers.models.pp_lcnet_v4.modular_pp_lcnet_v4'
+121810 INFO: Analyzing hidden import 'transformers.models.pp_ocrv5_mobile_det.modular_pp_ocrv5_mobile_det'
+121814 INFO: Analyzing hidden import 'transformers.models.pp_ocrv5_mobile_rec'
+121824 INFO: Analyzing hidden import 'transformers.models.pp_ocrv5_mobile_rec.modular_pp_ocrv5_mobile_rec'
+121838 INFO: Analyzing hidden import 'transformers.models.pp_ocrv5_server_det.modular_pp_ocrv5_server_det'
+121852 INFO: Analyzing hidden import 'transformers.models.pp_ocrv5_server_rec.modular_pp_ocrv5_server_rec'
+121859 INFO: Analyzing hidden import 'transformers.models.pp_ocrv6_medium_det.modular_pp_ocrv6_medium_det'
+121861 INFO: Analyzing hidden import 'transformers.models.pp_ocrv6_small_det.modular_pp_ocrv6_small_det'
+121863 INFO: Analyzing hidden import 'transformers.models.pp_ocrv6_small_rec.image_processing_pp_ocrv6_small_rec'
+121867 INFO: Analyzing hidden import 'transformers.models.pp_ocrv6_small_rec.modular_pp_ocrv6_small_rec'
+121870 INFO: Analyzing hidden import 'transformers.models.pp_ocrv6_tiny_rec.modular_pp_ocrv6_tiny_rec'
+121873 INFO: Analyzing hidden import 'transformers.models.prompt_depth_anything.modular_prompt_depth_anything'
+121878 INFO: Analyzing hidden import 'transformers.models.qianfan_ocr.modular_qianfan_ocr'
+121884 INFO: Analyzing hidden import 'transformers.models.qwen2.modular_qwen2'
+121886 INFO: Analyzing hidden import 'transformers.models.qwen2_5_omni.modular_qwen2_5_omni'
+122055 INFO: Analyzing hidden import 'transformers.models.qwen2_5_vl.modular_qwen2_5_vl'
+122067 INFO: Analyzing hidden import 'transformers.models.qwen2_moe.modular_qwen2_moe'
+122071 INFO: Analyzing hidden import 'transformers.models.qwen2_vl.video_processing_qwen2_vl'
+122078 INFO: Analyzing hidden import 'transformers.models.qwen3.modular_qwen3'
+122081 INFO: Analyzing hidden import 'transformers.models.qwen3_5.modular_qwen3_5'
+122092 INFO: Analyzing hidden import 'transformers.models.qwen3_5_moe.modular_qwen3_5_moe'
+122098 INFO: Analyzing hidden import 'transformers.models.qwen3_asr.modular_qwen3_asr'
+122102 INFO: Analyzing hidden import 'transformers.models.qwen3_moe.modular_qwen3_moe'
+122107 INFO: Analyzing hidden import 'transformers.models.qwen3_next.modular_qwen3_next'
+122120 INFO: Analyzing hidden import 'transformers.models.qwen3_omni_moe.modular_qwen3_omni_moe'
+122164 INFO: Analyzing hidden import 'transformers.models.qwen3_vl.modular_qwen3_vl'
+122180 INFO: Analyzing hidden import 'transformers.models.qwen3_vl_moe.modular_qwen3_vl_moe'
+122190 INFO: Analyzing hidden import 'transformers.models.radio.modular_radio'
+122197 INFO: Analyzing hidden import 'transformers.models.rf_detr.modular_rf_detr'
+122218 INFO: Analyzing hidden import 'transformers.models.roberta.modular_roberta'
+122227 INFO: Analyzing hidden import 'transformers.models.roberta.tokenization_roberta_old'
+122230 INFO: Analyzing hidden import 'transformers.models.rt_detr.modular_rt_detr'
+122261 INFO: Analyzing hidden import 'transformers.models.rt_detr_v2.modular_rt_detr_v2'
+122270 INFO: Analyzing hidden import 'transformers.models.sam2.modular_sam2'
+122393 INFO: Analyzing hidden import 'transformers.models.sam2_video.modular_sam2_video'
+122429 INFO: Analyzing hidden import 'transformers.models.sam3.modular_sam3'
+122433 INFO: Analyzing hidden import 'transformers.models.sam3_lite_text.modular_sam3_lite_text'
+122441 INFO: Analyzing hidden import 'transformers.models.sam3_tracker.modular_sam3_tracker'
+122443 INFO: Analyzing hidden import 'transformers.models.sam3_tracker_video.modular_sam3_tracker_video'
+122450 INFO: Analyzing hidden import 'transformers.models.sam_hq.modular_sam_hq'
+122457 INFO: Analyzing hidden import 'transformers.models.sapiens2.modular_sapiens2'
+122483 INFO: Analyzing hidden import 'transformers.models.seed_oss.modular_seed_oss'
+122488 INFO: Analyzing hidden import 'transformers.models.segformer.modular_segformer'
+122500 INFO: Analyzing hidden import 'transformers.models.sew.modular_sew'
+122507 INFO: Analyzing hidden import 'transformers.models.siglip2.modular_siglip2'
+122512 INFO: Analyzing hidden import 'transformers.models.slanet.modular_slanet'
+122520 INFO: Analyzing hidden import 'transformers.models.slanext.modular_slanext'
+122532 INFO: Analyzing hidden import 'transformers.models.smollm3.modular_smollm3'
+122536 INFO: Analyzing hidden import 'transformers.models.smolvlm.modular_smolvlm'
+122540 INFO: Analyzing hidden import 'transformers.models.smolvlm.video_processing_smolvlm'
+122545 INFO: Analyzing hidden import 'transformers.models.solar_open.modular_solar_open'
+122548 INFO: Analyzing hidden import 'transformers.models.starcoder2.modular_starcoder2'
+122554 INFO: Analyzing hidden import 'transformers.models.swin.modular_swin'
+122572 INFO: Analyzing hidden import 'transformers.models.switch_transformers.modular_switch_transformers'
+122583 INFO: Analyzing hidden import 'transformers.models.t5gemma.modular_t5gemma'
+122600 INFO: Analyzing hidden import 'transformers.models.t5gemma2.modular_t5gemma2'
+122729 INFO: Analyzing hidden import 'transformers.models.timesfm.modular_timesfm'
+122743 INFO: Analyzing hidden import 'transformers.models.timesfm2_5.modular_timesfm2_5'
+122754 INFO: Analyzing hidden import 'transformers.models.tipsv2'
+122782 INFO: Analyzing hidden import 'transformers.models.tipsv2.modular_tipsv2'
+122794 INFO: Analyzing hidden import 'transformers.models.tipsv2_dpt'
+122806 INFO: Analyzing hidden import 'transformers.models.tipsv2_dpt.modular_tipsv2_dpt'
+122819 INFO: Analyzing hidden import 'transformers.models.unispeech.modular_unispeech'
+122825 INFO: Analyzing hidden import 'transformers.models.unispeech_sat.modular_unispeech_sat'
+122834 INFO: Analyzing hidden import 'transformers.models.uvdoc.modular_uvdoc'
+122843 INFO: Analyzing hidden import 'transformers.models.vaultgemma.modular_vaultgemma'
+122845 INFO: Analyzing hidden import 'transformers.models.vibevoice_acoustic_tokenizer'
+122859 INFO: Analyzing hidden import 'transformers.models.vibevoice_acoustic_tokenizer.modular_vibevoice_acoustic_tokenizer'
+122869 INFO: Analyzing hidden import 'transformers.models.vibevoice_asr.modular_vibevoice_asr'
+122877 INFO: Analyzing hidden import 'transformers.models.video_llama_3.modular_video_llama_3'
+122899 INFO: Analyzing hidden import 'transformers.models.video_llava.video_processing_video_llava'
+122901 INFO: Analyzing hidden import 'transformers.models.videomt.modular_videomt'
+122906 INFO: Analyzing hidden import 'transformers.models.videoprism.modular_videoprism'
+122920 INFO: Analyzing hidden import 'transformers.models.vipllava.modular_vipllava'
+122923 INFO: Analyzing hidden import 'transformers.models.vit_mae.modular_vit_mae'
+122931 INFO: Analyzing hidden import 'transformers.models.vit_msn.modular_vit_msn'
+122936 INFO: Analyzing hidden import 'transformers.models.vivit.modular_vivit'
+122942 INFO: Analyzing hidden import 'transformers.models.voxtral.modular_voxtral'
+122947 INFO: Analyzing hidden import 'transformers.models.voxtral_realtime.feature_extraction_voxtral_realtime'
+122950 INFO: Analyzing hidden import 'transformers.models.voxtral_realtime.modular_voxtral_realtime'
+122963 INFO: Analyzing hidden import 'transformers.models.wav2vec2_bert.modular_wav2vec2_bert'
+122983 INFO: Analyzing hidden import 'transformers.models.wav2vec2_conformer.modular_wav2vec2_conformer'
+123099 INFO: Analyzing hidden import 'transformers.models.wavlm.modular_wavlm'
+123109 INFO: Analyzing hidden import 'transformers.models.x_clip.modular_x_clip'
+123119 INFO: Analyzing hidden import 'transformers.models.xcodec2.modular_xcodec2'
+123134 INFO: Analyzing hidden import 'transformers.models.xlm_roberta.modular_xlm_roberta'
+123141 INFO: Analyzing hidden import 'transformers.models.xlm_roberta_xl.modular_xlm_roberta_xl'
+123151 INFO: Analyzing hidden import 'transformers.models.xlstm.configuration_xlstm'
+123153 INFO: Analyzing hidden import 'transformers.models.xlstm.modeling_xlstm'
+123178 INFO: Analyzing hidden import 'transformers.models.yolos.modular_yolos'
+123185 INFO: Analyzing hidden import 'transformers.models.youtu.modular_youtu'
+123187 INFO: Analyzing hidden import 'transformers.models.zamba2.modular_zamba2'
+123206 INFO: Analyzing hidden import 'transformers.models.zaya.modular_zaya'
+123219 INFO: Analyzing hidden import 'transformers.testing_utils'
+123442 INFO: Analyzing hidden import 'transformers.utils.attention_visualizer'
+123449 INFO: Analyzing hidden import 'transformers.utils.backbone_utils'
+123451 INFO: Analyzing hidden import 'transformers.utils.dummy_detectron2_objects'
+123452 INFO: Analyzing hidden import 
 'transformers.utils.dummy_essentia_and_librosa_and_pretty_midi_and_scipy_and_torch_objects'
-111772 INFO: Analyzing hidden import 'transformers.utils.dummy_music_objects'
-111772 INFO: Analyzing hidden import 'transformers.utils.dummy_speech_objects'
-111788 INFO: Analyzing hidden import 'transformers.utils.dummy_timm_and_torchvision_objects'
-111794 INFO: Analyzing hidden import 'transformers.utils.dummy_torchaudio_objects'
-111794 INFO: Analyzing hidden import 'transformers.utils.hp_naming'
-111806 INFO: Analyzing hidden import 'transformers.utils.network_logging'
-111822 INFO: Analyzing hidden import 'transformers.utils.pytest_helpers'
-111851 INFO: Analyzing hidden import 'tokenizers.tools'
-111867 INFO: Analyzing hidden import 'piper.__main__'
-111979 INFO: Analyzing hidden import 'piper.download_voices'
-111994 INFO: Analyzing hidden import 'piper.http_server'
-112349 INFO: Analyzing hidden import 'piper.patch_voice_with_alignment'
-112357 INFO: Analyzing hidden import 'piper.train'
-112359 INFO: Analyzing hidden import 'piper.train.__main__'
-112371 INFO: Analyzing hidden import 'piper.train.export_generator'
-112376 INFO: Analyzing hidden import 'piper.train.export_onnx'
-112385 INFO: Processing module hooks (post-graph stage)...
-113361 INFO: Processing standard module hook 'hook-lxml.isoschematron.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\Pyt
+123453 INFO: Analyzing hidden import 'transformers.utils.dummy_music_objects'
+123454 INFO: Analyzing hidden import 'transformers.utils.dummy_speech_objects'
+123456 INFO: Analyzing hidden import 'transformers.utils.dummy_timm_and_torchvision_objects'
+123457 INFO: Analyzing hidden import 'transformers.utils.dummy_torchaudio_objects'
+123459 INFO: Analyzing hidden import 'transformers.utils.hp_naming'
+123462 INFO: Analyzing hidden import 'transformers.utils.network_logging'
+123471 INFO: Analyzing hidden import 'transformers.utils.pytest_helpers'
+123475 INFO: Analyzing hidden import 'tokenizers.tools'
+123480 INFO: Analyzing hidden import 'piper.__main__'
+123602 INFO: Analyzing hidden import 'piper.download_voices'
+123608 INFO: Analyzing hidden import 'piper.http_server'
+124110 INFO: Analyzing hidden import 'piper.patch_voice_with_alignment'
+124112 INFO: Analyzing hidden import 'piper.train'
+124112 INFO: Analyzing hidden import 'piper.train.__main__'
+124116 INFO: Analyzing hidden import 'piper.train.export_generator'
+124116 INFO: Analyzing hidden import 'piper.train.export_onnx'
+124116 INFO: Processing module hooks (post-graph stage)...
+125541 INFO: Processing standard module hook 'hook-lxml.isoschematron.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\Pyt
 honSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\_pyinstaller_hooks_contr
 ib\\stdhooks'
-114116 INFO: Processing standard module hook 'hook-matplotlib.backends.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\Py
+126499 INFO: Processing standard module hook 'hook-matplotlib.backends.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\Py
 thonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks'
-114116 INFO: Matplotlib backend selection method: automatic discovery of used backends
-114124 INFO: Discovered Matplotlib backend(s) via `matplotlib.use()` call in module 'sympy.testing.runtests': ['Agg', 'Agg']
-114124 INFO: The following Matplotlib backends were discovered by scanning for `matplotlib.use()` calls: ['Agg']. If your 
+126499 INFO: Matplotlib backend selection method: automatic discovery of used backends
+126508 INFO: Discovered Matplotlib backend(s) via `matplotlib.use()` call in module 'sympy.testing.runtests': ['Agg', 'Agg']
+126508 INFO: The following Matplotlib backends were discovered by scanning for `matplotlib.use()` calls: ['Agg']. If your 
 backend of choice is not in this list, either add a `matplotlib.use()` call to your code, or configure the backend collection 
 via hook options (see: https://pyinstaller.org/en/stable/hooks-config.html#matplotlib-hooks).
-114124 INFO: Selected matplotlib backends: ['Agg']
-114735 INFO: Processing standard module hook 'hook-PIL.SpiderImagePlugin.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\
+126510 INFO: Selected matplotlib backends: ['Agg']
+127331 INFO: Processing standard module hook 'hook-PIL.SpiderImagePlugin.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\
 PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks'
-118409 INFO: Processing standard module hook 'hook-sqlalchemy.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftw
+133263 INFO: Processing standard module hook 'hook-sqlalchemy.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftw
 areFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks'
-118691 WARNING: Hidden import "pysqlite2" not found!
-118691 WARNING: Hidden import "MySQLdb" not found!
-118691 WARNING: Hidden import "psycopg2" not found!
-120509 INFO: Processing standard module hook 'hook-_tkinter.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwar
+133669 WARNING: Hidden import "pysqlite2" not found!
+133671 WARNING: Hidden import "MySQLdb" not found!
+133671 WARNING: Hidden import "psycopg2" not found!
+136276 INFO: Processing standard module hook 'hook-_tkinter.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwar
 eFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks'
-120512 INFO: Processing standard module hook 'hook-lxml.objectify.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonS
+136278 INFO: Processing standard module hook 'hook-lxml.objectify.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonS
 oftwareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\_pyinstaller_hooks_contrib\\
 stdhooks'
-120516 INFO: Processing standard module hook 'hook-tzdata.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareF
+136288 INFO: Processing standard module hook 'hook-tzdata.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareF
 oundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks
 '
-121255 INFO: Performing binary vs. data reclassification (7740 entries)
-137442 INFO: Looking for ctypes DLLs
-137528 INFO: Analyzing run-time hooks ...
-137559 INFO: Including run-time hook 'pyi_rth_inspect.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFound
+136942 INFO: Performing binary vs. data reclassification (7740 entries)
+143616 INFO: Looking for ctypes DLLs
+143748 INFO: Analyzing run-time hooks ...
+143769 INFO: Including run-time hook 'pyi_rth_inspect.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFound
 ation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks\\rthooks'
-137574 INFO: Including run-time hook 'pyi_rth_pkgutil.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFound
+143792 INFO: Including run-time hook 'pyi_rth_pkgutil.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFound
 ation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks\\rthooks'
-137575 INFO: Including run-time hook 'pyi_rth_multiprocessing.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftw
+143810 INFO: Including run-time hook 'pyi_rth_multiprocessing.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftw
 areFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks\\rthooks'
-137593 INFO: Including run-time hook 'pyi_rth_cryptography_openssl.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\Python
+143817 INFO: Including run-time hook 'pyi_rth_cryptography_openssl.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\Python
 SoftwareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\_pyinstaller_hooks_contrib\
 \rthooks'
-137593 INFO: Including run-time hook 'pyi_rth_setuptools.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFo
+143838 INFO: Including run-time hook 'pyi_rth_setuptools.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFo
 undation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks\\rthooks'
-137607 INFO: Including run-time hook 'pyi_rth_mplconfig.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFou
+143858 INFO: Including run-time hook 'pyi_rth_mplconfig.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFou
 ndation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks\\rthooks'
-137607 INFO: Processing pre-find-module-path hook 'hook-_pyi_rth_utils.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\Py
+143864 INFO: Processing pre-find-module-path hook 'hook-_pyi_rth_utils.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\Py
 thonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks\\pre
 _find_module_path'
-137626 INFO: Processing standard module hook 'hook-_pyi_rth_utils.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonS
+143886 INFO: Processing standard module hook 'hook-_pyi_rth_utils.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonS
 oftwareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks'
-137654 INFO: Including run-time hook 'pyi_rth_pkgres.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFounda
+143903 INFO: Including run-time hook 'pyi_rth_pkgres.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFounda
 tion.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks\\rthooks'
-137663 INFO: Including run-time hook 'pyi_rth_traitlets.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFou
+143916 INFO: Including run-time hook 'pyi_rth_traitlets.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFou
 ndation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\_pyinstaller_hooks_contrib\\rthooks'
-137670 INFO: Including run-time hook 'pyi_rth__tkinter.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFoun
+143927 INFO: Including run-time hook 'pyi_rth__tkinter.py' from 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFoun
 dation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\PyInstaller\\hooks\\rthooks'
-137908 INFO: Creating base_library.zip...
-137944 INFO: Looking for dynamic libraries
+144332 INFO: Creating base_library.zip...
+144358 INFO: Looking for dynamic libraries
 C:\Users\admin\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\local-packages\Python310\si
 te-packages\pydantic\experimental\__init__.py:7: PydanticExperimentalWarning: This module is experimental, its contents are 
 subject to change and deprecation.
@@ -794,7 +799,7 @@ subject to change and deprecation.
 be used.
 [transformers] PyTorch was not found. Models won't be available and only tokenizers, configuration and file/data utilities can 
 be used.
-151070 INFO: Extra DLL search directories (AddDllDirectory): ['C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFounda
+162362 INFO: Extra DLL search directories (AddDllDirectory): ['C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFounda
 tion.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\numpy.libs', 'C:\\Users\\admin\\AppData\\
 Local\\Packages\\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\av.l
 ibs', 'C:\\Users\\admin\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packag
@@ -802,34 +807,35 @@ es\\Python310\\site-packages\\pandas.libs', 'C:\\Users\\admin\\AppData\\Local\\P
 bz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\ctranslate2', 'C:\\Users\\admin\\AppData\\Local\\Packages\\
 PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\ctranslate2/../_rocm_
 sdk_core/bin']
-151070 INFO: Extra DLL search directories (PATH): []
-153556 WARNING: Library not found: could not resolve 'libmysql.dll', dependency of 'C:\\Users\\admin\\AppData\\Local\\Packages\
+162362 INFO: Extra DLL search directories (PATH): []
+164963 WARNING: Library not found: could not resolve 'libmysql.dll', dependency of 'C:\\Users\\admin\\AppData\\Local\\Packages\
 \PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\site-packages\\_mysql_connector.cp3
 10-win_amd64.pyd'.
-153884 INFO: Warnings written to D:\VAIC\OpenNezt-PTIT\backend\build\opennezt-backend\warn-opennezt-backend.txt
-154665 INFO: Graph cross-reference written to D:\VAIC\OpenNezt-PTIT\backend\build\opennezt-backend\xref-opennezt-backend.html
-155020 INFO: checking PYZ
-155059 INFO: Building because toc changed
-155059 INFO: Building PYZ (ZlibArchive) D:\VAIC\OpenNezt-PTIT\backend\build\opennezt-backend\PYZ-00.pyz
-158242 INFO: Building PYZ (ZlibArchive) D:\VAIC\OpenNezt-PTIT\backend\build\opennezt-backend\PYZ-00.pyz completed successfully.
-158353 INFO: checking PKG
-158353 INFO: Building because toc changed
-158353 INFO: Building PKG (CArchive) opennezt-backend.pkg
-158384 INFO: Building PKG (CArchive) opennezt-backend.pkg completed successfully.
-158400 INFO: Bootloader C:\Users\admin\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\loc
+165447 INFO: Warnings written to D:\VAIC\OpenNezt-PTIT\backend\build\opennezt-backend\warn-opennezt-backend.txt
+166186 INFO: Graph cross-reference written to D:\VAIC\OpenNezt-PTIT\backend\build\opennezt-backend\xref-opennezt-backend.html
+166578 INFO: checking PYZ
+166578 INFO: Building PYZ because PYZ-00.toc is non existent
+166578 INFO: Building PYZ (ZlibArchive) D:\VAIC\OpenNezt-PTIT\backend\build\opennezt-backend\PYZ-00.pyz
+170160 INFO: Building PYZ (ZlibArchive) D:\VAIC\OpenNezt-PTIT\backend\build\opennezt-backend\PYZ-00.pyz completed successfully.
+170279 INFO: checking PKG
+170279 INFO: Building PKG because PKG-00.toc is non existent
+170279 INFO: Building PKG (CArchive) opennezt-backend.pkg
+170307 INFO: Building PKG (CArchive) opennezt-backend.pkg completed successfully.
+170309 INFO: Bootloader C:\Users\admin\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\LocalCache\loc
 al-packages\Python310\site-packages\PyInstaller\bootloader\Windows-64bit-intel\run.exe
-158400 INFO: checking EXE
-158402 INFO: Building because toc changed
-158402 INFO: Building EXE from EXE-00.toc
-158402 INFO: Copying bootloader EXE to D:\VAIC\OpenNezt-PTIT\backend\build\opennezt-backend\opennezt-backend.exe
-158434 INFO: Copying icon to EXE
-158451 INFO: Copying 0 resources to EXE
-158451 INFO: Embedding manifest in EXE
-158453 INFO: Appending PKG archive to EXE
-158472 INFO: Fixing EXE headers
-158607 INFO: Building EXE from EXE-00.toc completed successfully.
-158666 INFO: checking COLLECT
-158713 INFO: Removing dir D:\VAIC\OpenNezt-PTIT\backend\dist\opennezt-backend
-159382 INFO: Building COLLECT COLLECT-00.toc
-164178 INFO: Building COLLECT COLLECT-00.toc completed successfully.
-164321 INFO: Build complete! The results are available in: D:\VAIC\OpenNezt-PTIT\backend\dist
+170309 INFO: checking EXE
+170309 INFO: Building EXE because EXE-00.toc is non existent
+170309 INFO: Building EXE from EXE-00.toc
+170309 INFO: Copying bootloader EXE to D:\VAIC\OpenNezt-PTIT\backend\build\opennezt-backend\opennezt-backend.exe
+170309 INFO: Copying icon to EXE
+170309 INFO: Copying 0 resources to EXE
+170309 INFO: Embedding manifest in EXE
+170317 INFO: Appending PKG archive to EXE
+170336 INFO: Fixing EXE headers
+170501 INFO: Building EXE from EXE-00.toc completed successfully.
+170557 INFO: checking COLLECT
+170557 INFO: Building COLLECT because COLLECT-00.toc is non existent
+170557 INFO: Removing dir D:\VAIC\OpenNezt-PTIT\backend\dist\opennezt-backend
+171485 INFO: Building COLLECT COLLECT-00.toc
+177205 INFO: Building COLLECT COLLECT-00.toc completed successfully.
+177367 INFO: Build complete! The results are available in: D:\VAIC\OpenNezt-PTIT\backend\dist
