@@ -59,10 +59,18 @@ def build_providers(mode: str) -> ProviderBundle:
 
     if normalized == "cloud":
         # TTS is decoupled from mode (see build_tts): cloud STT+NMT still gets
-        # real local Piper voices.
+        # real local Piper voices. NMT stays on Groq unless SEA-LION is asked
+        # for explicitly — that pairs Groq Whisper STT with SEA-LION v4 NMT.
+        if settings.nmt_engine.lower() == "sealion":
+            from .sealion_nmt import SeaLionNMTProvider
+
+            cloud_nmt: NMTProvider = SeaLionNMTProvider()
+        else:
+            cloud_nmt = CloudNMTProvider()
+
         return ProviderBundle(
             stt=CloudSTTProvider(),
-            nmt=CloudNMTProvider(),
+            nmt=cloud_nmt,
             tts=build_tts(),
             mode="cloud",
         )
@@ -82,12 +90,18 @@ def build_providers(mode: str) -> ProviderBundle:
         else:
             stt = OfflineSTTProvider()
 
-        # NMT engine is config-selectable: NLLB CT2 (default) or a local chat
-        # server (Ollama/vLLM) serving SeaLLM.
-        if settings.nmt_engine.lower() == "seallm":
+        # NMT engine is config-selectable: NLLB CT2 (default), a local chat
+        # server (Ollama/vLLM) serving SeaLLM, or SEA-LION v4 over its
+        # OpenAI-compatible API (note: that one needs network).
+        nmt_engine = settings.nmt_engine.lower()
+        if nmt_engine == "seallm":
             from .local_nmt import LocalNMTProvider
 
             nmt: NMTProvider = LocalNMTProvider()
+        elif nmt_engine == "sealion":
+            from .sealion_nmt import SeaLionNMTProvider
+
+            nmt = SeaLionNMTProvider()
         else:
             nmt = OfflineNMTProvider()
 
