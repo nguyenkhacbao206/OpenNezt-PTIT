@@ -4,7 +4,9 @@ Run with:  uvicorn app.main:app --reload
 """
 from __future__ import annotations
 
+import asyncio
 import logging
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
@@ -17,6 +19,7 @@ STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 from .core.config import settings
 from .core.glossary import list_glossaries
 from .core.session import SessionState
+from .core.warmup import run_warmup
 from .providers.factory import VALID_MODES
 from .ws.handler import dispatch
 from .ws.rooms import manager
@@ -27,10 +30,27 @@ logging.basicConfig(
 )
 log = logging.getLogger("app.main")
 
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    """Kick off model warmup, then serve.
+
+    Warmup is a fire-and-forget background task on purpose: `/ws` must accept
+    connections immediately, and a client that connects mid-warm just waits on
+    the same shared cache entry the warmup is filling. Cancelled on shutdown so
+    a half-finished load never holds the process open.
+    """
+    task = asyncio.create_task(run_warmup())
+    try:
+        yield
+    finally:
+        task.cancel()
+
+
 app = FastAPI(
     title="Real-Time VI<->EN Business Meeting Translator",
     version="0.1.0",
     description="Modular STT/NMT/TTS pipeline over WebSocket.",
+    lifespan=lifespan,
 )
 
 # Open CORS for local hackathon development.

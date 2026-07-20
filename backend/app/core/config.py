@@ -35,6 +35,11 @@ class Settings(BaseSettings):
     # CORS allow-list. "*" is fine for local hackathon dev.
     cors_origins: str = "*"
 
+    # Preload the local models at startup (see core/warmup.py) so the first
+    # speaker does not pay NLLB/Whisper/Piper load time inside their turn.
+    # Runs in the background — it never blocks or crashes startup.
+    warmup_on_startup: bool = True
+
     # --- Offline STT engine selection ------------------------------------
     # Which local STT engine `mode=offline` uses:
     #   "whisper"    -> Faster-Whisper (one multilingual model, auto-detect)
@@ -105,12 +110,29 @@ class Settings(BaseSettings):
     # Chat model used to translate the transcript (both directions).
     groq_nmt_model: str = "llama-3.3-70b-versatile"
 
-    # --- Offline NMT engine selection ------------------------------------
-    # Which NMT engine `mode=offline` uses:
-    #   "nllb"   -> CTranslate2 NLLB-200 (light, fast, real-time on CPU; default)
-    #   "seallm" -> a local OpenAI-compatible chat endpoint (Ollama/vLLM) serving
-    #               SeaLLMs-v3 — better glossary/context following, needs a GPU.
+    # --- NMT engine selection --------------------------------------------
+    # Which NMT engine to use. Applies to `mode=offline` (replacing NLLB) and,
+    # for "sealion" only, also to `mode=cloud` (replacing the Groq chat NMT, so
+    # you can pair Groq Whisper STT with SEA-LION translation):
+    #   "nllb"    -> CTranslate2 NLLB-200 (light, fast, real-time on CPU; default)
+    #   "seallm"  -> a local OpenAI-compatible chat endpoint (Ollama/vLLM) serving
+    #                SeaLLMs-v3 — better glossary/context following, needs a GPU.
+    #   "sealion" -> AI Singapore SEA-LION v4 via the hosted SEA-LION API
+    #                (api.sea-lion.ai). SEA-Asian-tuned, best VI quality, but it
+    #                is a NETWORK call — not usable without internet.
     nmt_engine: str = "nllb"
+
+    # --- SEA-LION NMT (used when nmt_engine == "sealion") ----------------
+    # Hosted SEA-LION API — OpenAI-compatible, so groq_client is reused as-is.
+    # Get a free key from the SEA-LION Playground (https://playground.sea-lion.ai).
+    # NOTE: the free tier is rate-limited (~10 requests/minute), which a busy
+    # meeting can exceed — see .env.example.
+    sealion_api_url: str = "https://api.sea-lion.ai/v1"
+    sealion_api_key: str | None = None
+    # Any model id the API serves. Point this at a self-hosted Ollama/vLLM
+    # instead (e.g. aisingapore/Gemma-SEA-LION-v4-27B-IT) by also setting
+    # SEALION_API_URL — no rate limit then.
+    sealion_model: str = "aisingapore/Qwen-SEA-LION-v4.5-27B-IT"
 
     # --- Local chat NMT (used when nmt_engine == "seallm") ---------------
     # OpenAI-compatible base URL of the local LLM server (Ollama default shown).

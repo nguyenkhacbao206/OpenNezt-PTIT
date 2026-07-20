@@ -96,7 +96,18 @@ abstract contract in `app/providers/base.py`. Concrete trios implement it:
     (`phowhisper.py`: PhoWhisper for VI, Whisper for EN).
   - **NMT** by `NMT_ENGINE`: `nllb` (default) → `OfflineNMTProvider`
     (CTranslate2 int8 + NLLB-200 via `ct2_nmt.py`), `seallm` → `LocalNMTProvider`
-    (`local_nmt.py`, OpenAI-compatible local chat — Ollama/vLLM).
+    (`local_nmt.py`, OpenAI-compatible local chat — Ollama/vLLM), `sealion` →
+    `SeaLionNMTProvider` (`sealion_nmt.py`, AI Singapore SEA-LION v4).
+    **`sealion` is the one engine that also applies in `mode=cloud`** — it
+    replaces the Groq chat NMT there, so you get Groq Whisper STT + SEA-LION
+    translation. It defaults to the hosted `api.sea-lion.ai` (needs
+    `SEALION_API_KEY`, so `mode=offline` is no longer literally offline, and the
+    free tier's ~10 req/min can be exceeded by a busy meeting); point
+    `SEALION_API_URL` at a local Ollama serving a SEA-LION v4 GGUF to avoid
+    both. Verify a key with `python tools/check_sealion_key.py`.
+    All three chat-based NMT providers (`cloud`, `local_nmt`, `sealion_nmt`) are
+    thin wrappers over `groq_client`'s pure OpenAI-shaped helpers — a new
+    OpenAI-compatible NMT backend is a ~40-line file plus a `factory.py` branch.
   - **TTS** is Piper (`piper_engine.py`), but reached via `build_tts()` /
     `TTS_ENGINE=piper` (see below), not the offline trio.
   - **Device/precision is config-driven** (previously hard-coded CPU/int8):
@@ -194,6 +205,24 @@ self-loop never had. `app/main.py` passes it into `dispatch`; on disconnect the
   So the speaker sees only their own transcript; the listener gets the
   translation + audio.
 
+### Startup warmup (`core/warmup.py`)
+
+Local engines cache their model process-wide (`ct2_nmt._CACHE`,
+`whisper_engine.get_engine`/`piper_engine.get_piper_engine` `lru_cache`) but load
+**lazily**, so without warmup the first speaker of the first meeting paid the
+full NLLB+Whisper+Piper load inside their turn (~13s measured). `main.py`'s
+lifespan fires `run_warmup()` as a **background task** — startup completes and
+`/ws` accepts connections immediately; a client connecting mid-warm just waits on
+the same cache entry. Failures are logged and swallowed, never fatal. Disable
+with `WARMUP_ON_STARTUP=false`.
+
+**Gotcha:** the cached getters only build a wrapper — `WhisperEngine.__init__`
+sets `_model = None` and `PiperEngine` holds an empty `_voices` dict. Warmup must
+call `.load()` (Whisper) / `.load(lang)` per voice (Piper) or it silently no-ops
+(the giveaway is a "ready in 0.0s" log line). Warms STT+NMT only when
+`default_mode == "offline"`, but Piper TTS whenever `TTS_ENGINE=piper`, since
+`build_tts()` is mode-independent.
+
 ### Two invariants — do not break
 - **Zero retention.** All audio/text lives in RAM only (`core/session.py`
   buffers). `SessionState.cleanup()` runs in the `/ws` `finally` block on
@@ -203,7 +232,12 @@ self-loop never had. `app/main.py` passes it into `dispatch`; on disconnect the
 
 Mode can change mid-session via `config.update {mode}`; providers rebuild without
 reconnecting (`SessionState.set_mode`). Business glossary (`core/glossary.py`) is
-applied as whole-word replacement to NMT output, selected per-session.
+applied as whole-word replacement to NMT output, selected per-session. It is
+**direction-aware**: `apply_glossary(text, glossary_id, target_lang)` stores
+pairs as EN→VI and inverts them when `target_lang == "en"`. Passing the wrong
+target (or dropping the arg) silently rewrites correct EN output back into
+Vietnamese — that was a real bug on every VI→EN turn. An unrecognized
+`target_lang` is a passthrough by design; never guess a direction.
 
 `backend/static/index.html` is a self-contained browser client for manually
 driving the WS (served at **`/app`**; `/` is a health JSON). It never sends

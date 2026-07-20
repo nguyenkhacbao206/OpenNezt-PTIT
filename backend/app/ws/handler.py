@@ -307,7 +307,7 @@ async def _on_audio_partial(
             dst_text = await session.providers.nmt.translate_partial(
                 window_text, session.source_lang, session.target_lang
             )
-        dst_text = apply_glossary(dst_text, session.glossary_id)
+        dst_text = apply_glossary(dst_text, session.glossary_id, session.target_lang)
         # [LATENCY] partial path: "first text on screen as you speak".
         log.info(
             "[LATENCY][partial] speaker=%s audioBytes=%d partialSttMs=%.0f partialNmtMs=%.0f -> nmt.partial emitted",
@@ -341,7 +341,7 @@ async def _on_text_partial(
         dst_text = await session.providers.nmt.translate_partial(
             text, session.source_lang, session.target_lang
         )
-        dst_text = apply_glossary(dst_text, session.glossary_id)
+        dst_text = apply_glossary(dst_text, session.glossary_id, session.target_lang)
         await _emit(ws, session, manager, "nmt.partial", {
             "speaker": speaker, "srcText": text, "dstText": dst_text, "isFinal": False,
         }, to_peer=True)
@@ -366,7 +366,7 @@ async def _on_text_final(
             dst_text = await session.providers.nmt.translate(
                 text, session.source_lang, session.target_lang
             )
-        dst_text = apply_glossary(dst_text, session.glossary_id)
+        dst_text = apply_glossary(dst_text, session.glossary_id, session.target_lang)
         metrics.nmt_ms = sw_nmt.ms
         await _emit_translation(ws, session, manager, speaker, text, dst_text)
     except Exception as exc:  # noqa: BLE001
@@ -442,7 +442,7 @@ async def _on_audio_chunk(
             dst_text = await session.providers.nmt.translate(
                 source_text, session.source_lang, session.target_lang
             )
-        dst_text = apply_glossary(dst_text, session.glossary_id)
+        dst_text = apply_glossary(dst_text, session.glossary_id, session.target_lang)
         metrics.nmt_ms = sw_nmt.ms
         log.info("[LATENCY][turn] speaker=%s NMT done nmtMs=%.0f", speaker, sw_nmt.ms)
         # Translation goes to the listener (peer) in a room; self on console.
